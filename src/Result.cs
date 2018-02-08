@@ -37,7 +37,7 @@ namespace RZ.Foundation
         public static Task<Result<T, Exception>> AsFailTask<T>(this Exception ex) => Task.FromResult(ex.AsFailure<T, Exception>());
         public static Task<Result<T, Exception>> AsFailTask<T>(this string message) => Task.FromResult(new Exception(message).AsFailure<T, Exception>());
 
-        public static ApiResult<T> AsApiResult<T>(this Task<ApiResult<T>> t) => t.IsCompleted ? t.Result : t.Exception;
+        public static ApiResult<T> AsApiResult<T>(this Task<ApiResult<T>> t) => t.IsCompletedSuccessfully ? t.Result : t.Exception;
     }
 
     /// <summary>
@@ -185,82 +185,6 @@ namespace RZ.Foundation
             else
                 fFail(error);
             return this;
-        }
-    }
-
-    public static class TaskExtensions
-    {
-        /// <summary>
-        /// Prevent locking from Synchronization Context
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="t"></param>
-        /// <returns></returns>
-        public static ConfiguredTaskAwaitable NoSync(this Task t) => t.ConfigureAwait(continueOnCapturedContext: false);
-        public static ConfiguredTaskAwaitable<T> NoSync<T>(this Task<T> t) => t.ConfigureAwait(continueOnCapturedContext: false);
-        public static Task<TB> Map<TA, TB>(this Task<TA> task, Func<TA, TB> mapper) =>
-            task.ContinueWith(t => t.IsFaulted ? throw new AggregateException(t.Exception?.InnerExceptions)
-                                 : t.IsCanceled ? throw new TaskCanceledException(t)
-                                 : mapper(t.Result)
-                             , TaskContinuationOptions.ExecuteSynchronously);
-
-        public static Task<Result<T, Exception>> MapEither<T>(this Task<T> task) => MapEither(task, CancellationToken.None);
-
-        public static Task<Result<T, Exception>> MapEither<T>(this Task<T> task, CancellationToken token) =>
-            task.ContinueWith(t => token.IsCancellationRequested || t.IsCanceled || t.IsFaulted
-                                 ? GetException(t).AsFailure<T, Exception>()
-                                 : t.Result.AsSuccess<T, Exception>()
-                             , token
-                             , TaskContinuationOptions.ExecuteSynchronously
-                             , TaskScheduler.Current
-                             );
-
-        public static Task<ApiResult<T>> ToApiResult<T>(this Task<T> task) => ToApiResult(task, CancellationToken.None);
-
-        public static Task<ApiResult<T>> ToApiResult<T>(this Task<T> task, CancellationToken token) =>
-            task.ContinueWith(t => token.IsCancellationRequested || t.IsCanceled || t.IsFaulted
-                                 ? GetException(t).AsApiFailure<T>()
-                                 : t.Result.AsApiSuccess()
-                             , token
-                             , TaskContinuationOptions.ExecuteSynchronously
-                             , TaskScheduler.Current
-                             );
-
-        static Exception GetException<T>(Task<T> t) => t.Exception ?? (Exception)new TaskCanceledException(t);
-        public static Task<TB> Chain<TA, TB>(this Task<TA> task, Func<TA, Task<TB>> chain)
-        {
-            var result = new TaskCompletionSource<TB>();
-            task.ContinueWith(t => {
-                if (t.IsCanceled)
-                    result.SetCanceled();
-                else if (t.IsFaulted)
-                    // ReSharper disable once AssignNullToNotNullAttribute
-                    result.SetException(t.Exception);
-                else
-                {
-                    Debug.Assert(t.IsCompleted);
-                    chain(t.Result)
-                        .Then(success: r => result.SetResult(r),
-                            faulted: ex => result.SetException(ex),
-                            canceled: () => result.SetCanceled());
-                }
-            });
-            return result.Task;
-        }
-        public static Task Then<T>(this Task<T> task, Action<T> success = null, Action<Exception> faulted = null,
-            Action canceled = null)
-        {
-            return task.ContinueWith(t => {
-                if (t.IsCompleted)
-                    success?.Invoke(t.Result);
-                else if (t.IsFaulted)
-                    faulted?.Invoke(t.Exception);
-                else
-                {
-                    Contract.Assert(t.IsCanceled);
-                    canceled?.Invoke();
-                }
-            });
         }
     }
 }
