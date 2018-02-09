@@ -5,13 +5,13 @@ using Xunit;
 
 namespace RZ.Foundation
 {
-    public class CollectionExtension_WindowTest
+    public class CollectionExtension_BatchTest
     {
         [Fact]
-        public void WindowWithDividableNumber() {
+        public void BatchWithDividableNumber() {
             var x = Enumerable.Range(1, 100);
 
-            var result = x.Window(20).ToArray();
+            var result = x.Batch(20).ToArray();
 
             result.Length.Should().Be(5);
             result[0].Should().Equal(Enumerable.Range(1, 20));
@@ -21,10 +21,10 @@ namespace RZ.Foundation
             result[4].Should().Equal(Enumerable.Range(81, 20));
         }
         [Fact]
-        public void WindowWithIndividableNumber() {
+        public void BatchWithIndividableNumber() {
             var x = Enumerable.Range(1, 90);
 
-            var result = x.Window(20).ToArray();
+            var result = x.Batch(20).ToArray();
 
             result.Length.Should().Be(5);
             result[0].Should().Equal(Enumerable.Range(1, 20));
@@ -35,17 +35,17 @@ namespace RZ.Foundation
         }
 
         [Fact]
-        public void WindowWithEmptySeq() {
-            var result = Enumerable.Empty<int>().Window(20).ToArray();
+        public void BatchWithEmptySeq() {
+            var result = Enumerable.Empty<int>().Batch(20).ToArray();
 
             result.Should().BeEmpty();
         }
 
         [Fact]
-        public void WindowWithGreaterSizeReturnsItself() {
+        public void BatchWithGreaterSizeReturnsItself() {
             var x = Enumerable.Range(1, 11).ToArray();
 
-            var result = x.Window(20).ToArray();
+            var result = x.Batch(20).ToArray();
 
             result.Length.Should().Be(1);
             result[0].Should().BeEquivalentTo(x);

@@ -26,7 +26,7 @@ namespace RZ.Foundation.Extensions {
                 return item;
             return Option<T>.None();
         }
-        public static IEnumerable<IEnumerable<T>> Window<T>(this IEnumerable<T> data, int size) {
+        public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> data, int size) {
             using(var itor = data.GetEnumerator())
                 while (itor.MoveNext())
                     yield return Take(itor, size - 1, itor.Current).ToArray();
