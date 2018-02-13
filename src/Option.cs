@@ -43,8 +43,11 @@ namespace RZ.Foundation
 
         public T Get() => isSome? value : throw new InvalidOperationException();
         public TResult Get<TResult>(Func<T, TResult> someHandler, Func<TResult> noneHandler) => isSome? someHandler(value) : noneHandler();
+        [Obsolete("Use OrElse instead")]
         public T GetOrElse(Func<T> noneHandler) => isSome? value : noneHandler();
-        public T GetOrDefault() => isSome? value : default(T);
+        public T OrElse(Func<T> noneHandler) => isSome? value : noneHandler();
+        public T GetOrElse(T defaultValue) => isSome? value : defaultValue;
+        public T GetOrDefault() => GetOrElse(default(T));
         public Option<TB> Map<TB>(Func<T, TB> mapper) => isSome? mapper(value) : Option<TB>.None();
 
         public Option<U> TryCast<U>()
@@ -66,7 +69,6 @@ namespace RZ.Foundation
         public override int GetHashCode() => isSome? value.GetHashCode() : 0;
         #endregion
 
-        public T GetOrElse(T defaultValue) => isSome? value : defaultValue;
 
         public static Option<T> From(Func<T> initializer)
         {

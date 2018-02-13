@@ -11,4 +11,11 @@ namespace RZ.Foundation {
             return x;
         };
     }
+
+    public struct Unit
+    {
+        public static readonly Unit Value = new Unit();
+        public override bool Equals(object obj) => obj is Unit;
+        public override int GetHashCode() => 0;
+    }
 }
