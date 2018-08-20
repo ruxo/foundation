@@ -6,8 +6,7 @@ using System.Linq;
 namespace RZ.Foundation.Extensions {
     public static class CollectionExtension{
         public static void Clear<T>(this ConcurrentQueue<T> queue){
-            T item;
-            while(queue.TryDequeue(out item)) { }
+            while(queue.TryDequeue(out _)) { }
         }
         public static void ForEach<T>(this IEnumerable<T> seq, Action<T> handler){
             foreach (var item in seq)
@@ -19,7 +18,7 @@ namespace RZ.Foundation.Extensions {
                 handler(item, index++);
         }
         public static T[] RemoveAt<T>(this IEnumerable<T> array, int n) => array.Take(n).Skip(n + 1).ToArray();
-        public static Option<T> Get<TKey, T>(this Dictionary<TKey, T> dict, TKey key) => dict.TryGetValue(key, out var result) ? result : Option<T>.None();
+        public static Option<T> Get<TKey, T>(this IDictionary<TKey, T> dict, TKey key) => dict.TryGetValue(key, out var result) ? result : Option<T>.None();
 
         public static IEnumerable<B> Choose<A, B>(this IEnumerable<A> array, Func<A, Option<B>> chooser) =>
             from i in array

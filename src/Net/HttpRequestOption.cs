@@ -1,4 +1,6 @@
-﻿namespace RZ.Foundation.Net
+﻿using System.Collections.Generic;
+
+namespace RZ.Foundation.Net
 {
     public struct HttpAuthentication
     {
@@ -9,5 +11,6 @@
     public struct HttpRequestOption
     {
         public Option<HttpAuthentication> Authentication;
+        public Option<Dictionary<string, string>> CustomHeaders;
     }
 }

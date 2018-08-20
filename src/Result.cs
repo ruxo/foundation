@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
+using RZ.Foundation.Extensions;
 
 namespace RZ.Foundation
 {
@@ -32,12 +29,28 @@ namespace RZ.Foundation
         public static ApiResult<T> AsApiSuccess<T>(this T data) => data;
         public static ApiResult<T> AsApiFailure<T>(this Exception data) => data;
 
+        public static Task<ApiResult<T>> AsTaskApiSuccess<T>(this T data) => Task.FromResult((ApiResult<T>)data);
+        public static Task<ApiResult<T>> AsTaskApiFailure<T>(this Exception ex) => Task.FromResult((ApiResult<T>) ex);
+
         public static Task<ApiResult<U>> ChainApiTask<T, U>(this ApiResult<T> result, Func<T, Task<ApiResult<U>>> f) => result.Get(f, ex => Task.FromResult((ApiResult<U>) ex));
+        public static Task<ApiResult<U>> ChainApiTask<T, U>(this ApiResult<T> result, Func<T, Task<U>> f) =>
+            result.Get(x => ApiResult<U>.SafeCallAsync(() => f(x)), ex => Task.FromResult((ApiResult<U>) ex));
 
-        public static Task<Result<T, Exception>> AsFailTask<T>(this Exception ex) => Task.FromResult(ex.AsFailure<T, Exception>());
-        public static Task<Result<T, Exception>> AsFailTask<T>(this string message) => Task.FromResult(new Exception(message).AsFailure<T, Exception>());
+        public static ApiResult<T> AsApiResult<T>(this Task<ApiResult<T>> t) => t.IsSuccess() ? t.Result : t.Exception;
 
-        public static ApiResult<T> AsApiResult<T>(this Task<ApiResult<T>> t) => t.IsCompletedSuccessfully ? t.Result : t.Exception;
+        public static T GetOrThrow<T>(this ApiResult<T> result) =>
+            result.IsSuccess
+                ? result.GetSuccess()
+                : throw ExceptionExtension.ChainError("Unhandled exception"
+                                                    , "unhandled"
+                                                    , "ApiResult")(result.GetFail());
+
+        public static ApiResult<(A, B)> With<A, B>(ApiResult<A> a, ApiResult<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
+        public static ApiResult<(A, B, C)> With<A, B, C>(ApiResult<A> a, ApiResult<B> b, ApiResult<C> c) =>
+            a.Chain(ax => b.Chain(bx => c.Map(cx => (ax, bx,cx))));
+
+        public static ApiResult<T> Call<A, B, T>(this ApiResult<(A, B)> x, Func<A, B, T> f) => x.Map(p => p.CallFrom(f));
+        public static ApiResult<T> Call<A, B, C, T>(this ApiResult<(A, B, C)> x, Func<A, B, C, T> f) => x.Map(p => p.CallFrom(f));
     }
 
     /// <summary>
@@ -82,6 +95,9 @@ namespace RZ.Foundation
         /// </summary>
         /// <returns>Instance of failed type.</returns>
         public TFail GetFail() => isFailed? error : throw new InvalidOperationException();
+
+        public Result<TSuccess, TFail> Where(Func<TSuccess, bool> predicate, TFail failed) => IsSuccess && predicate(data) ? this : failed;
+
         /// <summary>
         /// Transform Result into a value.
         /// </summary>
@@ -121,12 +137,15 @@ namespace RZ.Foundation
         /// <returns></returns>
         public Result<TSuccess, TFail> OrElse(Func<TFail, Result<TSuccess, TFail>> f) => isFailed? f(error) : this;
 
+        [Obsolete("Use Then instead")]
+        public Result<TSuccess, TFail> Apply(Action<TSuccess> f) => Then(f);
+
         /// <summary>
         /// Call <paramref name="f"/> if current result is success.
         /// </summary>
         /// <param name="f"></param>
         /// <returns>Always return current result.</returns>
-        public Result<TSuccess, TFail> Apply(Action<TSuccess> f)
+        public Result<TSuccess, TFail> Then(Action<TSuccess> f)
         {
             if (!isFailed) f(data);
             return this;
@@ -157,17 +176,55 @@ namespace RZ.Foundation
         }
 
         public static implicit operator ApiResult<T>(T success) => Equals(success,null)? new InvalidOperationException() : new ApiResult<T>(success);
-        public static implicit operator ApiResult<T>(Exception failed) => failed == null? new ArgumentNullException("failed") : new ApiResult<T>(failed);
+        public static implicit operator ApiResult<T>(Exception failed) => failed == null? new ArgumentNullException(nameof(failed)) : new ApiResult<T>(failed);
+        public static ApiResult<T> SafeCall(Func<T> f) {
+            try {
+                return f();
+            }
+            catch (Exception ex) {
+                return ex;
+            }
+        }
+
+        public static async Task<ApiResult<T>> SafeCallAsync(Func<Task<T>> f) {
+            try {
+                return await f();
+            }
+            catch (Exception ex) {
+                return ex;
+            }
+        }
+
+        public static async Task<ApiResult<T>> SafeCallAsync1(Func<Task<ApiResult<T>>> f) {
+            try {
+                return await f();
+            }
+            catch (Exception ex) {
+                return ex;
+            }
+        }
 
         public bool IsSuccess => error == null;
         public bool IsFail => error != null;
         public T GetSuccess() => IsFail? throw new InvalidOperationException() : data;
         public Exception GetFail() => IsFail? error : throw new InvalidOperationException();
 
+        public ApiResult<T> Where(Func<T, bool> predicate, Exception failed) => IsSuccess && predicate(data) ? this : failed;
+
         public U Get<U>(Func<T, U> success, Func<Exception, U> fail) => IsFail? fail(error) : success(data);
 
         public ApiResult<U> Map<U>(Func<T, U> mapper) => IsFail? new ApiResult<U>(error) : mapper(data);
+        public ApiResult<U> Map<U>(Func<T, U> mapper, Func<Exception,Exception> failMapper) =>
+            IsFail? new ApiResult<U>(failMapper(error)) : mapper(data);
         public ApiResult<U> Chain<U>(Func<T, ApiResult<U>> mapper) => IsFail? new ApiResult<U>(error) : mapper(data);
+
+        public Task<ApiResult<U>> ChainAsync<U>(Func<T, Task<ApiResult<U>>> mapper) {
+            return IsSuccess ? mapper(data) : Task.FromResult(error.AsApiFailure<U>());
+        }
+        public ApiResult<T> OrTry(Func<ApiResult<T>> tryFunc) => IsFail ? tryFunc() : this;
+
+        public Task<ApiResult<T>> OrTryAsync(Func<Task<ApiResult<T>>> tryFunc) => IsFail ? tryFunc() : Task.FromResult(this);
+
         public ApiResult<T> Apply(Action<T> f)
         {
             if (IsSuccess) f(data);
@@ -176,6 +233,11 @@ namespace RZ.Foundation
         public ApiResult<T> IfFail(Action<Exception> f)
         {
             if (IsFail) f(error);
+            return this;
+        }
+        public ApiResult<T> Then(Action<T> fSuccess)
+        {
+            if (IsSuccess) fSuccess(data);
             return this;
         }
         public ApiResult<T> Then(Action<T> fSuccess, Action<Exception> fFail)

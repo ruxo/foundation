@@ -1,15 +1,31 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using RZ.Foundation.Extensions;
 
 namespace RZ.Foundation
 {
     public static class OptionHelper
     {
+        static readonly Exception DummyException = new Exception();
+
         public static Option<T> ToOption<T>(this T data) => data;
+        public static Option<T> None<T>() => Option<T>.None();
 
         public static Result<T, F> ToResult<T, F>(this Option<T> o, Func<F> none) => o.IsSome ? o.Get().AsSuccess<T,F>() : none();
 
+        public static ApiResult<T> ToApiResult<T>(this Option<T> o) => o.IsSome ? o.Get().AsApiSuccess() : DummyException;
         public static ApiResult<T> ToApiResult<T>(this Option<T> o, Func<Exception> none) => o.IsSome ? o.Get().AsApiSuccess() : none();
+
+        public static Option<(A, B)> With<A, B>(Option<A> a, Option<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
+        public static Option<(A, B, C)> With<A, B, C>(Option<A> a, Option<B> b, Option<C> c) =>
+            a.Chain(ax => b.Chain(bx => c.Map(cx => (ax, bx,cx))));
+
+        public static Option<T> Call<A, B, T>(this Option<(A, B)> x, Func<A, B, T> f) => x.Map(p => p.CallFrom(f));
+        public static Option<T> Call<A, B, C, T>(this Option<(A, B, C)> x, Func<A, B, C, T> f) => x.Map(p => p.CallFrom(f));
+
+        public static Option<Unit> Call<A, B>(this Option<(A, B)> x, Action<A, B> f) => x.Map(p => p.CallFrom(f));
+        public static Option<Unit> Call<A, B, C>(this Option<(A, B, C)> x, Action<A, B, C> f) => x.Map(p => p.CallFrom(f));
     }
     public struct Option<T>
     {
@@ -25,29 +41,41 @@ namespace RZ.Foundation
         readonly T value;
         public static implicit operator Option<T> (T value) => From(value);
 
+        public Option<T> Where(Func<T, bool> predicate) => isSome && predicate(value) ? this : None();
         public Option<TB> Chain<TB>(Func<T, Option<TB>> mapper) => isSome? mapper(value) : Option<TB>.None();
+
+        public Task<Option<TB>> ChainAsync<TB>(Func<T, Task<Option<TB>>> mapper) =>
+            isSome ? mapper(value) : Task.FromResult(Option<TB>.None());
+        public Option<T> OrElse(Func<Option<T>> elseFunc) => isSome ? this : elseFunc();
+
+        public Task<Option<T>> OrElseAsync(Func<Task<Option<T>>> elseFunc) => isSome ? Task.FromResult(this) : elseFunc();
+
+        [Obsolete("Use orElse")]
         public Option<T> IfNoneTry(Func<Option<T>> other) => isSome? this : other();
 
         public bool IsSome => isSome;
         public bool IsNone => !isSome;
 
-        public void Apply(Action<T> handler)
+        [Obsolete("Use Then instead")]
+        public Option<T> Apply(Action<T> handler) => Then(handler);
+        public Option<T> Then(Action<T> handler)
         {
             if (isSome) handler(value);
+            return this;
         }
 
-        public void Apply(Action noneHandler, Action<T> someHandler)
+        [Obsolete("Use Then instead")]
+        public void Apply(Action noneHandler, Action<T> someHandler) => Then(someHandler, noneHandler);
+        public Option<T> Then( Action<T> someHandler, Action noneHandler)
         {
             if (isSome) someHandler(value); else noneHandler();
+            return this;
         }
 
         public T Get() => isSome? value : throw new InvalidOperationException();
         public TResult Get<TResult>(Func<T, TResult> someHandler, Func<TResult> noneHandler) => isSome? someHandler(value) : noneHandler();
-        [Obsolete("Use OrElse instead")]
         public T GetOrElse(Func<T> noneHandler) => isSome? value : noneHandler();
-        public T OrElse(Func<T> noneHandler) => isSome? value : noneHandler();
-        public T GetOrElse(T defaultValue) => isSome? value : defaultValue;
-        public T GetOrDefault() => GetOrElse(default(T));
+        public T GetOrDefault(T def = default(T)) => isSome? value : def;
         public Option<TB> Map<TB>(Func<T, TB> mapper) => isSome? mapper(value) : Option<TB>.None();
 
         public Option<U> TryCast<U>()
@@ -59,7 +87,7 @@ namespace RZ.Foundation
                  ? Option<U>.None()
                  : Option<U>.Some((U)converted);
         }
-        
+
         #region Equality
         public override bool Equals(object obj)
         {
@@ -69,6 +97,7 @@ namespace RZ.Foundation
         public override int GetHashCode() => isSome? value.GetHashCode() : 0;
         #endregion
 
+        public T GetOrElse(T defaultValue) => isSome? value : defaultValue;
 
         public static Option<T> From(Func<T> initializer)
         {
@@ -79,6 +108,15 @@ namespace RZ.Foundation
             }
             catch (Exception)
             {
+                return None();
+            }
+        }
+
+        public static async Task<Option<T>> SafeCallAsync(Func<Task<Option<T>>> handler) {
+            try {
+                return await handler();
+            }
+            catch (Exception) {
                 return None();
             }
         }
