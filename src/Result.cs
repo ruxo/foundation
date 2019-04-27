@@ -52,6 +52,8 @@ namespace RZ.Foundation
              ex => throw ExceptionExtension.ChainError("Unhandled exception", "unhandled", "Result")(ex)
             );
 
+        public static T GetOrDefault<T>(this Result<T> result) => result.Match(identity, _ => default);
+
         public static Result<U> Bind<T, U>(this Result<T> result, Func<T, Result<U>> f) => result.Match(f, faulted<U>);
 
         public static Result<(A, B)> With<A, B>(Result<A> a, Result<B> b) => a.Bind(ax => b.Map(bx => (ax, bx)));

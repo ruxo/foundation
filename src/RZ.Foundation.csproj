@@ -7,8 +7,8 @@
     <AssemblyVersion>1.0.11.0</AssemblyVersion>
     <FileVersion>1.0.11.11</FileVersion>
     <Version>1.0.10</Version>
-    <TargetFrameworks>netcoreapp2.1;netcoreapp2.2;net472</TargetFrameworks>
-    <PackageVersion>1.1.1</PackageVersion>
+    <TargetFrameworks>netcoreapp2.1;netcoreapp2.2</TargetFrameworks>
+    <PackageVersion>1.1.1.1</PackageVersion>
     <PackageTags>utility</PackageTags>
     <LangVersion>8</LangVersion>
     <Title>RZ Foundation Library</Title>

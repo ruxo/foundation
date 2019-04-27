@@ -13,6 +13,8 @@ namespace RZ.Foundation
         public static T Get<T>(this Option<T> opt) =>
             opt.IfNone(() => throw ExceptionExtension.CreateError("Unhandled exception", "unhandled", "Option", opt));
 
+        public static T GetOrDefault<T>(this Option<T> opt) => opt.IfNoneUnsafe(default(T));
+
         public static Either<T, F> ToResult<T, F>(this Option<T> o, Func<F> none) => o.IsSome ? o.Get().AsSuccess<T,F>() : none();
 
         public static Result<T> ToApiResult<T>(this Option<T> o) =>
