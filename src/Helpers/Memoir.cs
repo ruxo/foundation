@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using RZ.Foundation.Extensions;
 using static RZ.Foundation.Prelude;
+using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Helpers
 {
@@ -12,13 +13,13 @@ namespace RZ.Foundation.Helpers
     {
         public interface ICache<in A,B>
         {
-            Option<B> Get(A x);
+            LanguageExt.Option<B> Get(A x);
             void Store(A x, B result);
         }
 
         public interface ICacheAsync<A, B>
         {
-            Task<Option<B>> GetAsync(A x);
+            Task<LanguageExt.Option<B>> GetAsync(A x);
             Task StoreAsync(A x, B result);
         }
 
@@ -31,7 +32,7 @@ namespace RZ.Foundation.Helpers
         public sealed class DictionaryCache<A, B> : ICache<A, B>
         {
             readonly Dictionary<A,B> cache = new Dictionary<A, B>();
-            public Option<B> Get(A x) => cache.Get(x);
+            public LanguageExt.Option<B> Get(A x) => cache.Get(x);
             public void Store(A x, B result) => cache[x] = result;
         }
         public sealed class MultithreadLocker<A> : ILocker<A> {
@@ -55,7 +56,7 @@ namespace RZ.Foundation.Helpers
         }
 
         static B ExecuteMemoir<A,B>(Func<A,B> loader, ICache<A,B> cache, A x) =>
-            cache.Get(x).Get(Identity, () => SideEffect<B>(result => cache.Store(x, result))(loader(x)));
+            cache.Get(x).Match(identity, () => SideEffect<B>(result => cache.Store(x, result))(loader(x)));
 
         public static Func<A, B> From<A, B>(Func<A, B> loader, ICache<A, B> cache) => x => ExecuteMemoir(loader, cache, x);
 

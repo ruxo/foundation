@@ -5,6 +5,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using LanguageExt;
+using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.Extensions
 {
@@ -29,9 +31,9 @@ namespace RZ.Foundation.Extensions
             return taskB.Task;
         }
 
-        public static Task<Result<T, Exception>> MapEither<T>(this Task<T> task) => MapEither(task, CancellationToken.None);
+        public static Task<Either<T, Exception>> MapEither<T>(this Task<T> task) => MapEither(task, CancellationToken.None);
 
-        public static Task<Result<T, Exception>> MapEither<T>(this Task<T> task, CancellationToken token) =>
+        public static Task<Either<T, Exception>> MapEither<T>(this Task<T> task, CancellationToken token) =>
             task.ContinueWith(t => token.IsCancellationRequested || t.IsCanceled || t.IsFaulted
                                  ? GetException((Task) t).AsFailure<T, Exception>()
                                  : t.Result.AsSuccess<T, Exception>()
@@ -42,7 +44,7 @@ namespace RZ.Foundation.Extensions
 
         #region API Result helpers
 
-        public static Task<ApiResult<T>> ToApiResult<T>(this Task<T> task) => ToApiResult(task, CancellationToken.None);
+        public static Task<Result<T>> ToApiResult<T>(this Task<T> task) => ToApiResult(task, CancellationToken.None);
 
         public static bool IsSuccess(this Task task) =>
         #if NET47 || NET471 || NET472
@@ -51,7 +53,7 @@ namespace RZ.Foundation.Extensions
             task.IsCompletedSuccessfully;
         #endif
 
-        public static Task<ApiResult<T>> ToApiResult<T>(this Task<T> task, CancellationToken token) =>
+        public static Task<Result<T>> ToApiResult<T>(this Task<T> task, CancellationToken token) =>
             task.ContinueWith(t => !token.IsCancellationRequested && t.IsSuccess()
                                  ? t.Result
                                  : GetException(t).AsApiFailure<T>()
@@ -60,50 +62,50 @@ namespace RZ.Foundation.Extensions
                              , TaskScheduler.Current
                              );
 
-        public static Task<ApiResult<T>> TrapTaskErrors<T>(this Task<ApiResult<T>> task) {
+        public static Task<Result<T>> TrapTaskErrors<T>(this Task<Result<T>> task) {
             return task.ContinueWith(t => t.IsSuccess() ? t.Result : GetException((Task) t).AsApiFailure<T>());
         }
 
-        public static Task<ApiResult<Unit>> ToApiResult(this Task task) => ToApiResult(task, CancellationToken.None);
+        public static Task<Result<Unit>> ToApiResult(this Task task) => ToApiResult(task, CancellationToken.None);
 
-        public static Task<ApiResult<Unit>> ToApiResult(this Task task, CancellationToken token) =>
+        public static Task<Result<Unit>> ToApiResult(this Task task, CancellationToken token) =>
             task.ContinueWith(t => !token.IsCancellationRequested && t.IsSuccess()
-                                 ? Unit.Value
+                                 ? Unit.Default
                                  : GetException(t).AsApiFailure<Unit>()
                              , token
                              , TaskContinuationOptions.ExecuteSynchronously
                              , TaskScheduler.Current
                              );
 
-        public static Task<ApiResult<U>> MapResult<T, U>(this Task<ApiResult<T>> result, Func<T, U> mapper) =>
+        public static Task<Result<U>> MapResult<T, U>(this Task<Result<T>> result, Func<T, U> mapper) =>
             result.Map(r => r.Map(mapper));
 
-        public static Task<ApiResult<TB>> ChainResult<TA, TB>(this Task<ApiResult<TA>> task, Func<TA, Task<ApiResult<TB>>> chain)
+        public static Task<Result<TB>> ChainResult<TA, TB>(this Task<Result<TA>> task, Func<TA, Task<Result<TB>>> chain)
         {
-            var result = new TaskCompletionSource<ApiResult<TB>>();
+            var result = new TaskCompletionSource<Result<TB>>();
             task.Then(x => {
-                          if (x.IsFail)
-                              result.SetResult(x.GetFail().UnwrapAggregateException());
+                          if (x.IsFaulted)
+                              result.SetResult(faulted<TB>(x.GetFaulted().UnwrapAggregateException()));
                           else
-                              TaskToCompletion(result, chain(x.GetSuccess()));
+                              TaskToCompletion(result, chain(x.Get()));
                       }
                     , result.SetException
                     , result.SetCanceled);
             return result.Task;
         }
 
-        public static Task<ApiResult<B>> ChainResult<A, B>(this Task<ApiResult<A>> task, Func<A, ApiResult<B>> chain) =>
-            task.Map(r => r.Chain(chain));
+        public static Task<Result<B>> ChainResult<A, B>(this Task<Result<A>> task, Func<A, Result<B>> chain) =>
+            task.Map(r => r.Bind(chain));
 
-        public static Task<ApiResult<T>> OrElseResult<T>( this Task<ApiResult<T>> task
-                                                        , Func<Exception, Task<ApiResult<T>>> orElse) {
-            var result = new TaskCompletionSource<ApiResult<T>>();
+        public static Task<Result<T>> OrElseResult<T>( this Task<Result<T>> task
+                                                        , Func<Exception, Task<Result<T>>> orElse) {
+            var result = new TaskCompletionSource<Result<T>>();
 
             task.Then(x => {
-                          if (x.IsFail)
-                              TaskToCompletion(result, orElse(x.GetFail().UnwrapAggregateException()));
+                          if (x.IsFaulted)
+                              TaskToCompletion(result, orElse(x.GetFaulted().UnwrapAggregateException()));
                           else
-                              result.SetResult(x.GetSuccess());
+                              result.SetResult(x.Get());
                       }
                     , result.SetException
                     , result.SetCanceled);
@@ -112,34 +114,35 @@ namespace RZ.Foundation.Extensions
 
         public static Exception UnwrapAggregateException(this Exception ex) => ex is AggregateException ae ? ae.InnerException : ex;
 
-        public static Task<ApiResult<T>> OrElseResult<T>(this Task<ApiResult<T>> task
-                                                       , Func<Exception, ApiResult<T>> orElse) =>
+        public static Task<Result<T>> OrElseResult<T>(this Task<Result<T>> task
+                                                       , Func<Exception, Result<T>> orElse) =>
             OrElseResult(task, ex => Task.FromResult(orElse(ex)));
 
-        public static Task<ApiResult<T>> OrElseResult<T>(this Task<ApiResult<T>> task, ApiResult<T> orElse) =>
+        public static Task<Result<T>> OrElseResult<T>(this Task<Result<T>> task, Result<T> orElse) =>
             OrElseResult(task, _ => Task.FromResult(orElse));
 
-        public static Task<U> GetResult<T,U>(this Task<ApiResult<T>> result, Func<T,U> success, Func<Exception,U> failure) =>
-            result.Map(r => r.Get(success, failure));
+        public static Task<U> GetResult<T,U>(this Task<Result<T>> result, Func<T,U> success, Func<Exception,U> failure) =>
+            result.Map(r => r.Match(success, failure));
 
-        public static void WorkWithResult<T>(this Task<ApiResult<T>> task, Action<ApiResult<T>> handler) =>
-            task.Then(handler, ex => handler(ex), () => handler(task.Exception));
+        public static void WorkWithResult<T>(this Task<Result<T>> task, Action<Result<T>> handler) =>
+            task.Then(handler, ex => handler(faulted<T>(ex)), () => handler(faulted<T>(task.Exception)));
 
-        public static void WorkWithResult<T>(this Task<ApiResult<T>> task, Action<T> successHandler, Action<Exception> failHandler) =>
+        public static void WorkWithResult<T>(this Task<Result<T>> task, Action<T> successHandler, Action<Exception> failHandler) =>
             task.Then(result => result.Then(successHandler, failHandler), failHandler, () => failHandler(task.Exception));
 
-        public static void WorkWithSuccessResult<T>(this Task<ApiResult<T>> task, Action<T> handler) => task.Then(r => r.Then(handler));
+        public static void WorkWithSuccessResult<T>(this Task<Result<T>> task, Action<T> handler) => task.Then(r => r.IfSucc(handler));
 
-        public static Task<ApiResult<T[]>> JoinResults<T>(this Task<ApiResult<T>[]> results) =>
-            results.Map(rs => {
-                var failures = rs.Where(r => r.IsFail).AsArray();
+        public static Task<Result<T[]>> JoinResults<T>(this Task<Result<T>[]> results) =>
+            Map(results,
+                        rs => {
+                var failures = rs.Where(r => r.IsFaulted).AsArray();
                 return failures.Length == 0
-                           ? rs.Select(r => r.GetSuccess()).AsArray().AsApiSuccess()
-                           : new AggregateException(failures.Select(r => r.GetFail().UnwrapAggregateException()));
+                           ? rs.Select(r => r.Get()).AsArray().AsApiSuccess()
+                           : faulted<T[]>(new AggregateException(failures.Select(r => r.GetFaulted().UnwrapAggregateException())));
             });
 
-        public static Task<ApiResult<(A,B)>> JoinResults<A,B>(Task<ApiResult<A>> taskA, Task<ApiResult<B>> taskB) {
-            var result = new TaskCompletionSource<ApiResult<(A,B)>>();
+        public static Task<Result<(A,B)>> JoinResults<A,B>(Task<Result<A>> taskA, Task<Result<B>> taskB) {
+            var result = new TaskCompletionSource<Result<(A,B)>>();
             var tasks = Task.WhenAll(taskA, taskB);
             tasks.Then(() => {
                 if (!taskA.IsSuccess() )
@@ -155,7 +158,7 @@ namespace RZ.Foundation.Extensions
             return result.Task;
         }
 
-        public static Task<ApiResult<B>> CastResult<A, B>(this Task<ApiResult<A>> result) where A : B =>
+        public static Task<Result<B>> CastResult<A, B>(this Task<Result<A>> result) where A : B =>
             result.MapResult(x => (B) x);
 
         #endregion
@@ -184,7 +187,7 @@ namespace RZ.Foundation.Extensions
             return result.Task;
         }
 
-        static void TaskToCompletion<T>(TaskCompletionSource<ApiResult<T>> result, Task<ApiResult<T>> task) {
+        static void TaskToCompletion<T>(TaskCompletionSource<Result<T>> result, Task<Result<T>> task) {
             task.Then(result.SetResult, result.SetException, result.SetCanceled);
         }
 

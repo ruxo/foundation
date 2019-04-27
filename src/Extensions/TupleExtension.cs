@@ -1,4 +1,5 @@
 ﻿using System;
+using LanguageExt;
 
 namespace RZ.Foundation.Extensions
 {
@@ -9,12 +10,12 @@ namespace RZ.Foundation.Extensions
 
         public static Unit CallFrom<A, B>(this (A, B) t, Action<A, B> f) {
             f(t.Item1, t.Item2);
-            return Unit.Value;
+            return Unit.Default;
         }
 
         public static Unit CallFrom<A, B, C>(this (A, B, C) t, Action<A, B, C> f) {
             f(t.Item1, t.Item2, t.Item3);
-            return Unit.Value;
+            return Unit.Default;
         }
     }
 }

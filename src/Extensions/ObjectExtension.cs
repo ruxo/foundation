@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using LanguageExt;
 using Newtonsoft.Json;
+using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Extensions
 {
@@ -8,9 +10,9 @@ namespace RZ.Foundation.Extensions
     {
         public static T[] AsArray<T>(this IEnumerable<T> iter) => iter as T[] ?? iter.ToArray();
 
-        public static ApiResult<string> AsJson<T>(this T data) => ApiResult<string>.SafeCall(() => JsonConvert.SerializeObject(data));
+        public static Result<string> AsJson<T>(this T data) => Try(() => JsonConvert.SerializeObject(data)).Try();
 
-        public static ApiResult<T> DeserializeJson<T>(this string s) => ApiResult<T>.SafeCall(() => JsonConvert.DeserializeObject<T>(s));
+        public static Result<T> DeserializeJson<T>(this string s) => Try(() => JsonConvert.DeserializeObject<T>(s)).Try();
 
         public static bool IsEither<T>(this T source, T v1, T v2) {
             var comparer = EqualityComparer<T>.Default;
