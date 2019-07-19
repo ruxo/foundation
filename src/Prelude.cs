@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using RZ.Foundation.Types;
 
 namespace RZ.Foundation {
     public static class Prelude {
@@ -10,6 +13,12 @@ namespace RZ.Foundation {
             f(x);
             return x;
         };
+
+        public static Option<T> None<T>() => Option<T>.None();
+
+        public static TryAsync<T> TryAsync<T>(Func<Task<T>> runnable) => new TryAsync<T>(runnable);
+
+        public static Iter<T> Iter<T>(IEnumerable<T> enumerable) => enumerable is Iter<T> iter ? iter : new Iter<T>(enumerable);
     }
 
     public struct Unit

@@ -45,7 +45,7 @@ namespace RZ.Foundation.Extensions
         public static Task<ApiResult<T>> ToApiResult<T>(this Task<T> task) => ToApiResult(task, CancellationToken.None);
 
         public static bool IsSuccess(this Task task) =>
-        #if NET47 || NET471 || NET472
+        #if NET47 || NET471 || NET472 || NETSTANDARD2_0
             task.IsCompleted && !(task.IsCanceled || task.IsFaulted);
         #else
             task.IsCompletedSuccessfully;
