@@ -42,62 +42,70 @@ namespace RZ.Foundation
         public static implicit operator Option<T> (T value) => From(value);
 
         public Option<T> Where(Func<T, bool> predicate) => isSome && predicate(value) ? this : None();
+        public async Task<Option<T>> WhereAsync(Func<T, Task<bool>> predicate) => isSome && await predicate(value) ? this : None();
+
+        public Option<TB> Map<TB>(Func<T,TB> mapper) => isSome? mapper(value) : Option<TB>.None();
+        public async Task<Option<TB>> MapAsync<TB>(Func<T, Task<TB>> mapper) => isSome? await mapper(value) : Option<TB>.None();
+
         public Option<TB> Chain<TB>(Func<T, Option<TB>> mapper) => isSome? mapper(value) : Option<TB>.None();
+        public async Task<Option<TB>> ChainAsync<TB>(Func<T, Task<Option<TB>>> mapper) => isSome ? await mapper(value) : Option<TB>.None();
 
-        public Task<Option<TB>> ChainAsync<TB>(Func<T, Task<Option<TB>>> mapper) =>
-            isSome ? mapper(value) : Task.FromResult(Option<TB>.None());
+        public Option<T> OrElse(T elseValue) => isSome ? this : elseValue;
         public Option<T> OrElse(Func<Option<T>> elseFunc) => isSome ? this : elseFunc();
-
         public Task<Option<T>> OrElseAsync(Func<Task<Option<T>>> elseFunc) => isSome ? Task.FromResult(this) : elseFunc();
-
-        [Obsolete("Use orElse")]
-        public Option<T> IfNoneTry(Func<Option<T>> other) => isSome? this : other();
 
         public bool IsSome => isSome;
         public bool IsNone => !isSome;
 
-        [Obsolete("Use Then instead")]
-        public Option<T> Apply(Action<T> handler) => Then(handler);
+        public Option<T> IfNone(Action handler) {
+            if (IsNone) handler();
+            return this;
+        }
+        public async Task<Option<T>> IfNoneAsync(Func<Task> handler) {
+            if (IsNone) await handler();
+            return this;
+        }
         public Option<T> Then(Action<T> handler)
         {
             if (isSome) handler(value);
             return this;
         }
-
-        [Obsolete("Use Then instead")]
-        public void Apply(Action noneHandler, Action<T> someHandler) => Then(someHandler, noneHandler);
         public Option<T> Then( Action<T> someHandler, Action noneHandler)
         {
             if (isSome) someHandler(value); else noneHandler();
             return this;
         }
 
+        public async Task<Option<T>> ThenAsync(Func<T, Task> handler) {
+            if (isSome) await handler(value);
+            return this;
+        }
+
+        public async Task<Option<T>> ThenAsync(Func<T, Task> someHandler, Func<Task> noneHandler) {
+            if (isSome) await someHandler(value);
+            else await noneHandler();
+            return this;
+        }
+
         public T Get() => isSome? value : throw new InvalidOperationException();
         public TResult Get<TResult>(Func<T, TResult> someHandler, Func<TResult> noneHandler) => isSome? someHandler(value) : noneHandler();
-        public T GetOrElse(Func<T> noneHandler) => isSome? value : noneHandler();
-        public T GetOrDefault(T def = default(T)) => isSome? value : def;
-        public Option<TB> Map<TB>(Func<T, TB> mapper) => isSome? mapper(value) : Option<TB>.None();
-
-        public Option<U> TryCast<U>()
-        {
-            if (!isSome) return Option<U>.None();
-            if (Equals(value, null)) return Option<U>.Some(default(U));
-            var converted = Convert.ChangeType(value, typeof(U));
-            return Equals(converted, null)
-                 ? Option<U>.None()
-                 : Option<U>.Some((U)converted);
-        }
-
-        #region Equality
-        public override bool Equals(object obj)
-        {
-            var other = obj as Option<T>?;
-            return other != null && Equals(value, other.Value.value);
-        }
-        public override int GetHashCode() => isSome? value.GetHashCode() : 0;
-        #endregion
+        public async Task<TR> GetAsync<TR>(Func<T, Task<TR>> someHandler, Func<Task<TR>> noneHandler) => isSome ? await someHandler(value) : await noneHandler();
 
         public T GetOrElse(T defaultValue) => isSome? value : defaultValue;
+
+        public T GetOrElse(Func<T> noneHandler) => isSome? value : noneHandler();
+        public async Task<T> GetOrElseAsync(Func<Task<T>> noneHandler) => isSome ? value : await noneHandler();
+
+        public T GetOrDefault(T def = default) => isSome? value : def;
+
+        public Option<U> TryCast<U>() => (U) (object) value;
+
+        #region Equality
+
+        public override bool Equals(object obj) => obj is Option<T> other && Equals(value, other.value);
+        public override int GetHashCode() => isSome? value.GetHashCode() : 0;
+
+        #endregion
 
         public static Option<T> From(Func<T> initializer)
         {

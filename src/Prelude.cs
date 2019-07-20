@@ -14,6 +14,14 @@ namespace RZ.Foundation {
             return x;
         };
 
+        /// <summary>
+        /// Convert a value into Optional type. This one is inspired from LanguageExt lib :)
+        /// </summary>
+        /// <param name="val"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns>Option wrapped with the specific value</returns>
+        public static Option<T> Optional<T>(T val) => val;
+
         public static Option<T> None<T>() => Option<T>.None();
 
         public static TryAsync<T> TryAsync<T>(Func<Task<T>> runnable) => new TryAsync<T>(runnable);
