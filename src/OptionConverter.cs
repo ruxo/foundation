@@ -6,24 +6,27 @@ using System.Collections.Generic;
 
 namespace RZ.Foundation
 {
+    static class OptionConverterHelper
+    {
+        internal static readonly JToken NullToken = (string)null;
+        internal static readonly Dictionary<Type, JsonToken> PrimitiveLookup = new Dictionary<Type, JsonToken>
+        { { typeof(string), JsonToken.String }
+          , { typeof(bool), JsonToken.Boolean }
+          , { typeof(float), JsonToken.Float }
+          , { typeof(double), JsonToken.Float }
+          , { typeof(int), JsonToken.Integer }
+          , { typeof(long), JsonToken.Integer }
+        };
+    }
     public class OptionConverter<T> : JsonConverter
     {
-        JsonToken expectedToken;
-        static readonly JToken NullToken = (string)null;
-        static readonly Dictionary<Type, JsonToken> primitiveLookup = new Dictionary<Type, JsonToken>
-            { { typeof(string), JsonToken.String }
-            , { typeof(bool), JsonToken.Boolean }
-            , { typeof(float), JsonToken.Float }
-            , { typeof(double), JsonToken.Float }
-            , { typeof(int), JsonToken.Integer }
-            , { typeof(long), JsonToken.Integer }
-            };
+        readonly JsonToken expectedToken;
 
         public OptionConverter()
         {
             var t = typeof(T);
 
-            if (primitiveLookup.TryGetValue(t, out var value))
+            if (OptionConverterHelper.PrimitiveLookup.TryGetValue(t, out var value))
                 expectedToken = value;
             else
                 expectedToken = JsonToken.StartObject;  // assume object
@@ -41,17 +44,15 @@ namespace RZ.Foundation
             else if (reader.TokenType == JsonToken.Null)
                 return Option<T>.None();
             else
-                return serializer.Deserialize(reader, objectType);
+                return serializer.Deserialize<T>(reader).ToOption();
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            var opt = value as Option<T>?;
-            Debug.Assert(opt != null);
-
-            var v = opt.Value.GetOrDefault();
-            var token = Equals(v, null) ? NullToken : JToken.FromObject(v); 
-            token.WriteTo(writer);
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+            var v = (Option<T>) value;
+            if (v.IsSome)
+                serializer.Serialize(writer, v.Get(), typeof(T));
+            else
+                serializer.Serialize(writer, null);
         }
     }
 }

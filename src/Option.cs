@@ -51,6 +51,7 @@ namespace RZ.Foundation
         public async Task<Option<TB>> ChainAsync<TB>(Func<T, Task<Option<TB>>> mapper) => isSome ? await mapper(value) : Option<TB>.None();
 
         public Option<T> OrElse(T elseValue) => isSome ? this : elseValue;
+        public Option<T> OrElse(Option<T> elseValue) => isSome ? this : elseValue;
         public Option<T> OrElse(Func<Option<T>> elseFunc) => isSome ? this : elseFunc();
         public Task<Option<T>> OrElseAsync(Func<Task<Option<T>>> elseFunc) => isSome ? Task.FromResult(this) : elseFunc();
 

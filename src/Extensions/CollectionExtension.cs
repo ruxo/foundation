@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.Extensions {
     public static class CollectionExtension{
@@ -18,7 +19,15 @@ namespace RZ.Foundation.Extensions {
                 handler(item, index++);
         }
         public static T[] RemoveAt<T>(this IEnumerable<T> array, int n) => array.Take(n).Skip(n + 1).ToArray();
-        public static Option<T> Get<TKey, T>(this IDictionary<TKey, T> dict, TKey key) => dict.TryGetValue(key, out var result) ? result : Option<T>.None();
+
+        public static Option<T> Get<TKey, T>(this IDictionary<TKey, T> dict, TKey key) => dict.TryGetValue(key, out var result) ? result : None<T>();
+
+        public static Option<T> Find<T>(this IList<T> collection, Func<T, bool> predicate) {
+            foreach(var i in collection)
+                if (predicate(i))
+                    return i;
+            return None<T>();
+        }
 
         public static IEnumerable<B> Choose<A, B>(this IEnumerable<A> array, Func<A, Option<B>> chooser) =>
             from i in array
