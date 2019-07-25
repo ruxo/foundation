@@ -121,7 +121,7 @@ namespace RZ.Foundation
             }
         }
 
-        public static async Task<Option<T>> SafeCallAsync(Func<Task<Option<T>>> handler) {
+        public static async Task<Option<T>> SafeCallAsync(Func<Task<T>> handler) {
             try {
                 return await handler();
             }

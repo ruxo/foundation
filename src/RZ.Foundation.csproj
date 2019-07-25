@@ -4,9 +4,9 @@
     <Company>Meowmoo</Company>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <AssemblyVersion>1.2.3.15</AssemblyVersion>
-    <FileVersion>1.2.3.15</FileVersion>
-    <Version>1.2.3</Version>
+    <AssemblyVersion>1.2.5.17</AssemblyVersion>
+    <FileVersion>1.2.5.17</FileVersion>
+    <Version>1.2.5</Version>
     <LangVersion>8</LangVersion>
     <TargetFrameworks>net472;netstandard2.0;netcoreapp2.2;netcoreapp3.0</TargetFrameworks>
     <Title>Functional and utility functions</Title>

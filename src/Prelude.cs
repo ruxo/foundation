@@ -26,6 +26,8 @@ namespace RZ.Foundation {
 
         public static TryAsync<T> TryAsync<T>(Func<Task<T>> runnable) => new TryAsync<T>(runnable);
 
+        public static TryCall<T> Try<T>(Func<T> runnable) => new TryCall<T>(runnable);
+
         public static Iter<T> Iter<T>(IEnumerable<T> enumerable) => enumerable is Iter<T> iter ? iter : new Iter<T>(enumerable);
     }
 
