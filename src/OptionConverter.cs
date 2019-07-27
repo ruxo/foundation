@@ -37,15 +37,8 @@ namespace RZ.Foundation
             return objectType == typeof(Option<T>);
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-        {
-            if (reader.TokenType == expectedToken)
-                return Option<T>.From((T)Convert.ChangeType(reader.Value, typeof(T)));
-            else if (reader.TokenType == JsonToken.Null)
-                return Option<T>.None();
-            else
-                return serializer.Deserialize<T>(reader).ToOption();
-        }
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) =>
+            reader.TokenType == JsonToken.Null ? Option<T>.None() : serializer.Deserialize<T>(reader).ToOption();
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
             var v = (Option<T>) value;

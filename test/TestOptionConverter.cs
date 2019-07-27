@@ -1,5 +1,7 @@
+using System;
 using FluentAssertions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Xunit;
 
 namespace RZ.Foundation
@@ -49,6 +51,47 @@ namespace RZ.Foundation
 
             data.OptionField.Should().NotBeNull();
             data.OptionField.IsNone.Should().BeTrue();
+        }
+
+        [JsonObject(NamingStrategyType = typeof(SnakeCaseNamingStrategy), ItemRequired = Required.Always)]
+        public sealed class ComplexType
+        {
+            public string Value;
+        }
+
+        [JsonObject(NamingStrategyType = typeof(SnakeCaseNamingStrategy), ItemRequired = Required.Always)]
+        public sealed class ComplexWrapper
+        {
+            [JsonProperty(Required = Required.Default)]
+            [JsonConverter(typeof(OptionConverter<ComplexType>))]
+            public Option<ComplexType> ComplexDefault;
+        }
+
+        [Fact]
+        public void TestDeserialize() {
+            const string Load = @"{ ""complex_default"": { ""value"": ""abcdef"" }}";
+
+            var result = JsonConvert.DeserializeObject<ComplexWrapper>(Load);
+
+            result.ComplexDefault.IsSome.Should().BeTrue();
+        }
+
+        [Fact]
+        public void TestDeserializeObjectWithNull() {
+            const string Load = @"{""complex_default"": null}";
+
+            var result = JsonConvert.DeserializeObject<ComplexWrapper>(Load);
+
+            result.ComplexDefault.IsNone.Should().BeTrue();
+        }
+
+        [Fact]
+        public void TestDeserializeObjectWithMissing() {
+            const string Load = @"{}";
+
+            var result = JsonConvert.DeserializeObject<ComplexWrapper>(Load);
+
+            result.ComplexDefault.IsNone.Should().BeTrue();
         }
     }
 }
