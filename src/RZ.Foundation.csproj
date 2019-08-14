@@ -4,17 +4,17 @@
     <Company>Rux</Company>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <AssemblyVersion>1.2.7.19</AssemblyVersion>
-    <FileVersion>1.2.7.19</FileVersion>
-    <Version>1.2.7</Version>
-    <PackageVersion>1.2.7</PackageVersion>
+    <AssemblyVersion>1.2.9.20</AssemblyVersion>
+    <FileVersion>1.2.9.20</FileVersion>
+    <Version>1.2.9</Version>
+    <PackageVersion>1.2.9</PackageVersion>
     <LangVersion>8</LangVersion>
     <TargetFrameworks>net472;netstandard2.0;netcoreapp2.2;netcoreapp3.0</TargetFrameworks>
     <Title>RZ.Foundation: Functional and utility functions</Title>
     <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
     <PackageTags>utility,functional</PackageTags>
     <PackageLicenseUrl>https://mit-license.org/</PackageLicenseUrl>
-    <PackageReleaseNotes>Fix OptionConverter for class/struct</PackageReleaseNotes>
+    <PackageReleaseNotes>Add Option/ApiResult.GetOrThrow. Alias function Map and Chain for IEnumerable.</PackageReleaseNotes>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>..\lib\</OutputPath>

@@ -89,6 +89,7 @@ namespace RZ.Foundation
         }
 
         public T Get() => isSome? value : throw new InvalidOperationException();
+        public T GetOrThrow(Func<Exception> noneHandler) => isSome ? value : throw noneHandler();
         public TResult Get<TResult>(Func<T, TResult> someHandler, Func<TResult> noneHandler) => isSome? someHandler(value) : noneHandler();
         public async Task<TR> GetAsync<TR>(Func<T, Task<TR>> someHandler, Func<Task<TR>> noneHandler) => isSome ? await someHandler(value) : await noneHandler();
 

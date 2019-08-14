@@ -213,6 +213,7 @@ namespace RZ.Foundation
         public T GetOrElse(T valForError) => IsSuccess ? data : valForError;
         public T GetOrElse(Func<Exception, T> errorMap) => IsSuccess ? data : errorMap(error);
         public async Task<T> GetOrElseAsync(Func<Exception, Task<T>> errorMap) => IsSuccess ? data : await errorMap(error);
+        public T GetOrThrow() => IsSuccess ? data : throw new ApplicationException("ApiResult is error.", error);
 
         public ApiResult<T> Where(Func<T, bool> predicate, Exception failed) => IsSuccess && predicate(data) ? this : failed;
         public async Task<ApiResult<T>> WhereAsync(Func<T, Task<bool>> predicate, Exception failed) => IsSuccess && await predicate(data) ? this : failed;

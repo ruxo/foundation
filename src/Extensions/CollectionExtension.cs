@@ -18,6 +18,10 @@ namespace RZ.Foundation.Extensions {
             foreach (var item in seq)
                 handler(item, index++);
         }
+
+        public static IEnumerable<V> Map<T, V>(this IEnumerable<T> seq, Func<T, V> mapper) => seq.Select(mapper);
+        public static IEnumerable<V> Chain<T, V>(this IEnumerable<T> seq, Func<T, IEnumerable<V>> binder) => seq.SelectMany(binder);
+
         public static T[] RemoveAt<T>(this IEnumerable<T> array, int n) => array.Take(n).Skip(n + 1).ToArray();
 
         public static Option<T> Get<TKey, T>(this IDictionary<TKey, T> dict, TKey key) => dict.TryGetValue(key, out var result) ? result : None<T>();
