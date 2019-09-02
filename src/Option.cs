@@ -104,7 +104,7 @@ namespace RZ.Foundation
 
         #region Equality
 
-        public override bool Equals(object obj) => obj is Option<T> other && Equals(value, other.value);
+        public override bool Equals(object obj) => obj is Option<T> other && isSome == other.isSome && Equals(value, other.value);
         public override int GetHashCode() => isSome? value.GetHashCode() : 0;
 
         #endregion

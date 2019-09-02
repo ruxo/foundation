@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Xunit;
 using static RZ.Foundation.Prelude;
+// ReSharper disable EqualExpressionComparison
 
 namespace RZ.Foundation
 {
@@ -16,5 +17,13 @@ namespace RZ.Foundation
         [Fact]
         public void Where_False_ChangeSuccessToNone() => Optional(12).Where(_ => false).Should().Be(None<int>());
 
+        [Fact]
+        public void OptionEquality_SomeEqualsSome() => Optional(12).Equals(Optional(12)).Should().BeTrue();
+
+        [Fact]
+        public void OptionEquality_NoneEqualNone() => None<int>().Equals(None<int>()).Should().BeTrue();
+
+        [Fact]
+        public void OptionEquality_SomeNotEqualsNone() => Optional(0).Equals(None<int>()).Should().BeFalse();
     }
 }
