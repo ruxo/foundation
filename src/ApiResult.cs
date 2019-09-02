@@ -294,7 +294,9 @@ namespace RZ.Foundation
 
         public override bool Equals(object obj) => obj is ApiResult<T> other && Equals(other);
 
-        public bool Equals(ApiResult<T> other) => other.IsSuccess && IsSuccess && EqualityComparer<T>.Default.Equals(other.data, data);
+        public bool Equals(ApiResult<T> other) =>
+            (other.IsFail && IsFail) ||
+            (other.IsSuccess && IsSuccess && EqualityComparer<T>.Default.Equals(other.data, data));
 
         public override int GetHashCode() => IsSuccess? EqualityComparer<T>.Default.GetHashCode(data) : error.GetHashCode();
 

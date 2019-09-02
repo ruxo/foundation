@@ -24,6 +24,9 @@ namespace RZ.Foundation {
 
         public static Option<T> None<T>() => Option<T>.None();
 
+        public static ApiResult<T> Success<T>(T val) => val;
+        public static ApiResult<T> Failed<T>(Exception ex) => ex;
+
         public static TryAsync<T> TryAsync<T>(Func<Task<T>> runnable) => new TryAsync<T>(runnable);
         public static TryAsync<Unit> TryAsync(Func<Task> runnable) => new TryAsync<Unit>(async () => {
             await runnable();
