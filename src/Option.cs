@@ -17,7 +17,9 @@ namespace RZ.Foundation
         public static ApiResult<T> ToApiResult<T>(this Option<T> o) => o.IsSome ? o.Get().AsApiSuccess() : DummyException;
         public static ApiResult<T> ToApiResult<T>(this Option<T> o, Func<Exception> none) => o.IsSome ? o.Get().AsApiSuccess() : none();
 
+        [Obsolete("Use Prelude")]
         public static Option<(A, B)> With<A, B>(Option<A> a, Option<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
+        [Obsolete("Use Prelude")]
         public static Option<(A, B, C)> With<A, B, C>(Option<A> a, Option<B> b, Option<C> c) =>
             a.Chain(ax => b.Chain(bx => c.Map(cx => (ax, bx,cx))));
 

@@ -46,7 +46,9 @@ namespace RZ.Foundation
                                                     , "unhandled"
                                                     , "ApiResult")(result.GetFail());
 
+        [Obsolete("Use Prelude")]
         public static ApiResult<(A, B)> With<A, B>(ApiResult<A> a, ApiResult<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
+        [Obsolete("Use Prelude")]
         public static ApiResult<(A, B, C)> With<A, B, C>(ApiResult<A> a, ApiResult<B> b, ApiResult<C> c) =>
             a.Chain(ax => b.Chain(bx => c.Map(cx => (ax, bx,cx))));
 

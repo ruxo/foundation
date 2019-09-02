@@ -25,10 +25,23 @@ namespace RZ.Foundation {
         public static Option<T> None<T>() => Option<T>.None();
 
         public static TryAsync<T> TryAsync<T>(Func<Task<T>> runnable) => new TryAsync<T>(runnable);
+        public static TryAsync<Unit> TryAsync(Func<Task> runnable) => new TryAsync<Unit>(async () => {
+            await runnable();
+            return Unit.Value;
+        });
 
         public static TryCall<T> Try<T>(Func<T> runnable) => new TryCall<T>(runnable);
+        public static TryCall<Unit> Try(Action action) => new TryCall<Unit>(() => { action(); return Unit.Value; });
 
         public static Iter<T> Iter<T>(IEnumerable<T> enumerable) => enumerable is Iter<T> iter ? iter : new Iter<T>(enumerable);
+
+        public static Option<(A, B)> With<A, B>(Option<A> a, Option<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
+        public static Option<(A, B, C)> With<A, B, C>(Option<A> a, Option<B> b, Option<C> c) =>
+            a.Chain(ax => b.Chain(bx => c.Map(cx => (ax, bx,cx))));
+
+        public static ApiResult<(A, B)> With<A, B>(ApiResult<A> a, ApiResult<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
+        public static ApiResult<(A, B, C)> With<A, B, C>(ApiResult<A> a, ApiResult<B> b, ApiResult<C> c) =>
+            a.Chain(ax => b.Chain(bx => c.Map(cx => (ax, bx,cx))));
     }
 
     public struct Unit

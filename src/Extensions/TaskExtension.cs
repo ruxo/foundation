@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.Extensions
 {
@@ -146,11 +147,8 @@ namespace RZ.Foundation.Extensions
                     result.SetException(taskA.Exception);
                 else if (!taskB.IsSuccess())
                     result.SetException(taskB.Exception);
-                else {
-                    var a = taskA.Result;
-                    var b = taskB.Result;
-                    result.SetResult(ResultHelper.With(a, b));
-                }
+                else
+                    result.SetResult(With(taskA.Result, taskB.Result));
             }, result.SetException, result.SetCanceled);
             return result.Task;
         }
