@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using RZ.Foundation.Extensions;
+using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation
 {
@@ -10,6 +11,7 @@ namespace RZ.Foundation
         static readonly Exception DummyException = new Exception();
 
         public static Option<T> ToOption<T>(this T data) => data;
+        public static Option<T> ToOption<T>(this T? data) where T : struct => data.HasValue? Option<T>.Some(data.Value) : None<T>();
         public static Option<T> None<T>() => Option<T>.None();
 
         public static Result<T, F> ToResult<T, F>(this Option<T> o, Func<F> none) => o.IsSome ? o.Get().AsSuccess<T,F>() : none();
@@ -17,17 +19,18 @@ namespace RZ.Foundation
         public static ApiResult<T> ToApiResult<T>(this Option<T> o) => o.IsSome ? o.Get().AsApiSuccess() : DummyException;
         public static ApiResult<T> ToApiResult<T>(this Option<T> o, Func<Exception> none) => o.IsSome ? o.Get().AsApiSuccess() : none();
 
-        [Obsolete("Use Prelude")]
-        public static Option<(A, B)> With<A, B>(Option<A> a, Option<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
-        [Obsolete("Use Prelude")]
-        public static Option<(A, B, C)> With<A, B, C>(Option<A> a, Option<B> b, Option<C> c) =>
-            a.Chain(ax => b.Chain(bx => c.Map(cx => (ax, bx,cx))));
-
         public static Option<T> Call<A, B, T>(this Option<(A, B)> x, Func<A, B, T> f) => x.Map(p => p.CallFrom(f));
         public static Option<T> Call<A, B, C, T>(this Option<(A, B, C)> x, Func<A, B, C, T> f) => x.Map(p => p.CallFrom(f));
 
         public static Option<Unit> Call<A, B>(this Option<(A, B)> x, Action<A, B> f) => x.Map(p => p.CallFrom(f));
         public static Option<Unit> Call<A, B, C>(this Option<(A, B, C)> x, Action<A, B, C> f) => x.Map(p => p.CallFrom(f));
+
+        public static T? ToNullable<T>(this Option<T> opt) where T : class => opt.GetOrDefault();
+    }
+
+    public static class OptionNullableHelper
+    {
+        public static T? ToNullable<T>(this Option<T> opt) where T : struct => opt.Get(v => v, () => (T?) null);
     }
     public struct Option<T>
     {

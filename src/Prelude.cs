@@ -21,6 +21,7 @@ namespace RZ.Foundation {
         /// <typeparam name="T"></typeparam>
         /// <returns>Option wrapped with the specific value</returns>
         public static Option<T> Optional<T>(T val) => val;
+        public static Option<T> Optional<T>(this T? data) where T : struct => data.HasValue? Option<T>.Some(data.Value) : None<T>();
 
         public static Option<T> None<T>() => Option<T>.None();
 
