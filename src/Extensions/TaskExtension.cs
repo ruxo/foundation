@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -45,12 +43,7 @@ namespace RZ.Foundation.Extensions
 
         public static Task<ApiResult<T>> ToApiResult<T>(this Task<T> task) => ToApiResult(task, CancellationToken.None);
 
-        public static bool IsSuccess(this Task task) =>
-        #if NET47 || NET471 || NET472 || NETSTANDARD2_0
-            task.IsCompleted && !(task.IsCanceled || task.IsFaulted);
-        #else
-            task.IsCompletedSuccessfully;
-        #endif
+        public static bool IsSuccess(this Task task) => task.IsCompleted && !(task.IsCanceled || task.IsFaulted);
 
         public static Task<ApiResult<T>> ToApiResult<T>(this Task<T> task, CancellationToken token) =>
             task.ContinueWith(t => !token.IsCancellationRequested && t.IsSuccess()
@@ -171,13 +164,10 @@ namespace RZ.Foundation.Extensions
                     // ReSharper disable once AssignNullToNotNullAttribute
                     result.SetException(t.Exception);
                 else
-                {
-                    Debug.Assert(t.IsCompleted);
                     chain(t.Result)
                         .Then(success: r => result.SetResult(r),
-                            faulted: ex => result.SetException(ex),
-                            canceled: () => result.SetCanceled());
-                }
+                              faulted: ex => result.SetException(ex),
+                              canceled: () => result.SetCanceled());
             });
             return result.Task;
         }
@@ -186,31 +176,22 @@ namespace RZ.Foundation.Extensions
             task.Then(result.SetResult, result.SetException, result.SetCanceled);
         }
 
-        public static Task Then<T>(this Task<T> task, Action<T> success = null, Action<Exception> faulted = null, Action canceled = null)
-        {
-            return task.ContinueWith(t => {
+        public static Task Then<T>(this Task<T> task, Action<T>? success = null, Action<Exception>? faulted = null, Action? canceled = null) =>
+            task.ContinueWith(t => {
                 if (t.IsSuccess())
                     success?.Invoke(t.Result);
                 else if (t.IsFaulted)
                     faulted?.Invoke(t.Exception);
                 else
-                {
-                    Contract.Assert(t.IsCanceled);
                     canceled?.Invoke();
-                }
             });
-        }
-        public static Task Then(this Task task, Action success = null, Action<Exception> faulted = null, Action canceled = null)
-        {
-            return task.ContinueWith(t => {
+
+        public static Task Then(this Task task, Action? success = null, Action<Exception>? faulted = null, Action? canceled = null) =>
+            task.ContinueWith(t => {
                 if (t.IsSuccess()) success?.Invoke();
                 else if (t.IsFaulted) faulted?.Invoke(t.Exception);
                 else
-                {
-                    Contract.Assert(t.IsCanceled);
                     canceled?.Invoke();
-                }
             });
-        }
     }
 }

@@ -70,13 +70,13 @@ namespace RZ.Foundation
         public Result(TSuccess success)
         {
             isFailed = false;
-            error = default(TFail);
+            error = default;
             data = success;
         }
         public Result(TFail fail)
         {
             isFailed = true;
-            data = default(TSuccess);
+            data = default;
             error = fail;
         }
 
@@ -164,7 +164,7 @@ namespace RZ.Foundation
     /// <typeparam name="T">Type that represents success data.</typeparam>
     public struct ApiResult<T>
     {
-        readonly Exception error;
+        readonly Exception? error;
         readonly T data;
 
         public ApiResult(T success)
@@ -210,26 +210,26 @@ namespace RZ.Foundation
         public bool IsSuccess => error == null;
         public bool IsFail => error != null;
         public T GetSuccess() => IsFail? throw new InvalidOperationException() : data;
-        public Exception GetFail() => IsFail? error : throw new InvalidOperationException();
+        public Exception GetFail() => IsFail? error! : throw new InvalidOperationException();
 
         public T GetOrElse(T valForError) => IsSuccess ? data : valForError;
-        public T GetOrElse(Func<Exception, T> errorMap) => IsSuccess ? data : errorMap(error);
-        public async Task<T> GetOrElseAsync(Func<Exception, Task<T>> errorMap) => IsSuccess ? data : await errorMap(error);
+        public T GetOrElse(Func<Exception, T> errorMap) => IsSuccess ? data : errorMap(error!);
+        public async Task<T> GetOrElseAsync(Func<Exception, Task<T>> errorMap) => IsSuccess ? data : await errorMap(error!);
         public T GetOrThrow() => IsSuccess ? data : throw new ApplicationException("ApiResult is error.", error);
 
         public ApiResult<T> Where(Func<T, bool> predicate, Exception failed) => IsSuccess && predicate(data) ? this : failed;
         public async Task<ApiResult<T>> WhereAsync(Func<T, Task<bool>> predicate, Exception failed) => IsSuccess && await predicate(data) ? this : failed;
 
-        public ApiResult<U> Map<U>(Func<T, U> mapper) => IsSuccess? mapper(data) : new ApiResult<U>(error);
-        public ApiResult<U> Map<U>(Func<T, U> mapper, Func<Exception,Exception> failMapper) => IsSuccess? mapper(data) : new ApiResult<U>(failMapper(error));
+        public ApiResult<U> Map<U>(Func<T, U> mapper) => IsSuccess? mapper(data) : new ApiResult<U>(error!);
+        public ApiResult<U> Map<U>(Func<T, U> mapper, Func<Exception,Exception> failMapper) => IsSuccess? mapper(data) : new ApiResult<U>(failMapper(error!));
 
-        public async Task<ApiResult<U>> MapAsync<U>(Func<T, Task<U>> mapper) => IsSuccess? await mapper(data) : new ApiResult<U>(error);
+        public async Task<ApiResult<U>> MapAsync<U>(Func<T, Task<U>> mapper) => IsSuccess? await mapper(data) : new ApiResult<U>(error!);
         public async Task<ApiResult<U>> MapAsync<U>(Func<T, Task<U>> mapper, Func<Exception,Task<Exception>> failMapper) =>
-            IsSuccess? await mapper(data) : new ApiResult<U>(await failMapper(error));
+            IsSuccess? await mapper(data) : new ApiResult<U>(await failMapper(error!));
 
-        public ApiResult<U> Chain<U>(Func<T, ApiResult<U>> mapper) => IsFail? new ApiResult<U>(error) : mapper(data);
+        public ApiResult<U> Chain<U>(Func<T, ApiResult<U>> mapper) => IsFail? new ApiResult<U>(error!) : mapper(data);
 
-        public async Task<ApiResult<U>> ChainAsync<U>(Func<T, Task<ApiResult<U>>> mapper) => IsSuccess ? await mapper(data) : error.AsApiFailure<U>();
+        public async Task<ApiResult<U>> ChainAsync<U>(Func<T, Task<ApiResult<U>>> mapper) => IsSuccess ? await mapper(data) : error!.AsApiFailure<U>();
 
         public ApiResult<T> OrElse(T val) => IsSuccess ? this : val.AsApiSuccess();
         public ApiResult<T> OrElse(ApiResult<T> anotherResult) => IsSuccess ? this : anotherResult;
@@ -237,7 +237,7 @@ namespace RZ.Foundation
 
         public async Task<ApiResult<T>> OrElseAsync(Func<Task<ApiResult<T>>> tryFunc) => IsSuccess ? this : await tryFunc();
 
-        public U Get<U>(Func<T, U> success, Func<Exception, U> fail) => IsFail? fail(error) : success(data);
+        public U Get<U>(Func<T, U> success, Func<Exception, U> fail) => IsFail? fail(error!) : success(data);
 
         [Obsolete("Use OrElse instead")]
         public ApiResult<T> OrTry(Func<ApiResult<T>> tryFunc) => IsFail ? tryFunc() : this;
@@ -253,12 +253,12 @@ namespace RZ.Foundation
         }
         public ApiResult<T> IfFail(Action<Exception> f)
         {
-            if (IsFail) f(error);
+            if (IsFail) f(error!);
             return this;
         }
         public async Task<ApiResult<T>> IfFailAsync(Func<Exception,Task> f)
         {
-            if (IsFail) await f(error);
+            if (IsFail) await f(error!);
             return this;
         }
         public ApiResult<T> Then(Action<T> fSuccess)
@@ -271,7 +271,7 @@ namespace RZ.Foundation
             if (IsSuccess)
                 fSuccess(data);
             else
-                fFail(error);
+                fFail(error!);
             return this;
         }
         public async Task<ApiResult<T>> ThenAsync(Func<T,Task> fSuccess)
@@ -284,11 +284,11 @@ namespace RZ.Foundation
             if (IsSuccess)
                 await fSuccess(data);
             else
-                await fFail(error);
+                await fFail(error!);
             return this;
         }
 
-        public ApiResult<U> TryCast<U>() => IsSuccess? (U) (object) data : error.AsApiFailure<U>();
+        public ApiResult<U> TryCast<U>() => IsSuccess? (U) (object) data : error!.AsApiFailure<U>();
 
         #region Equality
 
@@ -298,7 +298,7 @@ namespace RZ.Foundation
             (other.IsFail && IsFail) ||
             (other.IsSuccess && IsSuccess && EqualityComparer<T>.Default.Equals(other.data, data));
 
-        public override int GetHashCode() => IsSuccess? EqualityComparer<T>.Default.GetHashCode(data) : error.GetHashCode();
+        public override int GetHashCode() => IsSuccess? EqualityComparer<T>.Default.GetHashCode(data) : error!.GetHashCode();
 
         #endregion
     }

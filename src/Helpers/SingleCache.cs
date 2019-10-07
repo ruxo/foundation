@@ -1,5 +1,8 @@
 ﻿using System;
 
+// ignore type T
+#pragma warning disable CS8618
+
 namespace RZ.Foundation.Helpers {
     public sealed class SingleCache<T>
     {

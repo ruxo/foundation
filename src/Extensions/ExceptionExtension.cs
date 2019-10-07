@@ -1,4 +1,5 @@
 ﻿using System;
+using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.Extensions
 {
@@ -6,22 +7,22 @@ namespace RZ.Foundation.Extensions
     {
         const string CodeField = "code";
         const string DataField = "data";
-        public static Exception CreateError(string message, string code, string source, object data = null) =>
+        public static Exception CreateError(string message, string code, string source, object? data = null) =>
             new Exception(message).AddMetaData( code, source, data);
 
-        public static Func<Exception, Exception> ChainError(string message, string code, string source, object data = null) =>
+        public static Func<Exception, Exception> ChainError(string message, string code, string source, object? data = null) =>
             ex => new Exception(message,ex).AddMetaData( code, source, data);
         public static Option<string> GetErrorCode(this Exception exn) => exn.GetData(CodeField).TryCast<string>();
         public static Option<object> GetData(this Exception exn) => exn.GetData(DataField);
-        public static Option<object> GetData(this Exception exn, string field) => exn.Data.Contains(field) ? exn.Data[field] : null;
+        public static Option<object> GetData(this Exception exn, string field) => exn.Data.Contains(field) ? exn.Data[field].ToOption() : None<object>();
 
         public static string DebugMessage(this Exception exn) {
             return exn.GetErrorCode()
-                      .Get(code => $"Code: {code}{Environment.NewLine}Data: {exn.GetData().Get(o => o.ToString(), () => string.Empty)}{Environment.NewLine}{exn.ToString()}"
+                      .Get(code => $"Code: {code}{Environment.NewLine}Data: {exn.GetData().Get(o => o.ToString(), () => string.Empty)}{Environment.NewLine}{exn}"
                          , exn.ToString);
         }
 
-        public static T AddMetaData<T>(this T exn, string code, string source, object data) where T: Exception {
+        public static T AddMetaData<T>(this T exn, string code, string source, object? data) where T: Exception {
             exn.Source = source;
             exn.Data.Add(CodeField, code);
             exn.Data.Add(DataField, data);
