@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+#if NETSTANDARD2_2
 using RZ.Foundation.Extensions;
 using static RZ.Foundation.Prelude;
+#endif
 
 namespace RZ.Foundation
 {
+    #nullable enable
     public static class OptionHelper
     {
         static readonly Exception DummyException = new Exception();
@@ -19,11 +22,13 @@ namespace RZ.Foundation
         public static ApiResult<T> ToApiResult<T>(this Option<T> o) => o.IsSome ? o.Get().AsApiSuccess() : DummyException;
         public static ApiResult<T> ToApiResult<T>(this Option<T> o, Func<Exception> none) => o.IsSome ? o.Get().AsApiSuccess() : none();
 
+#if NETSTANDARD2_2
         public static Option<T> Call<A, B, T>(this Option<(A, B)> x, Func<A, B, T> f) => x.Map(p => p.CallFrom(f));
         public static Option<T> Call<A, B, C, T>(this Option<(A, B, C)> x, Func<A, B, C, T> f) => x.Map(p => p.CallFrom(f));
 
         public static Option<Unit> Call<A, B>(this Option<(A, B)> x, Action<A, B> f) => x.Map(p => p.CallFrom(f));
         public static Option<Unit> Call<A, B, C>(this Option<(A, B, C)> x, Action<A, B, C> f) => x.Map(p => p.CallFrom(f));
+#endif
 
         public static T? ToNullable<T>(this Option<T> opt) where T : class => opt.GetOrDefault();
     }
@@ -32,6 +37,7 @@ namespace RZ.Foundation
     {
         public static T? ToNullable<T>(this Option<T> opt) where T : struct => opt.Get(v => v, () => (T?) null);
     }
+    #nullable disable
     public struct Option<T>
     {
         static readonly Option<T> NoneSingleton = new Option<T>();

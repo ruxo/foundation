@@ -46,6 +46,7 @@ namespace RZ.Foundation
                                                     , "unhandled"
                                                     , "ApiResult")(result.GetFail());
 
+        #if NETSTANDARD2_2
         [Obsolete("Use Prelude")]
         public static ApiResult<(A, B)> With<A, B>(ApiResult<A> a, ApiResult<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
         [Obsolete("Use Prelude")]
@@ -54,6 +55,7 @@ namespace RZ.Foundation
 
         public static ApiResult<T> Call<A, B, T>(this ApiResult<(A, B)> x, Func<A, B, T> f) => x.Map(p => p.CallFrom(f));
         public static ApiResult<T> Call<A, B, C, T>(this ApiResult<(A, B, C)> x, Func<A, B, C, T> f) => x.Map(p => p.CallFrom(f));
+        #endif
     }
 
     /// <summary>
@@ -164,7 +166,7 @@ namespace RZ.Foundation
     /// <typeparam name="T">Type that represents success data.</typeparam>
     public struct ApiResult<T>
     {
-        readonly Exception? error;
+        readonly Exception error;
         readonly T data;
 
         public ApiResult(T success)
@@ -215,7 +217,7 @@ namespace RZ.Foundation
         public T GetOrElse(T valForError) => IsSuccess ? data : valForError;
         public T GetOrElse(Func<Exception, T> errorMap) => IsSuccess ? data : errorMap(error!);
         public async Task<T> GetOrElseAsync(Func<Exception, Task<T>> errorMap) => IsSuccess ? data : await errorMap(error!);
-        public T GetOrThrow() => IsSuccess ? data : throw new ApplicationException("ApiResult is error.", error);
+        public T GetOrThrow() => IsSuccess ? data : throw new Exception("ApiResult is error.", error);
 
         public ApiResult<T> Where(Func<T, bool> predicate, Exception failed) => IsSuccess && predicate(data) ? this : failed;
         public async Task<ApiResult<T>> WhereAsync(Func<T, Task<bool>> predicate, Exception failed) => IsSuccess && await predicate(data) ? this : failed;

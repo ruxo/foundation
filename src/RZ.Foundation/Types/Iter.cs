@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Threading;
 
 namespace RZ.Foundation.Types
@@ -26,7 +25,7 @@ namespace RZ.Foundation.Types
         public Iter<T> EnableConcurrencyCache() => EnableCache(() => new ConcurrencyFetcher(source.GetEnumerator()));
 
         Iter<T> EnableCache(Func<IFetcher> fetcherFactory) {
-            if (!(source is IteratorCache || source is T[] || source is IImmutableList<T>))
+            if (!(source is IteratorCache || source is T[] || source is IReadOnlyCollection<T>))
                 source = new IteratorCache(fetcherFactory());
             return this;
         }

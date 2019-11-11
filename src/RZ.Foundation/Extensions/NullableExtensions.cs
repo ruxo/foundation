@@ -1,5 +1,7 @@
 using System;
 
+#nullable enable
+
 namespace RZ.Foundation.Extensions
 {
     public static class NullableExtension

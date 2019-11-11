@@ -4,29 +4,27 @@
     <Company>RZ</Company>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <AssemblyVersion>1.3.3.24</AssemblyVersion>
-    <FileVersion>1.3.3.24</FileVersion>
-    <Version>1.3.3</Version>
-    <PackageVersion>1.3.3</PackageVersion>
+    <AssemblyVersion>1.3.4.25</AssemblyVersion>
+    <FileVersion>1.3.4.25</FileVersion>
+    <Version>1.3.4</Version>
+    <PackageVersion>1.3.4</PackageVersion>
     <LangVersion>8</LangVersion>
     <Title>RZ.Foundation: Functional and utility functions</Title>
     <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
     <PackageTags>utility,functional</PackageTags>
     <PackageLicenseUrl>https://mit-license.org/</PackageLicenseUrl>
     <PackageReleaseNotes>Add support for C# 8 nullable.</PackageReleaseNotes>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>..\lib\</OutputPath>
+    <OutputPath>..\..\lib\RZ.Foundation\</OutputPath>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\bin\Debug\netcoreapp2.0\</OutputPath>
+    <OutputPath>bin\Debug\netcoreapp2.0\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
-    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 </Project>

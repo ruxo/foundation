@@ -48,6 +48,7 @@ namespace RZ.Foundation.Extensions {
             }
         }
 
+#if NETSTANDARD2_2
         public static (T[], T[]) Partition<T>(this IEnumerable<T> e, Func<T, bool> partitioner) {
             var trueResult = new List<T>();
             var falseResult = new List<T>();
@@ -55,6 +56,7 @@ namespace RZ.Foundation.Extensions {
                 (partitioner(i)? trueResult : falseResult).Add(i);
             return (trueResult.ToArray(), falseResult.ToArray());
         }
+#endif
 
         public static Option<T> TryFirst<T>(this IEnumerable<T> seq) {
             foreach (var item in seq) return item;
