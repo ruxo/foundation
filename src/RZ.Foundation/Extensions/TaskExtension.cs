@@ -13,6 +13,11 @@ namespace RZ.Foundation.Extensions
 {
     public static class TaskExtensions
     {
+        public static async Task<Unit> AsUnitTask(this Task task) {
+            await task;
+            return Unit.Value;
+        }
+
         /// <summary>
         /// Prevent locking from Synchronization Context
         /// </summary>
