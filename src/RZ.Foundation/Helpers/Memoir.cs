@@ -49,7 +49,7 @@ namespace RZ.Foundation.Helpers
             public void Wait(A x) {
                 var @lock = lockers[x];
                 while (@lock.Lock != 0) {
-#if NETSTANDARD2_2
+#if NETSTANDARD2_0
                     Thread.Yield();
 #else
                     // Lower .NET 2.2 does not support thread :( so just spin CPU...

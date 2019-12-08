@@ -3,7 +3,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-#if NETSTANDARD2_2
+#if NETSTANDARD2_0
 using static RZ.Foundation.Prelude;
 #endif
 
@@ -141,7 +141,7 @@ namespace RZ.Foundation.Extensions
                            : new AggregateException(failures.Select(r => r.GetFail().UnwrapAggregateException()));
             });
 
-#if NETSTANDARD2_2
+#if NETSTANDARD2_0
         public static Task<ApiResult<(A,B)>> JoinResults<A,B>(Task<ApiResult<A>> taskA, Task<ApiResult<B>> taskB) {
             var result = new TaskCompletionSource<ApiResult<(A,B)>>();
             var tasks = Task.WhenAll(taskA, taskB);

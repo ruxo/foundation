@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RZ.Foundation.Extensions;
+using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation
 {
@@ -46,7 +47,13 @@ namespace RZ.Foundation
                                                     , "unhandled"
                                                     , "ApiResult")(result.GetFail());
 
-        #if NETSTANDARD2_2
+        public static ApiResult<T> Join<T>(this ApiResult<ApiResult<T>> doubleResult) => doubleResult.Chain(i => i);
+        public static Result<T, F> Join<T, F>(this Result<Result<T, F>, F> doubleResult) => doubleResult.Chain(i => i);
+
+        public static Option<T> ToOption<T>(this ApiResult<T> result) => result.Map(Optional).GetOrElse(None<T>());
+        public static Option<T> ToOption<T, F>(this Result<T, F> result) => result.Map(Optional).GetOrElse(None<T>());
+
+#if NETSTANDARD2_0
         [Obsolete("Use Prelude")]
         public static ApiResult<(A, B)> With<A, B>(ApiResult<A> a, ApiResult<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
         [Obsolete("Use Prelude")]
@@ -55,7 +62,7 @@ namespace RZ.Foundation
 
         public static ApiResult<T> Call<A, B, T>(this ApiResult<(A, B)> x, Func<A, B, T> f) => x.Map(p => p.CallFrom(f));
         public static ApiResult<T> Call<A, B, C, T>(this ApiResult<(A, B, C)> x, Func<A, B, C, T> f) => x.Map(p => p.CallFrom(f));
-        #endif
+#endif
     }
 
     /// <summary>
@@ -101,16 +108,13 @@ namespace RZ.Foundation
         /// <returns>Instance of failed type.</returns>
         public TFail GetFail() => isFailed? error : throw new InvalidOperationException();
 
-        public Result<TSuccess, TFail> Where(Func<TSuccess, bool> predicate, TFail failed) => IsSuccess && predicate(data) ? this : failed;
+        public TSuccess GetOrElse(TSuccess valForError) => IsSuccess ? data : valForError;
+        public TSuccess GetOrElse(Func<TFail, TSuccess> errorMap) => IsSuccess ? data : errorMap(error!);
+        public async Task<TSuccess> GetOrElseAsync(Func<TFail, Task<TSuccess>> errorMap) => IsSuccess ? data : await errorMap(error!);
+        public TSuccess GetOrThrow() => IsSuccess ? data : throw new Exception("ApiResult is error.");
 
-        /// <summary>
-        /// Transform Result into a value.
-        /// </summary>
-        /// <typeparam name="T">Target type</typeparam>
-        /// <param name="success">Transformer function for success case.</param>
-        /// <param name="fail">Transformer function for failure case.</param>
-        /// <returns></returns>
-        public T Get<T>(Func<TSuccess, T> success, Func<TFail, T> fail) => isFailed? fail(error) : success(data);
+        public Result<TSuccess, TFail> Where(Func<TSuccess, bool> predicate, TFail failed) => IsSuccess && predicate(data) ? this : failed;
+        public async Task<Result<TSuccess,TFail>> WhereAsync(Func<TSuccess, Task<bool>> predicate, TFail failed) => IsSuccess && await predicate(data) ? this : failed;
         /// <summary>
         /// Transform success result to other success type. Do nothing if current result is a failure.
         /// </summary>
@@ -118,6 +122,12 @@ namespace RZ.Foundation
         /// <param name="mapper">Function to transform success type.</param>
         /// <returns>New Result type</returns>
         public Result<U, TFail> Map<U>(Func<TSuccess, U> mapper) => isFailed? (Result<U,TFail>) error : mapper(data);
+        public Result<U, TFail> Map<U>(Func<TSuccess, U> mapper, Func<TFail,TFail> failMapper) => IsSuccess? mapper(data) : new Result<U,TFail>(failMapper(error!));
+
+        public async Task<Result<U, TFail>> MapAsync<U>(Func<TSuccess, Task<U>> mapper) => IsSuccess? await mapper(data) : new Result<U,TFail>(error!);
+        public async Task<Result<U, TFail>> MapAsync<U>(Func<TSuccess, Task<U>> mapper, Func<TFail,Task<TFail>> failMapper) =>
+            IsSuccess? await mapper(data) : new Result<U,TFail>(await failMapper(error!));
+
         /// <summary>
         /// Transform success result to other success or failed type. Do nothing if current result is a failure.
         /// </summary>
@@ -125,25 +135,26 @@ namespace RZ.Foundation
         /// <param name="mapper">Function to transform success type to either U type or _TFail_ type. </param>
         /// <returns></returns>
         public Result<U, TFail> Chain<U>(Func<TSuccess, Result<U, TFail>> mapper) => isFailed? (Result<U,TFail>) error : mapper(data);
-        /// <summary>
-        /// Convert Result.
-        /// </summary>
-        /// <typeparam name="U"></typeparam>
-        /// <typeparam name="V"></typeparam>
-        /// <param name="successMapper"></param>
-        /// <param name="failMapper"></param>
-        /// <returns></returns>
-        public Result<U, V> MapAll<U, V>(Func<TSuccess, U> successMapper, Func<TFail, V> failMapper) => isFailed? (Result<U,V>) failMapper(error) : successMapper(data);
+        public async Task<Result<U, TFail>> ChainAsync<U>(Func<TSuccess, Task<Result<U, TFail>>> mapper) => IsSuccess ? await mapper(data) : error!;
 
-        /// <summary>
-        /// Try calling <paramref name="f"/> if current result is failure.
-        /// </summary>
-        /// <param name="f"></param>
-        /// <returns></returns>
+        public Result<TSuccess, TFail> OrElse(TSuccess val) => IsSuccess ? this : val;
         public Result<TSuccess, TFail> OrElse(Func<TFail, Result<TSuccess, TFail>> f) => isFailed? f(error) : this;
+        public Result<TSuccess, TFail> OrElse(Func<Result<TSuccess, TFail>> tryFunc) => IsSuccess ? this : tryFunc();
 
-        [Obsolete("Use Then instead")]
-        public Result<TSuccess, TFail> Apply(Action<TSuccess> f) => Then(f);
+        public async Task<Result<TSuccess, TFail>> OrElseAsync(Func<Task<Result<TSuccess, TFail>>> tryFunc) => IsSuccess ? this : await tryFunc();
+
+        public T Get<T>(Func<TSuccess, T> success, Func<TFail, T> fail) => isFailed? fail(error) : success(data);
+
+        public Result<TSuccess, TFail> IfFail(Action<TFail> f)
+        {
+            if (IsFail) f(error!);
+            return this;
+        }
+        public async Task<Result<TSuccess, TFail>> IfFailAsync(Func<TFail,Task> f)
+        {
+            if (IsFail) await f(error!);
+            return this;
+        }
 
         /// <summary>
         /// Call <paramref name="f"/> if current result is success.
@@ -155,9 +166,44 @@ namespace RZ.Foundation
             if (!isFailed) f(data);
             return this;
         }
+        public Result<TSuccess, TFail> Then(Action<TSuccess> fSuccess, Action<TFail> fFail)
+        {
+            if (IsSuccess)
+                fSuccess(data);
+            else
+                fFail(error!);
+            return this;
+        }
+        public async Task<Result<TSuccess, TFail>> ThenAsync(Func<TSuccess,Task> fSuccess)
+        {
+            if (IsSuccess) await fSuccess(data);
+            return this;
+        }
+        public async Task<Result<TSuccess, TFail>> ThenAsync(Func<TSuccess, Task> fSuccess, Func<TFail, Task> fFail)
+        {
+            if (IsSuccess)
+                await fSuccess(data);
+            else
+                await fFail(error!);
+            return this;
+        }
+
+        public Result<U, TFail> TryCast<U>() => IsSuccess? (U) (object) data : new Result<U, TFail>(error!);
 
         public static implicit operator Result<TSuccess, TFail>(TSuccess success) => new Result<TSuccess, TFail>(success);
         public static implicit operator Result<TSuccess, TFail>(TFail failed) => new Result<TSuccess, TFail>(failed);
+
+        #region Equality
+
+        public override bool Equals(object obj) => obj is Result<TSuccess, TFail> other && Equals(other);
+
+        public bool Equals(Result<TSuccess, TFail> other) =>
+            (other.IsFail && IsFail) ||
+            (other.IsSuccess && IsSuccess && EqualityComparer<TSuccess>.Default.Equals(other.data, data));
+
+        public override int GetHashCode() => IsSuccess? EqualityComparer<TSuccess>.Default.GetHashCode(data) : error!.GetHashCode();
+
+        #endregion
     }
 
     /// <summary>
@@ -231,9 +277,9 @@ namespace RZ.Foundation
 
         public ApiResult<U> Chain<U>(Func<T, ApiResult<U>> mapper) => IsFail? new ApiResult<U>(error!) : mapper(data);
 
-        public async Task<ApiResult<U>> ChainAsync<U>(Func<T, Task<ApiResult<U>>> mapper) => IsSuccess ? await mapper(data) : error!.AsApiFailure<U>();
+        public async Task<ApiResult<U>> ChainAsync<U>(Func<T, Task<ApiResult<U>>> mapper) => IsSuccess ? await mapper(data) : error!;
 
-        public ApiResult<T> OrElse(T val) => IsSuccess ? this : val.AsApiSuccess();
+        public ApiResult<T> OrElse(T val) => IsSuccess ? this : val;
         public ApiResult<T> OrElse(ApiResult<T> anotherResult) => IsSuccess ? this : anotherResult;
         public ApiResult<T> OrElse(Func<ApiResult<T>> tryFunc) => IsSuccess ? this : tryFunc();
 
@@ -241,18 +287,6 @@ namespace RZ.Foundation
 
         public U Get<U>(Func<T, U> success, Func<Exception, U> fail) => IsFail? fail(error!) : success(data);
 
-        [Obsolete("Use OrElse instead")]
-        public ApiResult<T> OrTry(Func<ApiResult<T>> tryFunc) => IsFail ? tryFunc() : this;
-
-        [Obsolete("Use OrElseAsync instead")]
-        public Task<ApiResult<T>> OrTryAsync(Func<Task<ApiResult<T>>> tryFunc) => IsFail ? tryFunc() : Task.FromResult(this);
-
-        [Obsolete("Use Then instead")]
-        public ApiResult<T> Apply(Action<T> f)
-        {
-            if (IsSuccess) f(data);
-            return this;
-        }
         public ApiResult<T> IfFail(Action<Exception> f)
         {
             if (IsFail) f(error!);
@@ -263,6 +297,7 @@ namespace RZ.Foundation
             if (IsFail) await f(error!);
             return this;
         }
+
         public ApiResult<T> Then(Action<T> fSuccess)
         {
             if (IsSuccess) fSuccess(data);

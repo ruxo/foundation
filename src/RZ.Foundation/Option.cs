@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-#if NETSTANDARD2_2
+#if NETSTANDARD2_0
 using RZ.Foundation.Extensions;
 using static RZ.Foundation.Prelude;
 #endif
@@ -22,7 +22,9 @@ namespace RZ.Foundation
         public static ApiResult<T> ToApiResult<T>(this Option<T> o) => o.IsSome ? o.Get().AsApiSuccess() : DummyException;
         public static ApiResult<T> ToApiResult<T>(this Option<T> o, Func<Exception> none) => o.IsSome ? o.Get().AsApiSuccess() : none();
 
-#if NETSTANDARD2_2
+        public static Option<T> Join<T>(this Option<Option<T>> doubleOption) => doubleOption.Chain(i => i);
+
+#if NETSTANDARD2_0
         public static Option<T> Call<A, B, T>(this Option<(A, B)> x, Func<A, B, T> f) => x.Map(p => p.CallFrom(f));
         public static Option<T> Call<A, B, C, T>(this Option<(A, B, C)> x, Func<A, B, C, T> f) => x.Map(p => p.CallFrom(f));
 

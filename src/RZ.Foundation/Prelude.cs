@@ -39,7 +39,7 @@ namespace RZ.Foundation {
 
         public static Iter<T> Iter<T>(IEnumerable<T> enumerable) => enumerable is Iter<T> iter ? iter : new Iter<T>(enumerable);
 
-#if NETSTANDARD2_2
+#if NETSTANDARD2_0
         public static Option<(A, B)> With<A, B>(Option<A> a, Option<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
         public static Option<(A, B, C)> With<A, B, C>(Option<A> a, Option<B> b, Option<C> c) =>
             a.Chain(ax => b.Chain(bx => c.Map(cx => (ax, bx,cx))));

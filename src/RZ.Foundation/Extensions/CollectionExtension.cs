@@ -48,7 +48,7 @@ namespace RZ.Foundation.Extensions {
             }
         }
 
-#if NETSTANDARD2_2
+#if NETSTANDARD2_0
         public static (T[], T[]) Partition<T>(this IEnumerable<T> e, Func<T, bool> partitioner) {
             var trueResult = new List<T>();
             var falseResult = new List<T>();
