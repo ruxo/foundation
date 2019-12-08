@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.Types
 {
@@ -20,6 +21,11 @@ namespace RZ.Foundation.Types
         }
 
         public Task<ApiResult<T>> Try() => ApiResult<T>.SafeCallAsync(runnable);
+
+        public async Task<ApiResult<T>> Try(Func<Exception, Exception> exceptionTransformer) {
+            var result = await Try();
+            return result.Map(Identity, exceptionTransformer);
+        }
         public Task<Option<T>> TryOption() => Option<T>.SafeCallAsync(runnable);
 
         public TryAsync<U> Map<U>(Func<T, U> mapper) => new TryAsync<U>(async () => mapper(await runnable()));
@@ -54,6 +60,7 @@ namespace RZ.Foundation.Types
         }
 
         public ApiResult<T> Try() => ApiResult<T>.SafeCall(runnable);
+        public ApiResult<T> Try(Func<Exception, Exception> exceptionTransformer) => Try().Map(Identity, exceptionTransformer);
         public Option<T> TryOption() => Option<T>.From(runnable);
 
         public TryCall<U> Map<U>(Func<T, U> mapper) => new TryCall<U>(() => mapper(runnable()));
