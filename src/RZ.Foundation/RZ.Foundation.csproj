@@ -4,10 +4,10 @@
     <Company>RZ</Company>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <AssemblyVersion>1.4.0.30</AssemblyVersion>
-    <FileVersion>1.4.0.30</FileVersion>
-    <Version>1.4.0</Version>
-    <PackageVersion>1.4.0</PackageVersion>
+    <AssemblyVersion>1.4.1.31</AssemblyVersion>
+    <FileVersion>1.4.1.31</FileVersion>
+    <Version>1.4.1</Version>
+    <PackageVersion>1.4.1</PackageVersion>
     <LangVersion>8</LangVersion>
     <Title>RZ.Foundation: Functional and utility functions</Title>
     <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
@@ -15,6 +15,9 @@
     <PackageReleaseNotes>Iter (break-compat!) is now always cached, and is thread-unsafe. IterSafe is cachable Enumerable for thread-safe.</PackageReleaseNotes>
     <Nullable>disable</Nullable>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/ruxo/foundation</RepositoryUrl>
+    <RepositoryType>public</RepositoryType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>..\..\lib\RZ.Foundation\</OutputPath>

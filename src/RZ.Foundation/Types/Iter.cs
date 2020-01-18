@@ -11,7 +11,7 @@ namespace RZ.Foundation.Types
         readonly IEnumerable<T> source;
 
         public Iter(IEnumerable<T> origin) {
-            source = origin is IteratorCache || origin is T[] || origin is IReadOnlyCollection<T>
+            source = origin is Iter<T> || origin is T[] || origin is IReadOnlyCollection<T>
                          ? origin
                          : new IteratorCache(origin.GetEnumerator());
         }
