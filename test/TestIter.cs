@@ -40,7 +40,7 @@ namespace RZ.Foundation
                     yield return i;
             }
 
-            var x = Prelude.Iter(generator()).EnableCache();
+            var x = Prelude.Iter(generator());
             var y = Prelude.Iter(x);
 
             y.Should().BeSameAs(x);
@@ -51,7 +51,7 @@ namespace RZ.Foundation
 
         [Fact]
         public void FetchCacheWithDifferentLength() {
-            var x = Prelude.Iter(Enumerable.Range(1, 10)).EnableCache();
+            var x = Prelude.Iter(Enumerable.Range(1, 10));
 
             var shortVersion = x.Take(3).ToArray();
             var longVersion = x.Take(5).ToArray();
@@ -62,7 +62,7 @@ namespace RZ.Foundation
 
         [Fact]
         public void MultithreadTest() {
-            var x = Prelude.Iter(Enumerable.Range(1, 1_000_000)).EnableConcurrencyCache();
+            var x = Prelude.IterSafe(Enumerable.Range(1, 1_000_000));
 
             var startSignal = new ManualResetEvent(false);
 
@@ -71,7 +71,7 @@ namespace RZ.Foundation
                 return x.Take(n).Last();
             });
 
-            var tasks = new[] {getLast(100_000), getLast(100_100), getLast(100_200), getLast(110_000)};
+            var tasks = new[] {getLast(100_000), getLast(100_100), getLast(100_200), getLast(110_000), Task.Run(() => x.Last())};
 
             startSignal.Set();
 
@@ -82,9 +82,8 @@ namespace RZ.Foundation
                 output.WriteLine(e.ToString());
             }
 
-            tasks[0].Result.Should().Be(100_000);
-            tasks[1].Result.Should().Be(100_100);
-            tasks[2].Result.Should().Be(100_200);
+            var result = from t in tasks select t.Result;
+            result.Should().BeEquivalentTo(new[] {100_000, 100_100, 100_200, 110_000, 1_000_000 });
         }
     }
 }

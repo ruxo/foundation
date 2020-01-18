@@ -14,12 +14,6 @@ namespace RZ.Foundation {
             return x;
         };
 
-        /// <summary>
-        /// Convert a value into Optional type. This one is inspired from LanguageExt lib :)
-        /// </summary>
-        /// <param name="val"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns>Option wrapped with the specific value</returns>
         public static Option<T> Optional<T>(T val) => val;
         public static Option<T> Optional<T>(this T? data) where T : struct => data.HasValue? Option<T>.Some(data.Value) : None<T>();
 
@@ -38,6 +32,7 @@ namespace RZ.Foundation {
         public static TryCall<Unit> Try(Action action) => new TryCall<Unit>(() => { action(); return Unit.Value; });
 
         public static Iter<T> Iter<T>(IEnumerable<T> enumerable) => enumerable is Iter<T> iter ? iter : new Iter<T>(enumerable);
+        public static IterSafe<T> IterSafe<T>(IEnumerable<T> enumerable) => enumerable is IterSafe<T> iter ? iter : new IterSafe<T>(enumerable);
 
 #if NETSTANDARD2_0
         public static Option<(A, B)> With<A, B>(Option<A> a, Option<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
