@@ -20,6 +20,11 @@ namespace RZ.Foundation.Types
                          : new IteratorCache(origin.GetEnumerator());
         }
 
+        // support common data conversion
+        public static implicit operator IterSafe<T>(T[] data) => new IterSafe<T>(data);
+        public static implicit operator IterSafe<T>(List<T> data) => new IterSafe<T>(data);
+        public static implicit operator IterSafe<T>(HashSet<T> data) => new IterSafe<T>(data);
+
         public IEnumerator<T> GetEnumerator() => source.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 

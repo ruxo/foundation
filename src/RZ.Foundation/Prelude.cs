@@ -14,6 +14,21 @@ namespace RZ.Foundation {
             return x;
         };
 
+        public static Func<T, Task<T>> SideEffectAsync<T>(Func<T, Task> f) => async x => {
+            await f(x);
+            return x;
+        };
+
+        public static T SideEffect<T>(this T x, Action<T> f) {
+            f(x);
+            return x;
+        }
+
+        public static async Task<T> SideEffectAsync<T>(this T x, Func<T,Task> f) {
+            await f(x);
+            return x;
+        }
+
         public static Option<T> Optional<T>(T val) => val;
         public static Option<T> Optional<T>(this T? data) where T : struct => data.HasValue? Option<T>.Some(data.Value) : None<T>();
 

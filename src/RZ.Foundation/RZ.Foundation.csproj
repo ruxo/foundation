@@ -4,15 +4,15 @@
     <Company>RZ</Company>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <AssemblyVersion>1.4.1.31</AssemblyVersion>
-    <FileVersion>1.4.1.31</FileVersion>
-    <Version>1.4.1</Version>
-    <PackageVersion>1.4.1</PackageVersion>
+    <AssemblyVersion>1.4.3.33</AssemblyVersion>
+    <FileVersion>1.4.3.33</FileVersion>
+    <Version>1.4.3</Version>
+    <PackageVersion>1.4.3</PackageVersion>
     <LangVersion>8</LangVersion>
     <Title>RZ.Foundation: Functional and utility functions</Title>
     <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
     <PackageTags>utility,functional</PackageTags>
-    <PackageReleaseNotes>Iter (break-compat!) is now always cached, and is thread-unsafe. IterSafe is cachable Enumerable for thread-safe.</PackageReleaseNotes>
+    <PackageReleaseNotes>Add SideEffect as fluent style.  Also add SideEffectAsync.</PackageReleaseNotes>
     <Nullable>disable</Nullable>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
