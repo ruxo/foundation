@@ -31,11 +31,23 @@ namespace RZ.Foundation.Net
     /// <summary>
     /// Text HTTP is a HTTP requester that specially works with string as input and output.
     /// </summary>
-    public class TextHttp : ITextHttp
+    public class TextHttp : ITextHttp, IDisposable
     {
         const string HttpErrorCodePrefix = "http-";
         static readonly MediaTypeHeaderValue JsonMimeType = new MediaTypeHeaderValue("application/json");
+
+        readonly HttpClient http = new HttpClient();
+
         public string NetworkErrorCode => "network-issue";
+
+        #region IDisposable methods
+
+        public void Dispose() {
+            http.Dispose();
+        }
+
+        #endregion
+
         public Option<HttpStatusCode> ParseHttpError(string httpErrorCode) => httpErrorCode.StartsWith(HttpErrorCodePrefix)? (HttpStatusCode) int.Parse(httpErrorCode.Substring(HttpErrorCodePrefix.Length)) : None<HttpStatusCode>();
 
         public Task<ApiResult<string>> Request(HttpMethod method
@@ -49,30 +61,26 @@ namespace RZ.Foundation.Net
                                                     , Option<string> data
                                                     , Option<HttpRequestOption> config) {
             var req = new HttpRequestMessage(method, uri);
-            data.Then(text =>
+            data.Then(s =>
             {
-                req.Content = new StringContent(text);
+                req.Content = new StringContent(s);
                 req.Content.Headers.ContentType = JsonMimeType;
             });
             config.Then(ApplyConfig(req));
 
-                using (var http = new HttpClient()) {
-                    HttpResponseMessage res;
-                    string text;
-                    try {
-                        res = await http.SendAsync(req);
-                        text = await res.Content.ReadAsStringAsync();
-                    }
-                    catch (Exception ex) {
-                        throw ExceptionExtension.ChainError("HTTP invocation failed."
-                                                          , NetworkErrorCode
-                                                          , $"{nameof(TextHttp)}:{nameof(Request)}"
-                                                          , uri.ToString())(ex);
-                    }
-                    return res.IsSuccessStatusCode
-                               ? text
-                               : throw ExceptionExtension.CreateError(res.ReasonPhrase, $"{HttpErrorCodePrefix}{(int) res.StatusCode}", uri.ToString(), text);
-                }
+            HttpResponseMessage res;
+            string text;
+            try {
+                res = await http.SendAsync(req);
+                text = await res.Content.ReadAsStringAsync();
+            }
+            catch (Exception ex) {
+                throw ExceptionExtension.ChainError("HTTP invocation failed.", NetworkErrorCode, $"{nameof(TextHttp)}:{nameof(Request)}", uri.ToString())(ex);
+            }
+
+            return res.IsSuccessStatusCode
+                       ? text
+                       : throw ExceptionExtension.CreateError(res.ReasonPhrase, $"{HttpErrorCodePrefix}{(int) res.StatusCode}", uri.ToString(), text);
         }
 
         public Task<string> NGet(Uri uri, Option<HttpRequestOption> config) => NRequest(HttpMethod.Get, uri, None<string>(), config);
@@ -91,5 +99,6 @@ namespace RZ.Foundation.Net
                                                               , () => new AuthenticationHeaderValue(auth.Scheme)));
             config.CustomHeaders.Then(headers => headers.ForEach(kv => req.Headers.Add(kv.Key, kv.Value)));
         };
+
     }
 }

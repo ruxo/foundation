@@ -1,9 +1,8 @@
 using System.Linq;
 using FluentAssertions;
-using RZ.Foundation.Extensions;
 using Xunit;
 
-namespace RZ.Foundation
+namespace RZ.Foundation.Extensions
 {
     public class CollectionExtension_BatchTest
     {

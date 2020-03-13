@@ -17,6 +17,7 @@ namespace RZ.Foundation.Types
         }
 
         // support common data conversion
+        public static implicit operator Iter<T>(T data) => new Iter<T>(new[] {data});
         public static implicit operator Iter<T>(T[] data) => new Iter<T>(data);
         public static implicit operator Iter<T>(List<T> data) => new Iter<T>(data);
         public static implicit operator Iter<T>(HashSet<T> data) => new Iter<T>(data);

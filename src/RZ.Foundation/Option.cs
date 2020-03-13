@@ -75,6 +75,7 @@ namespace RZ.Foundation
             if (IsNone) handler();
             return this;
         }
+        
         public async Task<Option<T>> IfNoneAsync(Func<Task> handler) {
             if (IsNone) await handler();
             return this;
