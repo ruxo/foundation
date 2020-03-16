@@ -2,7 +2,6 @@
 
 namespace RZ.Foundation.Extensions
 {
-#if NETSTANDARD2_0
     public static class TupleExtension
     {
         public static T CallFrom<A, B, T>(this (A, B) t, Func<A, B, T> f) => f(t.Item1, t.Item2);
@@ -18,5 +17,4 @@ namespace RZ.Foundation.Extensions
             return Unit.Value;
         }
     }
-#endif
 }

@@ -90,13 +90,13 @@ namespace RZ.Foundation.Types
     {
         public string TimeText = string.Empty;
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
-            var range = (TimeRange) value;
-            writer.WriteValue(range.ToString());
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) {
+            var range = (TimeRange?) value;
+            writer.WriteValue(range!.ToString());
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) =>
-            TimeRange.Parse((string)reader.Value);
+        public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) =>
+            TimeRange.Parse((string)reader.Value!);
 
         public override bool CanConvert(Type objectType) => objectType == typeof(TimeRange);
     }

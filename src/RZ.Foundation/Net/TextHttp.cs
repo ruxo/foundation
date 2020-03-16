@@ -1,5 +1,6 @@
 ﻿using RZ.Foundation.Extensions;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -86,12 +87,12 @@ namespace RZ.Foundation.Net
         public Task<string> NGet(Uri uri, Option<HttpRequestOption> config) => NRequest(HttpMethod.Get, uri, None<string>(), config);
         public Task<string> NPost(Uri uri, Option<string> data, Option<HttpRequestOption> config) => NRequest(HttpMethod.Post, uri, data, config);
         public Task<string> NPut(Uri uri, Option<string> data, Option<HttpRequestOption> config) => NRequest(HttpMethod.Put, uri, data, config);
-        public Task<string> NDelete(Uri uri, Option<HttpRequestOption> config) => NRequest(HttpMethod.Delete, uri, null, config);
+        public Task<string> NDelete(Uri uri, Option<HttpRequestOption> config) => NRequest(HttpMethod.Delete, uri, null!, config);
 
-        public Task<ApiResult<string>> Get(Uri uri, Option<HttpRequestOption> config) => Request(HttpMethod.Get, uri, null, config);
+        public Task<ApiResult<string>> Get(Uri uri, Option<HttpRequestOption> config) => Request(HttpMethod.Get, uri, null!, config);
         public Task<ApiResult<string>> Post(Uri uri, Option<string> data, Option<HttpRequestOption> config) => Request(HttpMethod.Post, uri, data, config);
         public Task<ApiResult<string>> Put(Uri uri, Option<string> data, Option<HttpRequestOption> config) => Request(HttpMethod.Put, uri, data, config);
-        public Task<ApiResult<string>> Delete(Uri uri, Option<HttpRequestOption> config) => Request(HttpMethod.Delete, uri, null, config);
+        public Task<ApiResult<string>> Delete(Uri uri, Option<HttpRequestOption> config) => Request(HttpMethod.Delete, uri, null!, config);
 
         static Action<HttpRequestOption> ApplyConfig(HttpRequestMessage req) => config => {
             config.Authentication.Then(auth =>

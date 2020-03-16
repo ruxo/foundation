@@ -4,17 +4,17 @@
     <Company>RZ</Company>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <AssemblyVersion>1.5.0.35</AssemblyVersion>
-    <FileVersion>1.5.0.35</FileVersion>
-    <Version>1.5.0</Version>
-    <PackageVersion>1.5.0</PackageVersion>
+    <AssemblyVersion>2.0.0.200</AssemblyVersion>
+    <FileVersion>2.0.0.200</FileVersion>
+    <Version>2.0.0</Version>
+    <PackageVersion>2.0.0</PackageVersion>
     <LangVersion>8</LangVersion>
     <Title>RZ.Foundation: Functional and utility functions</Title>
     <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
     <PackageTags>utility,functional</PackageTags>
     <PackageReleaseNotes>Fix TextHttp potential socket exhaustion problem</PackageReleaseNotes>
-    <Nullable>disable</Nullable>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/ruxo/foundation</RepositoryUrl>
     <RepositoryType>public</RepositoryType>

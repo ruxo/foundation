@@ -1,14 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-#if NETSTANDARD2_0
 using RZ.Foundation.Extensions;
-using static RZ.Foundation.Prelude;
-#endif
 
 namespace RZ.Foundation
 {
-    #nullable enable
     public static class OptionHelper
     {
         static readonly Exception DummyException = new Exception();
@@ -24,22 +21,21 @@ namespace RZ.Foundation
 
         public static Option<T> Join<T>(this Option<Option<T>> doubleOption) => doubleOption.Chain(i => i);
 
-#if NETSTANDARD2_0
         public static Option<T> Call<A, B, T>(this Option<(A, B)> x, Func<A, B, T> f) => x.Map(p => p.CallFrom(f));
         public static Option<T> Call<A, B, C, T>(this Option<(A, B, C)> x, Func<A, B, C, T> f) => x.Map(p => p.CallFrom(f));
 
         public static Option<Unit> Call<A, B>(this Option<(A, B)> x, Action<A, B> f) => x.Map(p => p.CallFrom(f));
         public static Option<Unit> Call<A, B, C>(this Option<(A, B, C)> x, Action<A, B, C> f) => x.Map(p => p.CallFrom(f));
-#endif
 
-        public static T? ToNullable<T>(this Option<T> opt) where T : class => opt.GetOrDefault();
+        [return: MaybeNull]
+        public static T ToNullable<T>(this Option<T> opt) where T : class => opt.GetOrDefault();
     }
 
     public static class OptionNullableHelper
     {
         public static T? ToNullable<T>(this Option<T> opt) where T : struct => opt.Get(v => v, () => (T?) null);
     }
-    #nullable disable
+
     public struct Option<T>
     {
         static readonly Option<T> NoneSingleton = new Option<T>();
@@ -52,7 +48,7 @@ namespace RZ.Foundation
 
         readonly bool isSome;
         readonly T value;
-        public static implicit operator Option<T> (T value) => From(value);
+        public static implicit operator Option<T> ([AllowNull] T value) => From(value);
 
         public Option<T> Where(Func<T, bool> predicate) => isSome && predicate(value) ? this : None();
         public async Task<Option<T>> WhereAsync(Func<T, Task<bool>> predicate) => isSome && await predicate(value) ? this : None();
@@ -75,7 +71,7 @@ namespace RZ.Foundation
             if (IsNone) handler();
             return this;
         }
-        
+
         public async Task<Option<T>> IfNoneAsync(Func<Task> handler) {
             if (IsNone) await handler();
             return this;
@@ -114,12 +110,12 @@ namespace RZ.Foundation
 
         public T GetOrDefault(T def = default) => isSome? value : def;
 
-        public Option<U> TryCast<U>() => (U) (object) value;
+        public Option<U> TryCast<U>() => (U) (object) value!;
 
         #region Equality
 
         public override bool Equals(object obj) => obj is Option<T> other && isSome == other.isSome && Equals(value, other.value);
-        public override int GetHashCode() => isSome? value.GetHashCode() : 0;
+        public override int GetHashCode() => isSome? value!.GetHashCode() : 0;
 
         #endregion
 
@@ -153,11 +149,12 @@ namespace RZ.Foundation
     public struct OptionSerializable<T>
     {
         public bool HasValue;
+        [AllowNull]
         public T Value;
         public OptionSerializable(Option<T> opt)
         {
             HasValue = opt.IsSome;
-            Value = opt.Get(x => x, () => default(T));
+            Value = opt.Get(x => x, () => default!);
         }
         public Option<T> ToOption() => HasValue ? Value : Option<T>.None();
     }

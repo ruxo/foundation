@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using RZ.Foundation.Extensions;
 using static RZ.Foundation.Prelude;
@@ -53,16 +54,15 @@ namespace RZ.Foundation
         public static Option<T> ToOption<T>(this ApiResult<T> result) => result.Map(Optional).GetOrElse(None<T>());
         public static Option<T> ToOption<T, F>(this Result<T, F> result) => result.Map(Optional).GetOrElse(None<T>());
 
-#if NETSTANDARD2_0
-        [Obsolete("Use Prelude")]
-        public static ApiResult<(A, B)> With<A, B>(ApiResult<A> a, ApiResult<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
-        [Obsolete("Use Prelude")]
-        public static ApiResult<(A, B, C)> With<A, B, C>(ApiResult<A> a, ApiResult<B> b, ApiResult<C> c) =>
-            a.Chain(ax => b.Chain(bx => c.Map(cx => (ax, bx,cx))));
+        public static T ToNullable<T>(this ApiResult<T> result) where T : class? => result.GetOrElse((T) null!);
 
         public static ApiResult<T> Call<A, B, T>(this ApiResult<(A, B)> x, Func<A, B, T> f) => x.Map(p => p.CallFrom(f));
         public static ApiResult<T> Call<A, B, C, T>(this ApiResult<(A, B, C)> x, Func<A, B, C, T> f) => x.Map(p => p.CallFrom(f));
-#endif
+    }
+
+    public static class ResultHelper2
+    {
+        public static T? ToNullable<T>(this ApiResult<T> result) where T : struct => result.IsSuccess? (T?) result.GetSuccess() : null;
     }
 
     /// <summary>
@@ -73,8 +73,8 @@ namespace RZ.Foundation
     public struct Result<TSuccess, TFail>
     {
         readonly bool isFailed;
-        readonly TFail error;
-        readonly TSuccess data;
+        [AllowNull] readonly TFail error;
+        [AllowNull] readonly TSuccess data;
 
         public Result(TSuccess success)
         {
@@ -134,7 +134,7 @@ namespace RZ.Foundation
         /// <typeparam name="U">Target success type</typeparam>
         /// <param name="mapper">Function to transform success type to either U type or _TFail_ type. </param>
         /// <returns></returns>
-        public Result<U, TFail> Chain<U>(Func<TSuccess, Result<U, TFail>> mapper) => isFailed? (Result<U,TFail>) error : mapper(data);
+        public Result<U, TFail> Chain<U>(Func<TSuccess, Result<U, TFail>> mapper) => isFailed? error : mapper(data);
         public async Task<Result<U, TFail>> ChainAsync<U>(Func<TSuccess, Task<Result<U, TFail>>> mapper) => IsSuccess ? await mapper(data) : error!;
 
         public Result<TSuccess, TFail> OrElse(TSuccess val) => IsSuccess ? this : val;
@@ -188,7 +188,7 @@ namespace RZ.Foundation
             return this;
         }
 
-        public Result<U, TFail> TryCast<U>() => IsSuccess? (U) (object) data : new Result<U, TFail>(error!);
+        public Result<U, TFail> TryCast<U>() => IsSuccess? (U) (object) data! : new Result<U, TFail>(error!);
 
         public static implicit operator Result<TSuccess, TFail>(TSuccess success) => new Result<TSuccess, TFail>(success);
         public static implicit operator Result<TSuccess, TFail>(TFail failed) => new Result<TSuccess, TFail>(failed);
@@ -212,8 +212,8 @@ namespace RZ.Foundation
     /// <typeparam name="T">Type that represents success data.</typeparam>
     public struct ApiResult<T>
     {
-        readonly Exception error;
-        readonly T data;
+        readonly Exception? error;
+        [AllowNull] readonly T data;
 
         public ApiResult(T success)
         {
@@ -325,7 +325,7 @@ namespace RZ.Foundation
             return this;
         }
 
-        public ApiResult<U> TryCast<U>() => IsSuccess? (U) (object) data : error!.AsApiFailure<U>();
+        public ApiResult<U> TryCast<U>() => IsSuccess? (U) (object) data! : error!.AsApiFailure<U>();
 
         #region Equality
 

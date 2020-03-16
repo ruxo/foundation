@@ -20,10 +20,8 @@ namespace RZ.Foundation.Extensions
 
         #endregion
 
-#if NETSTANDARD2_0
         public static DateTimeOffset ToTimeZone(this DateTime datetime, TimeZoneInfo tz) =>
             new DateTimeOffset(TimeZoneInfo.ConvertTimeFromUtc(datetime.ToUniversalTime(), tz), tz.BaseUtcOffset);
-#endif
 
         public static DateTimeOffset Midnight(this DateTimeOffset anytime) => anytime - anytime.TimeOfDay;
     }

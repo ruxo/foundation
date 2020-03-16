@@ -5,7 +5,7 @@ namespace RZ.Foundation.Extensions
 {
     public static class RetryExtension
     {
-        public static async Task<T> RetryIndefinitely<T>(Func<Task<T>> task, Action<Exception> onFailure = null) {
+        public static async Task<T> RetryIndefinitely<T>(Func<Task<T>> task, Action<Exception>? onFailure = null) {
             var result = await RetryUntil(task,
                                           onFailure == null
                                               ? null
@@ -16,7 +16,7 @@ namespace RZ.Foundation.Extensions
             return result.GetSuccess();
         }
 
-        public static T RetryIndefinitely<T>(Func<T> task, Action<Exception> onFailure = null) =>
+        public static T RetryIndefinitely<T>(Func<T> task, Action<Exception>? onFailure = null) =>
             RetryUntil(task,
                        onFailure == null
                            ? null
@@ -25,7 +25,7 @@ namespace RZ.Foundation.Extensions
                                return true;
                            })).GetSuccess();
 
-        public static async Task<ApiResult<T>> RetryUntil<T>(Func<Task<T>> task, Func<Exception,bool> onFailure = null) {
+        public static async Task<ApiResult<T>> RetryUntil<T>(Func<Task<T>> task, Func<Exception,bool>? onFailure = null) {
             ApiResult<T> result;
             var cont = true;
             do {
@@ -36,7 +36,7 @@ namespace RZ.Foundation.Extensions
             return result;
         }
 
-        public static ApiResult<T> RetryUntil<T>(Func<T> task, Func<Exception,bool> onFailure = null) {
+        public static ApiResult<T> RetryUntil<T>(Func<T> task, Func<Exception,bool>? onFailure = null) {
             ApiResult<T> result;
             var cont = true;
             do {

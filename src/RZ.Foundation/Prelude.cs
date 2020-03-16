@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using RZ.Foundation.Extensions;
 using RZ.Foundation.Types;
 
 namespace RZ.Foundation {
@@ -48,7 +49,28 @@ namespace RZ.Foundation {
 
         public static Iter<T> Iter<T>(IEnumerable<T> enumerable) => enumerable is Iter<T> iter ? iter : new Iter<T>(enumerable);
 
-#if NETSTANDARD2_0
+        public static (A, B)? With<A, B>(A a, B b) where A : class? where B : class? => a.Try(ax => b.Try(bx => (ax, bx)));
+        public static (A, B)? With<A, B>(A? a, B? b) where A : struct where B : struct => a.Try(ax => b.Try(bx => (ax, bx)));
+        public static (A, B)? With<A, B>(A? a, B b) where A : struct where B : class? => a.Try(ax => b.Try(bx => (ax, bx)));
+        public static (A, B)? With<A, B>(A a, B? b) where A : class? where B : struct => a.Try(ax => b.Try(bx => (ax, bx)));
+
+        public static (A, B, C)? With<A, B, C>(A a, B b, C c) where A : class? where B : class? where C : class? =>
+            a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
+        public static (A, B, C)? With<A, B, C>(A a, B b, C? c) where A : class? where B : class? where C : struct =>
+            a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
+        public static (A, B, C)? With<A, B, C>(A a, B? b, C c) where A : class? where B : struct where C : class? =>
+            a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
+        public static (A, B, C)? With<A, B, C>(A? a, B b, C c) where A : struct where B : class? where C : class? =>
+            a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
+        public static (A, B, C)? With<A, B, C>(A? a, B b, C? c) where A : struct where B : class? where C : struct =>
+            a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
+        public static (A, B, C)? With<A, B, C>(A a, B? b, C? c) where A : class? where B : struct where C : struct =>
+            a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
+        public static (A, B, C)? With<A, B, C>(A? a, B? b, C c) where A : struct where B : struct where C : class? =>
+            a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
+        public static (A, B, C)? With<A, B, C>(A? a, B? b, C? c) where A : struct where B : struct where C : struct =>
+            a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
+
         public static Option<(A, B)> With<A, B>(Option<A> a, Option<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
         public static Option<(A, B, C)> With<A, B, C>(Option<A> a, Option<B> b, Option<C> c) =>
             a.Chain(ax => b.Chain(bx => c.Map(cx => (ax, bx,cx))));
@@ -56,7 +78,6 @@ namespace RZ.Foundation {
         public static ApiResult<(A, B)> With<A, B>(ApiResult<A> a, ApiResult<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
         public static ApiResult<(A, B, C)> With<A, B, C>(ApiResult<A> a, ApiResult<B> b, ApiResult<C> c) =>
             a.Chain(ax => b.Chain(bx => c.Map(cx => (ax, bx,cx))));
-#endif
     }
 
     public struct Unit

@@ -3,7 +3,6 @@ using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.Extensions
 {
-    #nullable enable
     public static class ExceptionExtension
     {
         const string CodeField = "code";

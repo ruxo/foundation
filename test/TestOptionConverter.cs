@@ -1,4 +1,3 @@
-using System;
 using FluentAssertions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -56,7 +55,7 @@ namespace RZ.Foundation
         [JsonObject(NamingStrategyType = typeof(SnakeCaseNamingStrategy), ItemRequired = Required.Always)]
         public sealed class ComplexType
         {
-            public string Value;
+            public string Value = string.Empty;
         }
 
         [JsonObject(NamingStrategyType = typeof(SnakeCaseNamingStrategy), ItemRequired = Required.Always)]
