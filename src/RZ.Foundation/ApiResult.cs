@@ -51,10 +51,10 @@ namespace RZ.Foundation
         public static ApiResult<T> Join<T>(this ApiResult<ApiResult<T>> doubleResult) => doubleResult.Chain(i => i);
         public static Result<T, F> Join<T, F>(this Result<Result<T, F>, F> doubleResult) => doubleResult.Chain(i => i);
 
-        public static Option<T> ToOption<T>(this ApiResult<T> result) => result.Map(Optional).GetOrElse(None<T>());
-        public static Option<T> ToOption<T, F>(this Result<T, F> result) => result.Map(Optional).GetOrElse(None<T>());
+        public static Option<T> ToOption<T>(this ApiResult<T> result) => result.Map(Some).GetOrElse(None<T>());
+        public static Option<T> ToOption<T, F>(this Result<T, F> result) => result.Map(Some).GetOrElse(None<T>());
 
-        public static T ToNullable<T>(this ApiResult<T> result) where T : class? => result.GetOrElse((T) null!);
+        public static T? ToNullable<T>(this ApiResult<T> result) where T : class => result.IsSuccess? result.GetSuccess() : null;
 
         public static ApiResult<T> Call<A, B, T>(this ApiResult<(A, B)> x, Func<A, B, T> f) => x.Map(p => p.CallFrom(f));
         public static ApiResult<T> Call<A, B, C, T>(this ApiResult<(A, B, C)> x, Func<A, B, C, T> f) => x.Map(p => p.CallFrom(f));

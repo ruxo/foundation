@@ -30,9 +30,10 @@ namespace RZ.Foundation {
             return x;
         }
 
-        public static Option<T> Optional<T>(T val) => val;
-        public static Option<T> Optional<T>(this T? data) where T : struct => data.HasValue? Option<T>.Some(data.Value) : None<T>();
+        public static Option<T> Optional<T>(T? val) where T: class => Option<T>.From(val);
+        public static Option<T> Optional<T>(T? data) where T : struct => data.HasValue? Option<T>.Some(data.Value) : None<T>();
 
+        public static Option<T> Some<T>(T val) => val;
         public static Option<T> None<T>() => Option<T>.None();
 
         public static ApiResult<T> Success<T>(T val) => val;
@@ -49,24 +50,24 @@ namespace RZ.Foundation {
 
         public static Iter<T> Iter<T>(IEnumerable<T> enumerable) => enumerable is Iter<T> iter ? iter : new Iter<T>(enumerable);
 
-        public static (A, B)? With<A, B>(A a, B b) where A : class? where B : class? => a.Try(ax => b.Try(bx => (ax, bx)));
+        public static (A, B)? With<A, B>(A? a, B? b) where A : class where B : class => a.Try(ax => b.Try(bx => (ax, bx)));
         public static (A, B)? With<A, B>(A? a, B? b) where A : struct where B : struct => a.Try(ax => b.Try(bx => (ax, bx)));
-        public static (A, B)? With<A, B>(A? a, B b) where A : struct where B : class? => a.Try(ax => b.Try(bx => (ax, bx)));
-        public static (A, B)? With<A, B>(A a, B? b) where A : class? where B : struct => a.Try(ax => b.Try(bx => (ax, bx)));
+        public static (A, B)? With<A, B>(A? a, B? b) where A : struct where B : class => a.Try(ax => b.Try(bx => (ax, bx)));
+        public static (A, B)? With<A, B>(A? a, B? b) where A : class where B : struct => a.Try(ax => b.Try(bx => (ax, bx)));
 
-        public static (A, B, C)? With<A, B, C>(A a, B b, C c) where A : class? where B : class? where C : class? =>
+        public static (A, B, C)? With<A, B, C>(A? a, B? b, C? c) where A : class where B : class where C : class =>
             a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
-        public static (A, B, C)? With<A, B, C>(A a, B b, C? c) where A : class? where B : class? where C : struct =>
+        public static (A, B, C)? With<A, B, C>(A? a, B? b, C? c) where A : class where B : class where C : struct =>
             a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
-        public static (A, B, C)? With<A, B, C>(A a, B? b, C c) where A : class? where B : struct where C : class? =>
+        public static (A, B, C)? With<A, B, C>(A? a, B? b, C? c) where A : class where B : struct where C : class =>
             a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
-        public static (A, B, C)? With<A, B, C>(A? a, B b, C c) where A : struct where B : class? where C : class? =>
+        public static (A, B, C)? With<A, B, C>(A? a, B? b, C? c) where A : struct where B : class where C : class =>
             a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
-        public static (A, B, C)? With<A, B, C>(A? a, B b, C? c) where A : struct where B : class? where C : struct =>
+        public static (A, B, C)? With<A, B, C>(A? a, B? b, C? c) where A : struct where B : class where C : struct =>
             a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
-        public static (A, B, C)? With<A, B, C>(A a, B? b, C? c) where A : class? where B : struct where C : struct =>
+        public static (A, B, C)? With<A, B, C>(A? a, B? b, C? c) where A : class where B : struct where C : struct =>
             a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
-        public static (A, B, C)? With<A, B, C>(A? a, B? b, C c) where A : struct where B : struct where C : class? =>
+        public static (A, B, C)? With<A, B, C>(A? a, B? b, C? c) where A : struct where B : struct where C : class =>
             a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));
         public static (A, B, C)? With<A, B, C>(A? a, B? b, C? c) where A : struct where B : struct where C : struct =>
             a.Try(ax => b.Try(bx => c.Try(cx => (ax, bx, cx))));

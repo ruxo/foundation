@@ -140,7 +140,7 @@ namespace RZ.Foundation
                 return None();
             }
         }
-        public static Option<T> From(T value) => Equals(value, null) ? None() : Some(value);
+        public static Option<T> From([AllowNull] T value) => Equals(value, null) ? None() : Some(value);
         public static Option<T> None() => NoneSingleton;
         public static Option<T> Some(T value) => new Option<T>(value);
     }
