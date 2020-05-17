@@ -4,15 +4,15 @@
     <Company>RZ</Company>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <AssemblyVersion>2.0.2.202</AssemblyVersion>
-    <FileVersion>2.0.2.202</FileVersion>
-    <Version>2.0.2</Version>
-    <PackageVersion>2.0.2</PackageVersion>
+    <AssemblyVersion>2.0.4.204</AssemblyVersion>
+    <FileVersion>2.0.4.204</FileVersion>
+    <Version>2.0.4</Version>
+    <PackageVersion>2.0.4</PackageVersion>
     <LangVersion>8</LangVersion>
     <Title>RZ.Foundation: Functional and utility functions</Title>
     <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
     <PackageTags>utility,functional</PackageTags>
-    <PackageReleaseNotes>Fix TextHttp potential socket exhaustion problem</PackageReleaseNotes>
+    <PackageReleaseNotes>Add more Partition methods</PackageReleaseNotes>
     <Nullable>enable</Nullable>
     <TargetFramework>netstandard2.1</TargetFramework>
     <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>

@@ -20,7 +20,7 @@ namespace RZ.Foundation
         public override bool CanConvert(Type objectType) => objectType == typeof(Option<T>);
 
         public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) =>
-            reader.TokenType == JsonToken.Null ? Option<T>.None() : serializer.Deserialize<T>(reader).ToOption();
+            reader.TokenType == JsonToken.Null ? Option<T>.None() : serializer.Deserialize<T>(reader).ToOption()!;
 
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) {
             if (value is Option<T> v && v.IsSome)

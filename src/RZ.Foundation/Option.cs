@@ -27,8 +27,7 @@ namespace RZ.Foundation
         public static Option<Unit> Call<A, B>(this Option<(A, B)> x, Action<A, B> f) => x.Map(p => p.CallFrom(f));
         public static Option<Unit> Call<A, B, C>(this Option<(A, B, C)> x, Action<A, B, C> f) => x.Map(p => p.CallFrom(f));
 
-        [return: MaybeNull]
-        public static T ToNullable<T>(this Option<T> opt) where T : class => opt.GetOrDefault();
+        public static T? ToNullable<T>(this Option<T> opt) where T : class => opt.GetOrDefault();
     }
 
     public static class OptionNullableHelper
