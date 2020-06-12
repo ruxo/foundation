@@ -10,11 +10,11 @@ namespace RZ.Foundation
     {
         static readonly Exception DummyException = new Exception();
 
-        public static Option<T> ToOption<T>(this T data) => data;
+        public static Option<T> ToOption<T>(this T data) => Option<T>.From(data);
         public static Option<T> ToOption<T>(this T? data) where T : struct => data.HasValue? Option<T>.Some(data.Value) : None<T>();
         public static Option<T> None<T>() => Option<T>.None();
 
-        public static Result<T, F> ToResult<T, F>(this Option<T> o, Func<F> none) => o.IsSome ? o.Get().AsSuccess<T,F>() : none();
+        public static Result<T, F> ToResult<T, F>(this Option<T> o, Func<F> none) => o.IsSome ? o.Get().AsSuccess<T,F>() : new Result<T,F>(none());
 
         public static ApiResult<T> ToApiResult<T>(this Option<T> o) => o.IsSome ? o.Get().AsApiSuccess() : DummyException;
         public static ApiResult<T> ToApiResult<T>(this Option<T> o, Func<Exception> none) => o.IsSome ? o.Get().AsApiSuccess() : none();
@@ -26,6 +26,21 @@ namespace RZ.Foundation
 
         public static Option<Unit> Call<A, B>(this Option<(A, B)> x, Action<A, B> f) => x.Map(p => p.CallFrom(f));
         public static Option<Unit> Call<A, B, C>(this Option<(A, B, C)> x, Action<A, B, C> f) => x.Map(p => p.CallFrom(f));
+
+        public static async Task<Option<TR>> Map<T, TR>(this Task<Option<T>> t, Func<T, TR> mapper) => (await t).Map(mapper);
+        public static async Task<Option<TR>> MapAsync<T, TR>(this Task<Option<T>> t, Func<T, Task<TR>> mapper) => await (await t).MapAsync(mapper);
+        public static async Task<Option<TR>> Chain<T, TR>(this Task<Option<T>> t, Func<T, Option<TR>> mapper) => (await t).Chain(mapper);
+        public static async Task<Option<TR>> ChainAsync<T, TR>(this Task<Option<T>> t, Func<T, Task<Option<TR>>> mapper) => await (await t).ChainAsync(mapper);
+        public static async Task<T> Get<T>(this Task<Option<T>> t) => (await t).Get();
+        public static async Task<TR> Get<T, TR>(this Task<Option<T>> t, Func<T, TR> someMapper, Func<TR> noneMapper) => (await t).Get(someMapper, noneMapper);
+        public static async Task<TR> GetAsync<T, TR>(this Task<Option<T>> t, Func<T, Task<TR>> someMapper, Func<Task<TR>> noneMapper) =>
+            await (await t).GetAsync(someMapper, noneMapper);
+
+        public static async Task<T> GetOrThrow<T>(this Task<Option<T>> t, Func<Exception> exceptionToThrow) => (await t).GetOrThrow(exceptionToThrow);
+        public static async Task<T> GetOrDefault<T>(this Task<Option<T>> t) => (await t).GetOrDefault();
+        public static async Task<T> GetOrElse<T>(this Task<Option<T>> t, T noneValue) => (await t).GetOrElse(noneValue);
+        public static async Task<T> GetOrElse<T>(this Task<Option<T>> t, Func<T> noneValue) => (await t).GetOrElse(noneValue);
+        public static async Task<T> GetOrElseAsync<T>(this Task<Option<T>> t, Func<Task<T>> noneValue) => await (await t).GetOrElseAsync(noneValue);
 
         public static T? ToNullable<T>(this Option<T> opt) where T : class => opt.GetOrDefault();
     }
@@ -52,8 +67,8 @@ namespace RZ.Foundation
         public Option<T> Where(Func<T, bool> predicate) => isSome && predicate(value) ? this : None();
         public async Task<Option<T>> WhereAsync(Func<T, Task<bool>> predicate) => isSome && await predicate(value) ? this : None();
 
-        public Option<TB> Map<TB>(Func<T,TB> mapper) => isSome? mapper(value) : Option<TB>.None();
-        public async Task<Option<TB>> MapAsync<TB>(Func<T, Task<TB>> mapper) => isSome? await mapper(value) : Option<TB>.None();
+        public Option<TB> Map<TB>(Func<T,TB> mapper) => isSome? new Option<TB>(mapper(value)) : Option<TB>.None();
+        public async Task<Option<TB>> MapAsync<TB>(Func<T, Task<TB>> mapper) => isSome? new Option<TB>(await mapper(value)) : Option<TB>.None();
 
         public Option<TB> Chain<TB>(Func<T, Option<TB>> mapper) => isSome? mapper(value) : Option<TB>.None();
         public async Task<Option<TB>> ChainAsync<TB>(Func<T, Task<Option<TB>>> mapper) => isSome ? await mapper(value) : Option<TB>.None();
@@ -109,7 +124,7 @@ namespace RZ.Foundation
 
         public T GetOrDefault(T def = default) => isSome? value : def;
 
-        public Option<U> TryCast<U>() => (U) (object) value!;
+        public Option<U> TryCast<U>() => value is U v? v : Option<U>.None();
 
         #region Equality
 
@@ -131,6 +146,7 @@ namespace RZ.Foundation
             }
         }
 
+        [Obsolete("Use Try or TryAsync instead")]
         public static async Task<Option<T>> SafeCallAsync(Func<Task<T>> handler) {
             try {
                 return await handler();
