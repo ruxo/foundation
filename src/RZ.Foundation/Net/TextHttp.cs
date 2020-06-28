@@ -1,11 +1,11 @@
 ﻿using RZ.Foundation.Extensions;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using static RZ.Foundation.OptionHelper;
+using LanguageExt;
+using static RZ.Foundation.Extensions.OptionHelper;
 
 namespace RZ.Foundation.Net
 {
@@ -96,9 +96,9 @@ namespace RZ.Foundation.Net
 
         static Action<HttpRequestOption> ApplyConfig(HttpRequestMessage req) => config => {
             config.Authentication.Then(auth =>
-                req.Headers.Authorization = auth.Parameter.Get( p => new AuthenticationHeaderValue(auth.Scheme, p)
-                                                              , () => new AuthenticationHeaderValue(auth.Scheme)));
-            config.CustomHeaders.Then(headers => headers.ForEach(kv => req.Headers.Add(kv.Key, kv.Value)));
+                req.Headers.Authorization = auth.Parameter.Match( p => new AuthenticationHeaderValue(auth.Scheme, p)
+                                                                , () => new AuthenticationHeaderValue(auth.Scheme)));
+            config.CustomHeaders.Then(headers => headers.Iter(kv => req.Headers.Add(kv.Key, kv.Value)));
         };
 
     }

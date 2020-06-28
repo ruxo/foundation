@@ -3,6 +3,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using LanguageExt;
 using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.Extensions
@@ -11,7 +12,7 @@ namespace RZ.Foundation.Extensions
     {
         public static async Task<Unit> AsUnitTask(this Task task) {
             await task;
-            return Unit.Value;
+            return Unit.Default;
         }
 
         /// <summary>
@@ -67,7 +68,7 @@ namespace RZ.Foundation.Extensions
 
         public static Task<ApiResult<Unit>> ToApiResult(this Task task, CancellationToken token) =>
             task.ContinueWith(t => !token.IsCancellationRequested && t.IsSuccess()
-                                 ? Unit.Value
+                                 ? Unit.Default
                                  : GetException(t).AsApiFailure<Unit>()
                              , token
                              , TaskContinuationOptions.ExecuteSynchronously

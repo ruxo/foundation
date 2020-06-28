@@ -1,6 +1,9 @@
 ﻿using System;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using LanguageExt;
+using RZ.Foundation.Extensions;
+using static LanguageExt.Prelude;
 
 namespace RZ.Foundation
 {
@@ -20,7 +23,7 @@ namespace RZ.Foundation
         public override bool CanConvert(Type objectType) => objectType == typeof(Option<T>);
 
         public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) =>
-            reader.TokenType == JsonToken.Null ? Option<T>.None() : serializer.Deserialize<T>(reader).ToOption()!;
+            reader.TokenType == JsonToken.Null ? Option<T>.None : Optional(serializer.Deserialize<T>(reader)!);
 
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) {
             if (value is Option<T> v && v.IsSome)

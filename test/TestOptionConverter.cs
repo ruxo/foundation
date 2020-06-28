@@ -1,7 +1,10 @@
 using FluentAssertions;
+using LanguageExt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using RZ.Foundation.Extensions;
 using Xunit;
+using static LanguageExt.Prelude;
 
 namespace RZ.Foundation
 {
@@ -26,7 +29,7 @@ namespace RZ.Foundation
         [Fact]
         public void SerializeNullStringWithOptionConverter()
         {
-            var data = new Sample { OptionField = Option<string>.None() };
+            var data = new Sample { OptionField = None };
 
             var serialized = JsonConvert.SerializeObject(data);
 
@@ -38,7 +41,6 @@ namespace RZ.Foundation
         {
             var data = JsonConvert.DeserializeObject<Sample>(@"{""OptionField"":""Test""}");
 
-            data.OptionField.Should().NotBeNull();
             data.OptionField.IsSome.Should().BeTrue();
             data.OptionField.GetOrElse("XXX").Should().Be("Test");
         }
@@ -48,7 +50,6 @@ namespace RZ.Foundation
         {
             var data = JsonConvert.DeserializeObject<Sample>(@"{""OptionField"":null}");
 
-            data.OptionField.Should().NotBeNull();
             data.OptionField.IsNone.Should().BeTrue();
         }
 

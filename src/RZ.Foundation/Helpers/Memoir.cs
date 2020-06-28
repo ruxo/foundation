@@ -3,8 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using LanguageExt;
 using RZ.Foundation.Extensions;
 using static RZ.Foundation.Prelude;
+using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Helpers
 {
@@ -55,7 +57,7 @@ namespace RZ.Foundation.Helpers
         }
 
         static B ExecuteMemoir<A,B>(Func<A,B> loader, ICache<A,B> cache, A x) =>
-            cache.Get(x).Get(Identity, () => SideEffect<B>(result => cache.Store(x, result))(loader(x)));
+            cache.Get(x).Match(identity, () => SideEffect<B>(result => cache.Store(x, result))(loader(x)));
 
         public static Func<A, B> From<A, B>(Func<A, B> loader, ICache<A, B> cache) => x => ExecuteMemoir(loader, cache, x);
 

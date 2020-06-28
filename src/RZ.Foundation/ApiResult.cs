@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using LanguageExt;
 using RZ.Foundation.Extensions;
-using static RZ.Foundation.Prelude;
+using static LanguageExt.Prelude;
 
 namespace RZ.Foundation
 {
@@ -51,8 +52,8 @@ namespace RZ.Foundation
         public static ApiResult<T> Join<T>(this ApiResult<ApiResult<T>> doubleResult) => doubleResult.Chain(i => i);
         public static Result<T, F> Join<T, F>(this Result<Result<T, F>, F> doubleResult) => doubleResult.Chain(i => i);
 
-        public static Option<T> ToOption<T>(this ApiResult<T> result) => result.Map(Some).GetOrElse(None<T>());
-        public static Option<T> ToOption<T, F>(this Result<T, F> result) => result.Map(Some).GetOrElse(None<T>());
+        public static Option<T> ToOption<T>(this ApiResult<T> result) => result.Map(Some).GetOrElse(None);
+        public static Option<T> ToOption<T, F>(this Result<T, F> result) => result.Map(Some).GetOrElse(None);
 
         public static T? ToNullable<T>(this ApiResult<T> result) where T : class => result.IsSuccess? result.GetSuccess() : null;
 

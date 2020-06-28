@@ -1,27 +1,58 @@
 using FluentAssertions;
 using Xunit;
-using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.Extensions
 {
     public sealed class CollectionExtensionTest
     {
         [Fact]
-        public void ChooseSomeOfArray() {
-            Option<int>[] data = { None<int>(), 2, 3, None<int>(), 5, 6, None<int>() };
-
-            var result = data.Choose(i => i);
-
-            result.Should().BeEquivalentTo(new[] {2, 3, 5, 6});
+        public void RemoveAtMiddle() {
+            var source = new[] {1, 2, 3, 4, 5};
+            var result = source.RemoveAt(2);
+            result.Should().BeEquivalentTo(new[] {1, 2, 4, 5});
         }
 
         [Fact]
-        public void ChooseOdd() {
-            var testText = "hello world!";
+        public void RemoveAtInvalidPos_ReturnSame() {
+            var source = new[] {1, 2, 3, 4, 5};
+            var result = source.RemoveAt(-2);
+            result.Should().BeEquivalentTo(source);
+        }
 
-            var result = testText.Choose((c, i) => i % 2 == 1 ? c : None<char>());
+        [Fact]
+        public void PartitionEvenOddNumbers() {
+            var source = new[] {1, 2, 3, 4, 5};
+            var (evens, odds) = source.Partition(i => i % 2 == 0);
+            evens.Should().BeEquivalentTo(new[] {2, 4});
+            odds.Should().BeEquivalentTo(new[] {1, 3, 5});
+        }
 
-            result.Should().BeEquivalentTo(new[] {'e', 'l', ' ', 'o', 'l', '!'});
+        [Fact]
+        public void TryFirst() {
+            var source = new[] {1, 2, 3, 4, 5};
+            var result = source.TryFirst();
+            result.Get().Should().Be(1);
+        }
+
+        [Fact]
+        public void TryFirstWithPredicate() {
+            var source = new[] {1, 2, 3, 4, 5};
+            var result = source.TryFirst(i => i%2 == 0);
+            result.Get().Should().Be(2);
+        }
+
+        [Fact]
+        public void TryFistWithEmpty_ReturnsNone() {
+            var source = new int[0];
+            var result = source.TryFirst();
+            result.IsNone.Should().BeTrue();
+        }
+
+        [Fact]
+        public void TryFirstWithPredicateFalse() {
+            var source = new[] {1, 2, 3, 4, 5};
+            var result = source.TryFirst(i => i%7 == 0);
+            result.IsNone.Should().BeTrue();
         }
     }
 }

@@ -1,8 +1,9 @@
 using System;
 using System.Linq;
+using LanguageExt;
 using Newtonsoft.Json;
 using RZ.Foundation.Extensions;
-using static RZ.Foundation.Prelude;
+using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Types
 {
@@ -67,14 +68,14 @@ namespace RZ.Foundation.Types
         public override string ToString() => Begin == null && End == null ? "*" : $"{DisplayTime(Begin)} - {DisplayTime(End)}";
 
         public static TimeRange Parse(string s) =>
-            TryParse(s).GetOrElse(() => throw ExceptionExtension.CreateError($"Unrecognized TimeRange format: {s}", "invalid_request", nameof(TimeRange), s));
+            TryParse(s).IfNone(() => throw ExceptionExtension.CreateError($"Unrecognized TimeRange format: {s}", "invalid_request", nameof(TimeRange), s));
 
         public static Option<TimeRange> TryParse(string s) {
             if (s == "*")
                 return new TimeRange();
 
             var timeParts = s.Split('-').Select(part => part.Trim()).ToArray();
-            return timeParts.Length == 2 ? Create(ParsePart(timeParts[0]), ParsePart(timeParts[1])) : None<TimeRange>();
+            return timeParts.Length == 2 ? Some(Create(ParsePart(timeParts[0]), ParsePart(timeParts[1]))) : None;
         }
 
         static TimeSpan? ParsePart(string p) =>

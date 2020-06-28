@@ -1,9 +1,16 @@
 using System;
 using System.Threading.Tasks;
+using LanguageExt;
 using static RZ.Foundation.Prelude;
+using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Types
 {
+    public static class TryExtensions
+    {
+
+    }
+    /*
     /// <summary>
     /// Inspired by LanguageExt
     /// </summary>
@@ -15,10 +22,8 @@ namespace RZ.Foundation.Types
             this.runnable = runnable;
         }
 
-        public async Task<U> Try<U>(Func<T, U> success, Func<Exception, U> failed) {
-            var result = await Try();
-            return result.Get(success, failed);
-        }
+        public async Task<U> Try<U>(Func<T, U> success, Func<Exception, U> failed) =>
+            (await Try()).Get(success, failed);
 
         public Task<ApiResult<T>> Try() => ApiResult<T>.SafeCallAsync(runnable);
 
@@ -60,8 +65,8 @@ namespace RZ.Foundation.Types
         }
 
         public ApiResult<T> Try() => ApiResult<T>.SafeCall(runnable);
-        public ApiResult<T> Try(Func<Exception, Exception> exceptionTransformer) => Try().Map(Identity, exceptionTransformer);
-        public Option<T> TryOption() => Option<T>.From(runnable);
+        public ApiResult<T> Try(Func<Exception, Exception> exceptionTransformer) => Try().Map(identity, exceptionTransformer);
+        public Option<T> TryOption() => Try(runnable);
 
         public TryCall<U> Map<U>(Func<T, U> mapper) => new TryCall<U>(() => mapper(runnable()));
 
@@ -75,4 +80,5 @@ namespace RZ.Foundation.Types
 
         public TryAsync<T> ToAsync() => new TryAsync<T>(() => Task.FromResult(runnable()));
     }
+    */
 }
