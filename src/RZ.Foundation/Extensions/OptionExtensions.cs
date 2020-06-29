@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using LanguageExt;
+using LanguageExt.Common;
 using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Extensions
@@ -15,8 +16,8 @@ namespace RZ.Foundation.Extensions
         public static Option<T> ToOption<T>(this T? data) where T : struct => data.HasValue? Some(data.Value) : Option<T>.None;
         public static Option<T> None<T>() => Option<T>.None;
 
-        public static ApiResult<T> ToApiResult<T>(this Option<T> o) => o.IsSome ? o.Get().AsApiSuccess() : DummyException;
-        public static ApiResult<T> ToApiResult<T>(this Option<T> o, Func<Exception> none) => o.IsSome ? o.Get().AsApiSuccess() : none();
+        public static Result<T> ToResult<T>(this Option<T> o) => o.IsSome ? o.Get().AsSuccess() : DummyException.AsFailure<T>();
+        public static Result<T> ToResult<T>(this Option<T> o, Func<Exception> none) => o.IsSome ? o.Get().AsSuccess() : none().AsFailure<T>();
 
         public static Option<T> Join<T>(this Option<Option<T>> doubleOption) => doubleOption.Bind(i => i);
 

@@ -5,7 +5,9 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using LanguageExt;
+using LanguageExt.Common;
 using static RZ.Foundation.Extensions.OptionHelper;
+using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Net
 {
@@ -17,11 +19,11 @@ namespace RZ.Foundation.Net
 
     public interface ITextHttp : IHttp
     {
-        Task<ApiResult<string>> Request(HttpMethod method, Uri uri, Option<string> data, Option<HttpRequestOption> config);
-        Task<ApiResult<string>> Get(Uri uri, Option<HttpRequestOption> config);
-        Task<ApiResult<string>> Post(Uri uri, Option<string> data, Option<HttpRequestOption> config);
-        Task<ApiResult<string>> Put(Uri uri, Option<string> data, Option<HttpRequestOption> config);
-        Task<ApiResult<string>> Delete(Uri uri, Option<HttpRequestOption> config);
+        Task<Result<string>> Request(HttpMethod method, Uri uri, Option<string> data, Option<HttpRequestOption> config);
+        Task<Result<string>> Get(Uri uri, Option<HttpRequestOption> config);
+        Task<Result<string>> Post(Uri uri, Option<string> data, Option<HttpRequestOption> config);
+        Task<Result<string>> Put(Uri uri, Option<string> data, Option<HttpRequestOption> config);
+        Task<Result<string>> Delete(Uri uri, Option<HttpRequestOption> config);
 
         Task<string> NRequest(HttpMethod method, Uri uri, Option<string> data, Option<HttpRequestOption> config);
         Task<string> NGet(Uri uri, Option<HttpRequestOption> config);
@@ -51,11 +53,11 @@ namespace RZ.Foundation.Net
 
         public Option<HttpStatusCode> ParseHttpError(string httpErrorCode) => httpErrorCode.StartsWith(HttpErrorCodePrefix)? (HttpStatusCode) int.Parse(httpErrorCode.Substring(HttpErrorCodePrefix.Length)) : None<HttpStatusCode>();
 
-        public Task<ApiResult<string>> Request(HttpMethod method
+        public Task<Result<string>> Request(HttpMethod method
                                               , Uri uri
                                               , Option<string> data
                                               , Option<HttpRequestOption> config) =>
-            ApiResult<string>.SafeCallAsync(() => NRequest(method, uri, data, config));
+            TryAsync(() => NRequest(method, uri, data, config)).Try();
 
         public async Task<string> NRequest( HttpMethod method
                                                     , Uri uri
@@ -89,10 +91,10 @@ namespace RZ.Foundation.Net
         public Task<string> NPut(Uri uri, Option<string> data, Option<HttpRequestOption> config) => NRequest(HttpMethod.Put, uri, data, config);
         public Task<string> NDelete(Uri uri, Option<HttpRequestOption> config) => NRequest(HttpMethod.Delete, uri, null!, config);
 
-        public Task<ApiResult<string>> Get(Uri uri, Option<HttpRequestOption> config) => Request(HttpMethod.Get, uri, null!, config);
-        public Task<ApiResult<string>> Post(Uri uri, Option<string> data, Option<HttpRequestOption> config) => Request(HttpMethod.Post, uri, data, config);
-        public Task<ApiResult<string>> Put(Uri uri, Option<string> data, Option<HttpRequestOption> config) => Request(HttpMethod.Put, uri, data, config);
-        public Task<ApiResult<string>> Delete(Uri uri, Option<HttpRequestOption> config) => Request(HttpMethod.Delete, uri, null!, config);
+        public Task<Result<string>> Get(Uri uri, Option<HttpRequestOption> config) => Request(HttpMethod.Get, uri, null!, config);
+        public Task<Result<string>> Post(Uri uri, Option<string> data, Option<HttpRequestOption> config) => Request(HttpMethod.Post, uri, data, config);
+        public Task<Result<string>> Put(Uri uri, Option<string> data, Option<HttpRequestOption> config) => Request(HttpMethod.Put, uri, data, config);
+        public Task<Result<string>> Delete(Uri uri, Option<HttpRequestOption> config) => Request(HttpMethod.Delete, uri, null!, config);
 
         static Action<HttpRequestOption> ApplyConfig(HttpRequestMessage req) => config => {
             config.Authentication.Then(auth =>

@@ -8,28 +8,12 @@ using static LanguageExt.Prelude;
 
 namespace RZ.Foundation
 {
+    /*
     /// <summary>
     /// Helper functions for <see cref="Result{TSuccess, TFail}"/>
     /// </summary>
     public static class ResultHelper
     {
-        /// <summary>
-        /// Helper function for creating a success result from any value.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="TFail"></typeparam>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public static Result<T, TFail> AsSuccess<T, TFail>(this T data) => data;
-        /// <summary>
-        /// Helper function for creating a failure result from any value.
-        /// </summary>
-        /// <typeparam name="TSuccess"></typeparam>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public static Result<TSuccess, T> AsFailure<TSuccess, T>(this T data) => data;
-
         public static ApiResult<T> AsApiSuccess<T>(this T data) => data;
         public static ApiResult<T> AsApiFailure<T>(this Exception data) => data;
 
@@ -50,10 +34,10 @@ namespace RZ.Foundation
                                                     , "ApiResult")(result.GetFail());
 
         public static ApiResult<T> Join<T>(this ApiResult<ApiResult<T>> doubleResult) => doubleResult.Chain(i => i);
-        public static Result<T, F> Join<T, F>(this Result<Result<T, F>, F> doubleResult) => doubleResult.Chain(i => i);
+        //public static Result<T, F> Join<T, F>(this Result<Result<T, F>, F> doubleResult) => doubleResult.Chain(i => i);
 
         public static Option<T> ToOption<T>(this ApiResult<T> result) => result.Map(Some).GetOrElse(None);
-        public static Option<T> ToOption<T, F>(this Result<T, F> result) => result.Map(Some).GetOrElse(None);
+        //public static Option<T> ToOption<T, F>(this Result<T, F> result) => result.Map(Some).GetOrElse(None);
 
         public static T? ToNullable<T>(this ApiResult<T> result) where T : class => result.IsSuccess? result.GetSuccess() : null;
 
@@ -73,41 +57,6 @@ namespace RZ.Foundation
     /// <typeparam name="TFail">Type that represents failed data.</typeparam>
     public struct Result<TSuccess, TFail>
     {
-        readonly bool isFailed;
-        [AllowNull] readonly TFail error;
-        [AllowNull] readonly TSuccess data;
-
-        public Result(TSuccess success)
-        {
-            isFailed = false;
-            error = default;
-            data = success;
-        }
-        public Result(TFail fail)
-        {
-            isFailed = true;
-            data = default;
-            error = fail;
-        }
-
-        /// <summary>
-        /// Check if this result represents success state.
-        /// </summary>
-        public bool IsSuccess => !isFailed;
-        /// <summary>
-        /// Check if this result represents failure state.
-        /// </summary>
-        public bool IsFail => isFailed;
-        /// <summary>
-        /// Get instance of success type.
-        /// </summary>
-        /// <returns>Instance of success type.</returns>
-        public TSuccess GetSuccess() => isFailed ? throw new InvalidOperationException() : data;
-        /// <summary>
-        /// Get instance of failed type.
-        /// </summary>
-        /// <returns>Instance of failed type.</returns>
-        public TFail GetFail() => isFailed? error : throw new InvalidOperationException();
 
         public TSuccess GetOrElse(TSuccess valForError) => IsSuccess ? data : valForError;
         public TSuccess GetOrElse(Func<TFail, TSuccess> errorMap) => IsSuccess ? data : errorMap(error!);
@@ -157,37 +106,6 @@ namespace RZ.Foundation
             return this;
         }
 
-        /// <summary>
-        /// Call <paramref name="f"/> if current result is success.
-        /// </summary>
-        /// <param name="f"></param>
-        /// <returns>Always return current result.</returns>
-        public Result<TSuccess, TFail> Then(Action<TSuccess> f)
-        {
-            if (!isFailed) f(data);
-            return this;
-        }
-        public Result<TSuccess, TFail> Then(Action<TSuccess> fSuccess, Action<TFail> fFail)
-        {
-            if (IsSuccess)
-                fSuccess(data);
-            else
-                fFail(error!);
-            return this;
-        }
-        public async Task<Result<TSuccess, TFail>> ThenAsync(Func<TSuccess,Task> fSuccess)
-        {
-            if (IsSuccess) await fSuccess(data);
-            return this;
-        }
-        public async Task<Result<TSuccess, TFail>> ThenAsync(Func<TSuccess, Task> fSuccess, Func<TFail, Task> fFail)
-        {
-            if (IsSuccess)
-                await fSuccess(data);
-            else
-                await fFail(error!);
-            return this;
-        }
 
         public Result<U, TFail> TryCast<U>() => IsSuccess? (U) (object) data! : new Result<U, TFail>(error!);
 
@@ -269,16 +187,9 @@ namespace RZ.Foundation
         public ApiResult<T> Where(Func<T, bool> predicate, Exception failed) => IsSuccess && predicate(data) ? this : failed;
         public async Task<ApiResult<T>> WhereAsync(Func<T, Task<bool>> predicate, Exception failed) => IsSuccess && await predicate(data) ? this : failed;
 
-        public ApiResult<U> Map<U>(Func<T, U> mapper) => IsSuccess? mapper(data) : new ApiResult<U>(error!);
-        public ApiResult<U> Map<U>(Func<T, U> mapper, Func<Exception,Exception> failMapper) => IsSuccess? mapper(data) : new ApiResult<U>(failMapper(error!));
-
         public async Task<ApiResult<U>> MapAsync<U>(Func<T, Task<U>> mapper) => IsSuccess? await mapper(data) : new ApiResult<U>(error!);
         public async Task<ApiResult<U>> MapAsync<U>(Func<T, Task<U>> mapper, Func<Exception,Task<Exception>> failMapper) =>
             IsSuccess? await mapper(data) : new ApiResult<U>(await failMapper(error!));
-
-        public ApiResult<U> Chain<U>(Func<T, ApiResult<U>> mapper) => IsFail? new ApiResult<U>(error!) : mapper(data);
-
-        public async Task<ApiResult<U>> ChainAsync<U>(Func<T, Task<ApiResult<U>>> mapper) => IsSuccess ? await mapper(data) : error!;
 
         public ApiResult<T> OrElse(T val) => IsSuccess ? this : val;
         public ApiResult<T> OrElse(ApiResult<T> anotherResult) => IsSuccess ? this : anotherResult;
@@ -340,4 +251,5 @@ namespace RZ.Foundation
 
         #endregion
     }
+    */
 }

@@ -1,5 +1,7 @@
 using System;
 using System.Threading.Tasks;
+using LanguageExt.Common;
+using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Extensions
 {
@@ -25,24 +27,24 @@ namespace RZ.Foundation.Extensions
                                return true;
                            })).GetSuccess();
 
-        public static async Task<ApiResult<T>> RetryUntil<T>(Func<Task<T>> task, Func<Exception,bool>? onFailure = null) {
-            ApiResult<T> result;
+        public static async Task<Result<T>> RetryUntil<T>(Func<Task<T>> task, Func<Exception,bool>? onFailure = null) {
+            Result<T> result;
             var cont = true;
             do {
-                result = await ApiResult<T>.SafeCallAsync(task);
-                if (result.IsFail) cont = onFailure?.Invoke(result.GetFail()) ?? true;
-            } while (result.IsFail && cont);
+                result = await TryAsync(task).Try();
+                if (result.IsFaulted) cont = onFailure?.Invoke(result.GetFail()) ?? true;
+            } while (result.IsFaulted && cont);
 
             return result;
         }
 
-        public static ApiResult<T> RetryUntil<T>(Func<T> task, Func<Exception,bool>? onFailure = null) {
-            ApiResult<T> result;
+        public static Result<T> RetryUntil<T>(Func<T> task, Func<Exception,bool>? onFailure = null) {
+            Result<T> result;
             var cont = true;
             do {
-                result = ApiResult<T>.SafeCall(task);
-                if (result.IsFail) cont = onFailure?.Invoke(result.GetFail()) ?? true;
-            } while (result.IsFail && cont);
+                result = Try(task).Try();
+                if (result.IsFaulted) cont = onFailure?.Invoke(result.GetFail()) ?? true;
+            } while (result.IsFaulted && cont);
 
             return result;
         }

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using LanguageExt;
+using LanguageExt.Common;
+using RZ.Foundation.Extensions;
 using RZ.Foundation.Types;
 
 namespace RZ.Foundation {
@@ -36,8 +38,8 @@ namespace RZ.Foundation {
             return x;
         }
 
-        public static ApiResult<T> Success<T>(T val) => val;
-        public static ApiResult<T> Failed<T>(Exception ex) => ex;
+        public static Result<T> Success<T>(T val) => val;
+        public static Result<T> Failed<T>(Exception ex) => new Result<T>(ex);
 
         public static Iter<T> Iter<T>(IEnumerable<T> enumerable) => enumerable is Iter<T> iter ? iter : new Iter<T>(enumerable);
 
@@ -45,8 +47,8 @@ namespace RZ.Foundation {
         public static Option<(A, B, C)> With<A, B, C>(Option<A> a, Option<B> b, Option<C> c) =>
             a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx,cx))));
 
-        public static ApiResult<(A, B)> With<A, B>(ApiResult<A> a, ApiResult<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
-        public static ApiResult<(A, B, C)> With<A, B, C>(ApiResult<A> a, ApiResult<B> b, ApiResult<C> c) =>
+        public static Result<(A, B)> With<A, B>(Result<A> a, Result<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
+        public static Result<(A, B, C)> With<A, B, C>(Result<A> a, Result<B> b, Result<C> c) =>
             a.Chain(ax => b.Chain(bx => c.Map(cx => (ax, bx,cx))));
     }
 }

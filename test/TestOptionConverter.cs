@@ -42,7 +42,7 @@ namespace RZ.Foundation
             var data = JsonConvert.DeserializeObject<Sample>(@"{""OptionField"":""Test""}");
 
             data.OptionField.IsSome.Should().BeTrue();
-            data.OptionField.GetOrElse("XXX").Should().Be("Test");
+            data.OptionField.IfNone("XXX").Should().Be("Test");
         }
 
         [Fact]
