@@ -1,11 +1,11 @@
 ﻿using System;
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using LanguageExt;
+using Newtonsoft.Json;
 using RZ.Foundation.Extensions;
 using static LanguageExt.Prelude;
 
-namespace RZ.Foundation
+namespace RZ.Foundation.NewtonsoftJson
 {
     static class OptionConverterHelper
     {
@@ -18,7 +18,7 @@ namespace RZ.Foundation
           , { typeof(long), JsonToken.Integer }
         };
     }
-    public class OptionConverter<T> : JsonConverter
+    public sealed class OptionConverter<T> : JsonConverter
     {
         public override bool CanConvert(Type objectType) => objectType == typeof(Option<T>);
 

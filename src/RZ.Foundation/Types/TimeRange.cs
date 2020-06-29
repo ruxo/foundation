@@ -1,14 +1,12 @@
 using System;
 using System.Linq;
 using LanguageExt;
-using Newtonsoft.Json;
 using RZ.Foundation.Extensions;
 using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Types
 {
-    [JsonConverter(typeof(TimeRangeJsonConverter))]
-    public struct TimeRange
+    public readonly struct TimeRange
     {
         public TimeSpan? Begin { get; }
         public TimeSpan? End { get; }
@@ -84,21 +82,5 @@ namespace RZ.Foundation.Types
                      ? v : throw new InvalidOperationException($"Invalid time part: {p}").AddMetaData("invalid_request", nameof(TimeRange), p);
 
         static string DisplayTime(TimeSpan? t) => t?.ToString(@"hh\:mm") ?? "*";
-
-    }
-
-    public class TimeRangeJsonConverter : JsonConverter
-    {
-        public string TimeText = string.Empty;
-
-        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) {
-            var range = (TimeRange?) value;
-            writer.WriteValue(range!.ToString());
-        }
-
-        public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) =>
-            TimeRange.Parse((string)reader.Value!);
-
-        public override bool CanConvert(Type objectType) => objectType == typeof(TimeRange);
     }
 }

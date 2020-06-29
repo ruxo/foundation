@@ -2,7 +2,7 @@ using FluentAssertions;
 using LanguageExt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using RZ.Foundation.Extensions;
+using RZ.Foundation.NewtonsoftJson;
 using Xunit;
 using static LanguageExt.Prelude;
 

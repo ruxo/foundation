@@ -2,6 +2,7 @@
 using LanguageExt;
 using Newtonsoft.Json;
 using RZ.Foundation.Extensions;
+using RZ.Foundation.NewtonsoftJson;
 using RZ.Foundation.Types;
 using Xunit;
 
@@ -45,14 +46,14 @@ namespace RZ.Foundation
         public void TestSerializeOptionTimeRange() {
             var x = new TestOptionTimeRange{A = TimeRange.Parse("10:00 - 12:00")};
 
-            var s = JsonConvert.SerializeObject(x);
+            var s = JsonConvert.SerializeObject(x, Formatting.None, new TimeRangeJsonConverter());
 
             s.Should().Be(@"{""A"":""10:00 - 12:00""}");
         }
 
         [Fact]
         public void TestDeserializeOptionTimeRange() {
-            var x = JsonConvert.DeserializeObject<TestOptionTimeRange>(@"{""A"":""10:00 - 12:00""}");
+            var x = JsonConvert.DeserializeObject<TestOptionTimeRange>(@"{""A"":""10:00 - 12:00""}", new TimeRangeJsonConverter())!;
 
             x.A.IsSome.Should().BeTrue();
             x.A.Get().Should().Be(TimeRange.Parse("10:00 - 12:00"));
