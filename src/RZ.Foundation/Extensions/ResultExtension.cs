@@ -110,6 +110,13 @@ namespace RZ.Foundation.Extensions
             return result;
         }
 
+        public static async Task<Result<T>> IfFail<T>(this Task<Result<T>> resultTask, Action<Exception> f) {
+            var result = await resultTask;
+            if (result.IsFaulted)
+                f(result.GetFail());
+            return result;
+        }
+
         public static async Task<Result<T>> IfFail<T>(this Task<Result<T>> resultTask, Func<Exception,Task> f)
         {
             var result = await resultTask;
