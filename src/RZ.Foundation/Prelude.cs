@@ -47,8 +47,8 @@ namespace RZ.Foundation {
         public static Option<(A, B, C)> With<A, B, C>(Option<A> a, Option<B> b, Option<C> c) =>
             a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx,cx))));
 
-        public static Result<(A, B)> With<A, B>(Result<A> a, Result<B> b) => a.Chain(ax => b.Map(bx => (ax, bx)));
+        public static Result<(A, B)> With<A, B>(Result<A> a, Result<B> b) => a.Bind(ax => b.Map(bx => (ax, bx)));
         public static Result<(A, B, C)> With<A, B, C>(Result<A> a, Result<B> b, Result<C> c) =>
-            a.Chain(ax => b.Chain(bx => c.Map(cx => (ax, bx,cx))));
+            a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx,cx))));
     }
 }

@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
-        <AssemblyVersion>3.0.0.208</AssemblyVersion>
-        <FileVersion>3.0.0.208</FileVersion>
-        <Version>3.0.0</Version>
-        <PackageVersion>3.0.0</PackageVersion>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <AssemblyVersion>3.0.1.209</AssemblyVersion>
+        <FileVersion>3.0.1.209</FileVersion>
+        <Version>3.0.1</Version>
+        <PackageVersion>3.0.1</PackageVersion>
         <LangVersion>8</LangVersion>
         <Nullable>enable</Nullable>
         <Title>RZ.Foundation.NewtonsoftJson</Title>
@@ -18,13 +18,17 @@
         <PackageTags>functional csharp extension json newtonsoft</PackageTags>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <OutputPath>../../lib/RZ.Foundation.NewtonsoftJson/</OutputPath>
+    </PropertyGroup>
+
     <ItemGroup>
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-      <PackageReference Include="RZ.Foundation" Version="3.0.0" />
+      <PackageReference Include="RZ.Foundation" Version="3.0.1" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\src\RZ.Foundation\RZ.Foundation.csproj" />
+      <ProjectReference Include="..\RZ.Foundation\RZ.Foundation.csproj" />
     </ItemGroup>
 
 </Project>
