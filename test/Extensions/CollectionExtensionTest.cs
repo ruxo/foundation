@@ -54,5 +54,19 @@ namespace RZ.Foundation.Extensions
             var result = source.TryFirst(i => i%7 == 0);
             result.IsNone.Should().BeTrue();
         }
+
+        [Fact]
+        public void TryFindIndex_ValidCondition() {
+            var source = new[] {1, 2, 3, 4, 5};
+            var result = source.TryFindIndex(i => i == 3);
+            result.Get().Should().Be(2);
+        }
+
+        [Fact]
+        public void TryFindIndex_NotFoundCondition() {
+            var source = new[] {1, 2, 3, 4, 5};
+            var result = source.TryFindIndex(i => i == 999);
+            result.IsNone.Should().BeTrue("999 is not in the array");
+        }
     }
 }

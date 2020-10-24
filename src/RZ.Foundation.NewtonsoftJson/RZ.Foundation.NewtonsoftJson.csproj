@@ -2,10 +2,10 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
-        <AssemblyVersion>3.0.1.209</AssemblyVersion>
-        <FileVersion>3.0.1.209</FileVersion>
-        <Version>3.0.1</Version>
-        <PackageVersion>3.0.1</PackageVersion>
+        <AssemblyVersion>3.0.3.211</AssemblyVersion>
+        <FileVersion>3.0.3.211</FileVersion>
+        <Version>3.0.3</Version>
+        <PackageVersion>3.0.3</PackageVersion>
         <LangVersion>8</LangVersion>
         <Nullable>enable</Nullable>
         <Title>RZ.Foundation.NewtonsoftJson</Title>

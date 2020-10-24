@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using LanguageExt;
 using LanguageExt.Common;
 using RZ.Foundation.Extensions;
-using RZ.Foundation.Types;
 
 namespace RZ.Foundation {
     public static class Prelude {
@@ -18,7 +16,6 @@ namespace RZ.Foundation {
         public static void Noop() { }
 
         public static Func<T, T> SideEffect<T>(Action<T> f) => x => {
-
             f(x);
             return x;
         };
@@ -40,8 +37,6 @@ namespace RZ.Foundation {
 
         public static Result<T> Success<T>(T val) => val;
         public static Result<T> Failed<T>(Exception ex) => new Result<T>(ex);
-
-        public static Iter<T> Iter<T>(IEnumerable<T> enumerable) => enumerable is Iter<T> iter ? iter : new Iter<T>(enumerable);
 
         public static Option<(A, B)> With<A, B>(Option<A> a, Option<B> b) => a.Bind(ax => b.Map(bx => (ax, bx)));
         public static Option<(A, B, C)> With<A, B, C>(Option<A> a, Option<B> b, Option<C> c) =>

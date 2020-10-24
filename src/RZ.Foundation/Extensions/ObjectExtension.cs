@@ -16,5 +16,10 @@ namespace RZ.Foundation.Extensions
             var comparer = EqualityComparer<T>.Default;
             return comparer.Equals(source, v1) || comparer.Equals(source, v2) || comparer.Equals(source, v3);
         }
+
+        public static bool IsEither<T>(this T source, T v1, T v2, T v3, T v4) {
+            var comparer = EqualityComparer<T>.Default;
+            return comparer.Equals(source, v1) || comparer.Equals(source, v2) || comparer.Equals(source, v3) || comparer.Equals(source, v4);
+        }
     }
 }

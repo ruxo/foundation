@@ -1,5 +1,7 @@
 ﻿using System;
+#if NETSTANDARD2_1
 using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using LanguageExt;
@@ -49,8 +51,10 @@ namespace RZ.Foundation.Extensions
             await (await t).MatchAsync(someMapper, noneMapper);
 
         public static async Task<T> GetOrThrow<T>(this Task<Option<T>> t, Func<Exception> exceptionToThrow) => (await t).GetOrThrow(exceptionToThrow);
-
+        
+#if NETSTANDARD2_1
         [return: MaybeNull]
+#endif
         public static async Task<T> GetOrDefault<T>(this Task<Option<T>> t) => (await t).GetOrDefault()!;
 
         public static async Task<T> GetOrElse<T>(this Task<Option<T>> t, T noneValue) => (await t).IfNone(noneValue);
@@ -78,7 +82,9 @@ namespace RZ.Foundation.Extensions
         public static Task<TR> GetAsync<T, TR>(this Option<T> opt, Func<T, Task<TR>> someHandler, Func<Task<TR>> noneHandler) =>
             opt.MatchAsync(someHandler, noneHandler);
 
+        #if NETSTANDARD2_1
         [return: MaybeNull]
+        #endif
         public static  T GetOrDefault<T>(this Option<T> opt) => opt.IfNoneUnsafe(() => default!);
 
         [Obsolete("use IfNone instead")]
@@ -115,6 +121,7 @@ namespace RZ.Foundation.Extensions
         /// <returns>Result option type</returns>
         public static Option<T> OrElse<T>(this Option<T> opt, Func<Option<T>> elseFunc) => opt.IsSome? opt : elseFunc();
 
+#if NETSTANDARD2_1
         /// <summary>
         /// Replace current option value if current option is None.
         /// </summary>
@@ -124,6 +131,7 @@ namespace RZ.Foundation.Extensions
         /// <returns>Result option type</returns>
         public static ValueTask<Option<T>> OrElseAsync<T>(this Option<T> opt, Func<ValueTask<Option<T>>> elseFunc) =>
             opt.IsSome ? new ValueTask<Option<T>>(opt) : elseFunc();
+#endif
 
         /// <summary>
         /// Replace current option value if current option is None.
@@ -212,7 +220,9 @@ namespace RZ.Foundation.Extensions
     public struct OptionSerializable<T>
     {
         public bool HasValue;
+#if NETSTANDARD2_1
         [AllowNull]
+#endif
         public T Value;
         public OptionSerializable(Option<T> opt)
         {

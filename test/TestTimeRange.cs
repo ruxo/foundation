@@ -19,7 +19,7 @@ namespace RZ.Foundation
 
         [Fact]
         public void TestDeserializer() {
-            var x = JsonConvert.DeserializeObject<Test>(@"{""A"":""10:30 - 12:30""}", new TimeRangeJsonConverter());
+            var x = JsonConvert.DeserializeObject<Test>(@"{""A"":""10:30 - 12:30""}", new TimeRangeJsonConverter())!;
 
             x.A.Should().Be(TimeRange.Parse("10:30 - 12:30"));
         }

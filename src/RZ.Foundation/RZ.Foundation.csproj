@@ -4,20 +4,20 @@
     <Company>RZ</Company>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <AssemblyVersion>3.0.2.210</AssemblyVersion>
-    <FileVersion>3.0.2.210</FileVersion>
-    <Version>3.0.2</Version>
-    <PackageVersion>3.0.2</PackageVersion>
+    <AssemblyVersion>3.1.0.211</AssemblyVersion>
+    <FileVersion>3.1.0.211</FileVersion>
+    <Version>3.1.0</Version>
+    <PackageVersion>3.1.0</PackageVersion>
     <LangVersion>8</LangVersion>
     <Title>RZ.Foundation: Functional and utility functions</Title>
     <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
     <PackageTags>utility,functional</PackageTags>
     <PackageReleaseNotes>Embrace LanguageExt lib.</PackageReleaseNotes>
     <Nullable>enable</Nullable>
-    <TargetFramework>netstandard2.1</TargetFramework>
     <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/ruxo/foundation</RepositoryUrl>
     <RepositoryType>public</RepositoryType>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>../../lib/RZ.Foundation/</OutputPath>

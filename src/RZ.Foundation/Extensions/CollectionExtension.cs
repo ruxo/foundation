@@ -16,12 +16,6 @@ namespace RZ.Foundation.Extensions {
             while(queue.TryDequeue(out _)) { }
         }
 
-        [Obsolete("use Iter instead")]
-        public static void ForEach<T>(this IEnumerable<T> seq, Action<T> handler) => seq.Iter(handler);
-
-        [Obsolete("use Iter instead")]
-        public static void ForEachIndex<T>(this IEnumerable<T> seq, Action<T, int> handler) => seq.Iter((i, x) => handler(x, i));
-
         /// <summary>
         /// Syntactic sugar for "Select"
         /// </summary>
@@ -94,6 +88,23 @@ namespace RZ.Foundation.Extensions {
         /// <typeparam name="T">type parameter of seq</typeparam>
         /// <returns>an option value of first element.</returns>
         public static Option<T> TryFirst<T>(this IEnumerable<T> seq, Func<T, bool> predicate) => seq.Where(predicate).TryFirst();
+
+        /// <summary>
+        /// Find an index number of the first element that satisfies the predicate.
+        /// </summary>
+        /// <param name="seq">A sequence to search</param>
+        /// <param name="predicate">Condition predicate</param>
+        /// <typeparam name="T">type parameter of seq</typeparam>
+        /// <returns>an option value of first element index</returns>
+        public static Option<int> TryFindIndex<T>(this IEnumerable<T> seq, Predicate<T> predicate) {
+            var index = -1;
+            foreach (var i in seq) {
+                ++index;
+                if (predicate(i))
+                    return index;
+            }
+            return None;
+        }
 
         /// <summary>
         ///
