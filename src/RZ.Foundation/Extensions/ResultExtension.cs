@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using LanguageExt;
 using LanguageExt.Common;
 using static LanguageExt.Prelude;
 

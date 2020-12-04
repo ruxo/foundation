@@ -124,5 +124,10 @@ namespace RZ.Foundation.Extensions {
             for (var i = 0; i < size && itor.MoveNext(); ++i)
                 yield return itor.Current;
         }
+
+        public static int GetCombinationHashCode<T>(this IEnumerable<T> seq) => seq.Aggregate(0, (hash, v) => hash ^ GetHashCode(v));
+        public static int GetCollectionHashCode<T>(this IEnumerable<T> seq) => seq.Aggregate(0, (hash, v) => HashAndShift(hash, GetHashCode(v)));
+        static int HashAndShift(int current, int newHash) => ((current ^ newHash) << 7) | ((current ^ newHash) >> (32 - 7));
+        static int GetHashCode<T>(T? v) => v?.GetHashCode() ?? 0;
     }
 }

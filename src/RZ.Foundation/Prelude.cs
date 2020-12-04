@@ -6,13 +6,8 @@ using RZ.Foundation.Extensions;
 
 namespace RZ.Foundation {
     public static class Prelude {
-        [Obsolete("use constant instead")]
-        public static Func<T> Constant<T>(T x) => constant(x);
-
         public static Func<T> constant<T>(T x) => () => x;
 
-        [Obsolete("use identity instead")]
-        public static T Identity<T>(T x) => x;
         public static void Noop() { }
 
         public static Func<T, T> SideEffect<T>(Action<T> f) => x => {

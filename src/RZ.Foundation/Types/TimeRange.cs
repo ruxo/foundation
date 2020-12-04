@@ -50,7 +50,7 @@ namespace RZ.Foundation.Types
         public static bool operator ==(TimeRange a, TimeRange b) => a.Begin == b.Begin && a.End == b.End;
         public static bool operator !=(TimeRange a, TimeRange b) => a.Begin != b.Begin || a.End != b.End;
 
-        public override bool Equals(object obj) {
+        public override bool Equals(object? obj) {
             if (ReferenceEquals(null, obj)) return false;
             return obj is TimeRange range && this == range;
         }

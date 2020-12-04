@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
-        <AssemblyVersion>3.0.3.211</AssemblyVersion>
-        <FileVersion>3.0.3.211</FileVersion>
-        <Version>3.0.3</Version>
-        <PackageVersion>3.0.3</PackageVersion>
-        <LangVersion>8</LangVersion>
+        <TargetFramework>net5.0</TargetFramework>
+        <AssemblyVersion>5.0.0.211</AssemblyVersion>
+        <FileVersion>5.0.0.211</FileVersion>
+        <Version>5.0.0</Version>
+        <PackageVersion>5.0.0</PackageVersion>
+        <LangVersion>9</LangVersion>
         <Nullable>enable</Nullable>
         <Title>RZ.Foundation.NewtonsoftJson</Title>
         <Authors>Ruxo Zheng</Authors>

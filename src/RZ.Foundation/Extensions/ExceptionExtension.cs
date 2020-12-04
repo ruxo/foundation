@@ -15,7 +15,7 @@ namespace RZ.Foundation.Extensions
             ex => new Exception(message,ex).AddMetaData( code, source, data);
         public static Option<string> GetErrorCode(this Exception exn) => exn.GetData(CodeField).TryCast<object,string>();
         public static Option<object> GetData(this Exception exn) => exn.GetData(DataField);
-        public static Option<object> GetData(this Exception exn, string field) => exn.Data.Contains(field) ? exn.Data[field].ToOption() : None;
+        public static Option<object> GetData(this Exception exn, string field) => exn.Data.Contains(field) ? exn.Data[field]!.ToOption() : None;
 
         public static string DebugMessage(this Exception exn) =>
             exn.GetErrorCode()

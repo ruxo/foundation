@@ -51,7 +51,7 @@ namespace RZ.Foundation.Extensions
             await (await t).MatchAsync(someMapper, noneMapper);
 
         public static async Task<T> GetOrThrow<T>(this Task<Option<T>> t, Func<Exception> exceptionToThrow) => (await t).GetOrThrow(exceptionToThrow);
-        
+
 #if NETSTANDARD2_1
         [return: MaybeNull]
 #endif
@@ -165,55 +165,6 @@ namespace RZ.Foundation.Extensions
             else await noneHandler();
             return opt;
         }
-        /*
-        public Option<T> Where(Func<T, bool> predicate) => isSome && predicate(value) ? this : None();
-        public async Task<Option<T>> WhereAsync(Func<T, Task<bool>> predicate) => isSome && await predicate(value) ? this : None();
-
-        public async Task<Option<TB>> MapAsync<TB>(Func<T, Task<TB>> mapper) => isSome? new Option<TB>(await mapper(value)) : Option<TB>.None();
-
-        public Option<TB> Chain<TB>(Func<T, Option<TB>> mapper) => isSome? mapper(value) : Option<TB>.None();
-        public async Task<Option<TB>> ChainAsync<TB>(Func<T, Task<Option<TB>>> mapper) => isSome ? await mapper(value) : Option<TB>.None();
-
-
-        public async Task<Option<T>> IfNoneAsync(Func<Task> handler) {
-            if (IsNone) await handler();
-            return this;
-        }
-
-
-        #region Equality
-
-        public override bool Equals(object obj) => obj is Option<T> other && isSome == other.isSome && Equals(value, other.value);
-        public override int GetHashCode() => isSome? value!.GetHashCode() : 0;
-
-        #endregion
-
-        public static Option<T> From(Func<T> initializer)
-        {
-            try
-            {
-                var result = initializer();
-                return Equals(result, null) ? None() : Some(result);
-            }
-            catch (Exception)
-            {
-                return None();
-            }
-        }
-
-        [Obsolete("Use Try or TryAsync instead")]
-        public static async Task<Option<T>> SafeCallAsync(Func<Task<T>> handler) {
-            try {
-                return await handler();
-            }
-            catch (Exception) {
-                return None();
-            }
-        }
-        public static Option<T> From([AllowNull] T value) => Equals(value, null) ? None() : Some(value);
-        public static Option<T> None() => NoneSingleton;
-        public static Option<T> Some(T value) => new Option<T>(value);
-        */
     }
 
     [StructLayout(LayoutKind.Auto)]

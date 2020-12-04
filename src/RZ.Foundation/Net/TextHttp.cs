@@ -83,7 +83,7 @@ namespace RZ.Foundation.Net
 
             return res.IsSuccessStatusCode
                        ? text
-                       : throw ExceptionExtension.CreateError(res.ReasonPhrase, $"{HttpErrorCodePrefix}{(int) res.StatusCode}", uri.ToString(), text);
+                       : throw ExceptionExtension.CreateError(res.ReasonPhrase!, $"{HttpErrorCodePrefix}{(int) res.StatusCode}", uri.ToString(), text);
         }
 
         public Task<string> NGet(Uri uri, Option<HttpRequestOption> config) => NRequest(HttpMethod.Get, uri, None<string>(), config);

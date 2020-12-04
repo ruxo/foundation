@@ -7,16 +7,13 @@ namespace RZ.Foundation.Types
         public DateTime? Begin { get; }
         public DateTime? End { get; }
 
-        public static readonly DateRange Empty = new DateRange(DateTime.MinValue, DateTime.MinValue);
+        public static readonly DateRange Empty = new (DateTime.MinValue, DateTime.MinValue);
 
         public DateRange(DateTime? begin, DateTime? end)
         {
-            if (begin != null && end != null && end < begin)
-            {
+            if (end < begin)
                 Begin = End = DateTime.MinValue;
-            }
-            else
-            {
+            else {
                 Begin = begin;
                 End = end;
             }
@@ -34,7 +31,7 @@ namespace RZ.Foundation.Types
             var begin = NullAsMin(Begin) > NullAsMin(other.Begin) ? Begin : other.Begin;
             var end = NullAsMax(End) < NullAsMax(other.End) ? End : other.End;
 
-            return new DateRange(begin, end);
+            return new(begin, end);
         }
 
         static DateTime NullAsMin(DateTime? d) => d ?? DateTime.MinValue;

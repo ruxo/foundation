@@ -18,30 +18,30 @@ namespace RZ.Foundation.Helpers
             void Store(A x, B result);
         }
 
-        public interface ICacheAsync<A, B>
+        public interface ICacheAsync<in A, B>
         {
             Task<Option<B>> GetAsync(A x);
             Task StoreAsync(A x, B result);
         }
 
-        public interface ILocker<A>
+        public interface ILocker<in A> where A : notnull
         {
             bool TryEnter(A x);
             void Wait(A x);
             void Leave(A x);
         }
-        public sealed class DictionaryCache<A, B> : ICache<A, B>
+        public sealed class DictionaryCache<A, B> : ICache<A, B> where A : notnull
         {
-            readonly Dictionary<A,B> cache = new Dictionary<A, B>();
+            readonly Dictionary<A,B> cache = new();
             public Option<B> Get(A x) => cache.Get(x);
             public void Store(A x, B result) => cache[x] = result;
         }
-        public sealed class MultithreadLocker<A> : ILocker<A> {
+        public sealed class MultithreadLocker<A> : ILocker<A> where A: notnull {
             sealed class Locker
             {
                 public int Lock;
             }
-            readonly ConcurrentDictionary<A,Locker> lockers = new ConcurrentDictionary<A, Locker>();
+            readonly ConcurrentDictionary<A,Locker> lockers = new();
 
             public bool TryEnter(A x) {
                 var @lock = lockers.GetOrAdd(x, _ => new Locker());
@@ -59,9 +59,9 @@ namespace RZ.Foundation.Helpers
         static B ExecuteMemoir<A,B>(Func<A,B> loader, ICache<A,B> cache, A x) =>
             cache.Get(x).Match(identity, () => SideEffect<B>(result => cache.Store(x, result))(loader(x)));
 
-        public static Func<A, B> From<A, B>(Func<A, B> loader, ICache<A, B> cache) => x => ExecuteMemoir(loader, cache, x);
+        public static Func<A, B> From<A, B>(Func<A, B> loader, ICache<A, B> cache) where A: notnull => x => ExecuteMemoir(loader, cache, x);
 
-        public static Func<A, B> From<A, B>(Func<A, B> loader, ICache<A,B> cache, ILocker<A> locker) => x => {
+        public static Func<A, B> From<A, B>(Func<A, B> loader, ICache<A,B> cache, ILocker<A> locker) where A: notnull => x => {
 retry:
             var v = cache.Get(x);
             if (v.IsSome)
@@ -88,9 +88,9 @@ retry:
             return result;
         }
 
-        public static Func<A, Task<B>> FromAsync<A, B>(Func<A, Task<B>> loader, ICacheAsync<A,B> cache) => x => ExecuteMemoirAsync(loader, cache, x);
+        public static Func<A, Task<B>> FromAsync<A, B>(Func<A, Task<B>> loader, ICacheAsync<A,B> cache) where A: notnull => x => ExecuteMemoirAsync(loader, cache, x);
 
-        public static Func<A, Task<B>> FromAsync<A, B>(Func<A, Task<B>> loader, ICacheAsync<A,B> cache, ILocker<A> locker) => async x => {
+        public static Func<A, Task<B>> FromAsync<A, B>(Func<A, Task<B>> loader, ICacheAsync<A,B> cache, ILocker<A> locker) where A: notnull => async x => {
 retry:
             var v = await cache.GetAsync(x);
             if (v.IsSome)
@@ -108,6 +108,6 @@ retry:
             }
         };
 
-        public static Func<A, B> DictWith<A, B>(Func<A, B> loader) => From(loader, new DictionaryCache<A,B>());
+        public static Func<A, B> DictWith<A, B>(Func<A, B> loader) where A: notnull => From(loader, new DictionaryCache<A,B>());
     }
 }
