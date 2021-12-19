@@ -110,9 +110,25 @@ namespace RZ.Foundation.Extensions
             }
         }
 
+        public static async IAsyncEnumerable<B> ChooseAsync<A, B>(this IEnumerable<A> source, Func<A, OptionAsync<B>> selector) {
+            foreach (var i in source) {
+                var result = await selector(i).ToOption();
+                if (result.IsSome)
+                    yield return result.Get();
+            }
+        }
+
         public static async IAsyncEnumerable<B> ChooseAsync<A, B>(this IAsyncEnumerable<A> source, Func<A, Task<Option<B>>> selector) {
             await foreach (var i in source) {
                 var result = await selector(i);
+                if (result.IsSome)
+                    yield return result.Get();
+            }
+        }
+
+        public static async IAsyncEnumerable<B> ChooseAsync<A, B>(this IAsyncEnumerable<A> source, Func<A, OptionAsync<B>> selector) {
+            await foreach (var i in source) {
+                var result = await selector(i).ToOption();
                 if (result.IsSome)
                     yield return result.Get();
             }

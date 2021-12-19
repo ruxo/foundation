@@ -4,10 +4,10 @@
     <Company>RZ</Company>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <AssemblyVersion>5.0.2.214</AssemblyVersion>
-    <FileVersion>5.0.2.214</FileVersion>
-    <Version>5.0.2</Version>
-    <PackageVersion>5.0.2</PackageVersion>
+    <AssemblyVersion>5.0.3.215</AssemblyVersion>
+    <FileVersion>5.0.3.215</FileVersion>
+    <Version>5.0.3</Version>
+    <PackageVersion>5.0.3</PackageVersion>
     <LangVersion>9</LangVersion>
     <Title>RZ.Foundation: Functional and utility functions</Title>
     <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
@@ -27,6 +27,6 @@
     <OutputPath>bin\Debug\netcoreapp2.0\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LanguageExt.Core" Version="3.4.15" />
+    <PackageReference Include="LanguageExt.Core" Version="4.0.3" />
   </ItemGroup>
 </Project>
