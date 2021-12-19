@@ -4,10 +4,10 @@
     <Company>RZ</Company>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <AssemblyVersion>5.0.1.213</AssemblyVersion>
-    <FileVersion>5.0.1.213</FileVersion>
-    <Version>5.0.1</Version>
-    <PackageVersion>5.0.1</PackageVersion>
+    <AssemblyVersion>5.0.2.214</AssemblyVersion>
+    <FileVersion>5.0.2.214</FileVersion>
+    <Version>5.0.2</Version>
+    <PackageVersion>5.0.2</PackageVersion>
     <LangVersion>9</LangVersion>
     <Title>RZ.Foundation: Functional and utility functions</Title>
     <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
