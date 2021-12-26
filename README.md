@@ -93,3 +93,13 @@ Option<object> x = Some((object) "I am string");
 Option<string> y = x.TryCast<object,string>();
 Option<int> z = x.TryCast<object,int>();   // None!
 ```
+
+## TaskOption[T] ##
+
+LanguageExt's `OptionAsync` should be a wrapper of `Task<Option<T>>`, but its recent async/await handler
+has been implemented in way that consumes all exceptions as `None` value. This makes sense when we don’t
+want any side-effect. But in case of exception handling, I find that by allowing exceptions as the side-effect,
+would simplify error handling code when writing in functional paradigm.
+
+So `TaskOption<T>` is made to work similar to `OptionAsync` but with async/await pattern that allows
+exceptions to be escalated normally, as well as, support `None` returning value.
