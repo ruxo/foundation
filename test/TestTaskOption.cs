@@ -37,6 +37,12 @@ namespace RZ.Foundation
             await act.Should().ThrowExactlyAsync<NotImplementedException>();
         }
 
+        [Fact]
+        public async Task SomeValueReturned() {
+            var result = await ReturnOption();
+            result.Should<Option<int>>().Be(Some(1));
+        }
+
         static async TaskOption<int> GetIntAsync() {
             var value = await GetInt();
             return value.Map(i => i + 1).Get();
@@ -49,12 +55,17 @@ namespace RZ.Foundation
 
         static async TaskOption<int> ReturnNone() {
             await Task.Yield();
-            return await TaskOptionNone<int>.Value;
+            return await TaskOption.None<int>();
         }
 
         static async TaskOption<int> ThrowException() {
             await Task.Yield();
             throw new NotImplementedException();
+        }
+
+        static async TaskOption<int> ReturnOption() {
+            await Task.Yield();
+            return await TaskOption.Return(Some(1));
         }
 
         #endregion

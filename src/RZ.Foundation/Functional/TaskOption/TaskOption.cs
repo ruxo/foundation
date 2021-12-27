@@ -1404,4 +1404,13 @@ namespace RZ.Foundation.Functional.TaskOption
             }
         }
     }
+
+    public static class TaskOption
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TaskOptionFrom<A> Return<A>(Option<A> value) => new(value);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TaskOptionNone<A> None<A>() => new();
+    }
 }

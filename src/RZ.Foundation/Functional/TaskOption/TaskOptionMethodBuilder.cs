@@ -45,18 +45,31 @@ namespace RZ.Foundation.Functional.TaskOption
             where TAwaiter : ICriticalNotifyCompletion
             where TStateMachine : IAsyncStateMachine
         {
+            HandleSpecialAwaiters(ref awaiter);
+
             var m = machine;
             awaiter.OnCompleted(() => m.MoveNext());
         }
 
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine machine)
             where TAwaiter : INotifyCompletion where TStateMachine : IAsyncStateMachine {
-            if (awaiter is TaskOptionNone<A>.Awaiter) {
-                state = ResultState.SpecialAwaiterDiscardNext;
-                asyncResult.SetResult((false, default!));
-            }
+            HandleSpecialAwaiters(ref awaiter);
+
             var m = machine;
             awaiter.OnCompleted(() => m.MoveNext());
+        }
+
+        void HandleSpecialAwaiters<TAwaiter>(ref TAwaiter awaiter) {
+            switch (awaiter) {
+                case TaskOptionNone<A>.Awaiter:
+                    state = ResultState.SpecialAwaiterDiscardNext;
+                    asyncResult.SetResult((false, default!));
+                    break;
+                case TaskOptionFrom<A>.Awaiter returnAwaiter:
+                    state = ResultState.SpecialAwaiterDiscardNext;
+                    asyncResult.SetResult(returnAwaiter.Result.Match(v => (true, v), () => (false, default!)));
+                    break;
+            }
         }
 
         enum ResultState

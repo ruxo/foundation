@@ -2,20 +2,33 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using LanguageExt;
 
 namespace RZ.Foundation.Functional.TaskOption
 {
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly struct TaskOptionNone<A>
+    public readonly struct TaskOptionFrom<A>
     {
-        public static readonly TaskOptionNone<A> Value = new();
+        readonly Option<A> result;
 
-        public Awaiter GetAwaiter() => new();
+        public TaskOptionFrom(Option<A> result)
+        {
+            this.result = result;
+        }
+
+        public Awaiter GetAwaiter() => new (result);
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public readonly struct Awaiter : INotifyCompletion
         {
+            public Awaiter(Option<A> result)
+            {
+                Result = result;
+            }
+
             public bool IsCompleted => false;
+
+            internal Option<A> Result { get; }
+
             public A GetResult() => default!;
             public void OnCompleted(Action continuation) => Task.Run(continuation);
         }
