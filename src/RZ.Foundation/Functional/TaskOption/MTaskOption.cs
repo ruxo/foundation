@@ -196,7 +196,7 @@ namespace RZ.Foundation.Functional.TaskOption
         [Pure]
         public TaskOption<A> RunAsync(Func<Unit, Task<TaskOption<A>>> ma)
         {
-            async Task<(bool IsSome, A Value)> Do(Func<Unit, Task<TaskOption<A>>> mma)
+            async Task<(bool IsSome, A? Value)> Do(Func<Unit, Task<TaskOption<A>>> mma)
             {
                 var a = await mma(unit).ConfigureAwait(false);
                 return await a.Data.ConfigureAwait(false);

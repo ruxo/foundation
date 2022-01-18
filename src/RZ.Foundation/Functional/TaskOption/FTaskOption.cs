@@ -16,7 +16,7 @@ namespace RZ.Foundation.Functional.TaskOption
         [Pure]
         public TaskOption<B> BiMapAsync(TaskOption<A> ma, Func<A, B> fa, Func<Unit, B> fb)
         {
-            async Task<(bool IsSome, B Value)> Do(TaskOption<A> mma, Func<A, B> ffa, Func<Unit, B> ffb) =>
+            async Task<(bool IsSome, B? Value)> Do(TaskOption<A> mma, Func<A, B> ffa, Func<Unit, B> ffb) =>
                 await mma.Match(
                     Some: x  => (true, ffa(x)),
                     None: () => (true, ffb(unit))).ConfigureAwait(false);
@@ -27,7 +27,7 @@ namespace RZ.Foundation.Functional.TaskOption
         [Pure]
         public TaskOption<B> BiMapAsync(TaskOption<A> ma, Func<A, Task<B>> fa, Func<Unit, B> fb)
         {
-            async Task<(bool IsSome, B Value)> Do(TaskOption<A> mma, Func<A, Task<B>> ffa, Func<Unit, B> ffb) =>
+            async Task<(bool IsSome, B? Value)> Do(TaskOption<A> mma, Func<A, Task<B>> ffa, Func<Unit, B> ffb) =>
                 await mma.MatchAsync(
                     Some: async x => (true, await ffa(x)),
                     None: ()      => (true, ffb(unit))).ConfigureAwait(false);
@@ -38,7 +38,7 @@ namespace RZ.Foundation.Functional.TaskOption
         [Pure]
         public TaskOption<B> BiMapAsync(TaskOption<A> ma, Func<A, B> fa, Func<Unit, Task<B>> fb)
         {
-            async Task<(bool IsSome, B Value)> Do(TaskOption<A> mma, Func<A, B> ffa, Func<Unit, Task<B>> ffb) =>
+            async Task<(bool IsSome, B? Value)> Do(TaskOption<A> mma, Func<A, B> ffa, Func<Unit, Task<B>> ffb) =>
                 await mma.MatchAsync(
                     Some: x        => (true, ffa(x)),
                     None: async () => (true, await ffb(unit))).ConfigureAwait(false);
@@ -49,7 +49,7 @@ namespace RZ.Foundation.Functional.TaskOption
         [Pure]
         public TaskOption<B> BiMapAsync(TaskOption<A> ma, Func<A, Task<B>> fa, Func<Unit, Task<B>> fb)
         {
-            async Task<(bool IsSome, B Value)> Do(TaskOption<A> mma, Func<A, Task<B>> ffa, Func<Unit, Task<B>> ffb) =>
+            async Task<(bool IsSome, B? Value)> Do(TaskOption<A> mma, Func<A, Task<B>> ffa, Func<Unit, Task<B>> ffb) =>
                 await mma.MatchAsync(
                     Some: async x  => (true, await ffa(x)),
                     None: async () => (true, await ffb(unit))).ConfigureAwait(false);

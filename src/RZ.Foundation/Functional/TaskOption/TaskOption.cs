@@ -39,7 +39,7 @@ namespace RZ.Foundation.Functional.TaskOption
     [AsyncMethodBuilder(typeof(TaskOptionMethodBuilder<>))]
     public readonly struct TaskOption<A> : IAsyncEnumerable<A>, IOptionalAsync
     {
-        readonly Task<(bool IsSome, A Value)> data;
+        readonly Task<(bool IsSome, A? Value)> data;
 
         #region Constructors
 
@@ -55,21 +55,21 @@ namespace RZ.Foundation.Functional.TaskOption
         {
             var first = option.Take(1).ToArray();
             data = first.Length == 0
-                ? (false, default(A)!).AsTask()
-                : (true, first[0]).AsTask();
+                ? (false, default(A)).AsTask()
+                : (true, (A?) first[0]).AsTask();
         }
 
-        internal TaskOption(Task<(bool IsSome, A Value)> data) => this.data = data;
+        internal TaskOption(Task<(bool IsSome, A? Value)> data) => this.data = data;
 
         #endregion
 
-        public static readonly TaskOption<A> None = new((false, default(A)!).AsTask());
+        public static readonly TaskOption<A> None = new((false, default(A)).AsTask());
 
         [Pure]
         public static TaskOption<A> Some(A value) =>
             isnull(value)
                 ? throw new ValueIsNullException()
-                : new TaskOption<A>((true, value).AsTask());
+                : new TaskOption<A>((true, (A?) value).AsTask());
 
         /// <summary>
         /// Construct an TaskOption of A in a Some state
@@ -80,7 +80,7 @@ namespace RZ.Foundation.Functional.TaskOption
         public static TaskOption<A> SomeAsync(Task<A> value) =>
             new(value.Map(v => isnull(v)
                                    ? throw new ValueIsNullException()
-                                   : (true, v)));
+                                   : (true, (A?) v)));
 
         #region Optional
 
@@ -101,14 +101,14 @@ namespace RZ.Foundation.Functional.TaskOption
         public static TaskOption<A> OptionalAsync(Task<A> value) => new(value.Map(MakeOptional));
 
         [Pure]
-        internal static (bool IsSome, A Value) MakeOptional(A value) => isnull(value) ? (false, default(A)!) : (true, value);
+        internal static (bool IsSome, A? Value) MakeOptional(A value) => isnull(value) ? (false, default(A)!) : (true, value);
 
         #endregion
 
         /// <summary>
         /// Data accessor
         /// </summary>
-        internal Task<(bool IsSome, A Value)> Data => data ?? None.data;
+        internal Task<(bool IsSome, A? Value)> Data => data ?? None.data;
 
         /// <summary>
         /// Reference version of option for use in pattern-matching
@@ -170,7 +170,7 @@ namespace RZ.Foundation.Functional.TaskOption
             var b = await rhs.Data.ConfigureAwait(false);
             if(a.IsSome != b.IsSome) return false;
             if(!a.IsSome && !b.IsSome) return true;
-            return await default(EqA).EqualsAsync(a.Value, b.Value).ConfigureAwait(false);
+            return await default(EqA).EqualsAsync(a.Value!, b.Value!).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -211,9 +211,9 @@ namespace RZ.Foundation.Functional.TaskOption
         {
             var a = await Data.ConfigureAwait(false);
             var b = await rhs.Data.ConfigureAwait(false);
-            var c = default(OrdBool).Compare(a.IsSome, b.IsSome);
+            var c = await default(OrdBool).CompareAsync(a.IsSome, b.IsSome);
             if (c != 0) return c;
-            return default(OrdA).Compare(a.Value, b.Value);
+            return default(OrdA).Compare(a.Value!, b.Value!);
         }
 
         /// <summary>
@@ -307,7 +307,7 @@ namespace RZ.Foundation.Functional.TaskOption
         /// <summary>
         /// Helper accessor for the bound value
         /// </summary>
-        internal Task<A> Value => Data.Map(a => a.Value);
+        internal Task<A> Value => Data.Map(a => a.Value!);
 
         /// <summary>
         /// Custom awaiter so TaskOption can be used with async/await
@@ -495,7 +495,7 @@ namespace RZ.Foundation.Functional.TaskOption
                 var d = await ldata;
 
                 return d.IsSome
-                    ? Fin<A>.Succ(d.Value)
+                    ? Fin<A>.Succ(d.Value!)
                     : Fin<A>.Fail(Fail);
             }
         }
@@ -1398,10 +1398,7 @@ namespace RZ.Foundation.Functional.TaskOption
         public async IAsyncEnumerator<A> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             var (isSome, value) = await Data.ConfigureAwait(false);
-            if(isSome)
-            {
-                yield return value;
-            }
+            if(isSome) yield return value!;
         }
     }
 

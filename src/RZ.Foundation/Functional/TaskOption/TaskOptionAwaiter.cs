@@ -9,7 +9,7 @@ namespace RZ.Foundation.Functional.TaskOption
     [EditorBrowsable(EditorBrowsableState.Never)]
     public readonly struct TaskOptionAwaiter<A> : INotifyCompletion
     {
-        readonly TaskAwaiter<(bool IsSome, A Value)> awaiter;
+        readonly TaskAwaiter<(bool IsSome, A? Value)> awaiter;
 
         internal TaskOptionAwaiter(TaskOption<A> ma) => awaiter = ma.Data.GetAwaiter();
 
@@ -19,7 +19,7 @@ namespace RZ.Foundation.Functional.TaskOption
 
         public Option<A> GetResult() {
             var (isSome, value) = awaiter.GetResult();
-            return isSome ? value : None;
+            return isSome ? value! : None;
         }
     }
 }

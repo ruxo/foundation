@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #if NETSTANDARD2_1
 using System.Diagnostics.CodeAnalysis;
@@ -166,18 +165,18 @@ namespace RZ.Foundation.Extensions
     }
 
     [StructLayout(LayoutKind.Auto)]
-    public struct OptionSerializable<T>
+    public readonly struct OptionSerializable<T>
     {
-        public bool HasValue;
+        public readonly bool HasValue;
 #if NETSTANDARD2_1
         [AllowNull]
 #endif
-        public T Value;
+        public readonly T? Value;
         public OptionSerializable(Option<T> opt)
         {
             HasValue = opt.IsSome;
             Value = opt.GetOrDefault();
         }
-        public Option<T> ToOption() => HasValue ? Some(Value) : None;
+        public Option<T> ToOption() => HasValue ? Some(Value!) : None;
     }
 }

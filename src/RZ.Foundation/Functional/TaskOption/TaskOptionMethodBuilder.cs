@@ -8,7 +8,7 @@ namespace RZ.Foundation.Functional.TaskOption
     [EditorBrowsable(EditorBrowsableState.Never)]
     public struct TaskOptionMethodBuilder<A>
     {
-        TaskCompletionSource<(bool IsSome, A Value)> asyncResult;
+        TaskCompletionSource<(bool IsSome, A? Value)> asyncResult;
         ResultState state;
 
         public TaskOption<A> Task { get; private set; }
