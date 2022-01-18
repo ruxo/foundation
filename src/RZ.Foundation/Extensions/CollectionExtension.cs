@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Collections.Specialized;
+using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
@@ -19,11 +23,13 @@ namespace RZ.Foundation.Extensions {
         /// <summary>
         /// Syntactic sugar for "Select"
         /// </summary>
+        [Pure]
         public static IEnumerable<V> Map<T, V>(this IEnumerable<T> seq, Func<T, V> mapper) => seq.Select(mapper);
 
         /// <summary>
         /// Syntactic sugar for "SelectMany"
         /// </summary>
+        [Pure]
         public static IEnumerable<V> Chain<T, V>(this IEnumerable<T> seq, Func<T, IEnumerable<V>> binder) => seq.SelectMany(binder);
 
         /// <summary>
@@ -33,9 +39,16 @@ namespace RZ.Foundation.Extensions {
         /// <param name="n">position to remove.</param>
         /// <typeparam name="T">Type parameter of array</typeparam>
         /// <returns>Return a new sequence without element at n.  If n is out of range, a new array of same content is returned.</returns>
+        [Pure]
         public static IEnumerable<T> RemoveAt<T>(this IEnumerable<T> array, int n) => array.Where((_, i) => i != n);
 
+        [Pure]
         public static Option<T> Get<TKey, T>(this IDictionary<TKey, T> dict, TKey key) => dict.TryGetValue(key);
+        [Pure]
+        public static Option<T> Get<TKey, T>(this ImmutableDictionary<TKey, T> dict, TKey key) where TKey : notnull =>
+            ((IImmutableDictionary<TKey, T>) dict).TryGetValue(key);
+        [Pure]
+        public static Option<T> Get<TKey, T>(this IImmutableDictionary<TKey, T> dict, TKey key) => dict.TryGetValue(key);
 
         /// <summary>
         /// Split a sequence into two array by a predicate.
@@ -44,6 +57,7 @@ namespace RZ.Foundation.Extensions {
         /// <param name="partitioner">a predicate for splitting the sequence</param>
         /// <typeparam name="T">type parameter for <paramref name="e"/></typeparam>
         /// <returns>A tuple of split arrays. First item is an array corresponding to true value of predicate. Second item is the rest.</returns>
+        [Pure]
         public static (T[], T[]) Partition<T>(this IEnumerable<T> e, Func<T, bool> partitioner) => e.Partition(partitioner, identity, identity);
 
         /// <summary>
@@ -58,6 +72,7 @@ namespace RZ.Foundation.Extensions {
         /// <typeparam name="A">Transformed type for <paramref name="trueTransform"/></typeparam>
         /// <typeparam name="B">Transformed type for <paramref name="falseTransform"/></typeparam>
         /// <returns>A tuple of split arrays. First item is an array corresponding to true value of predicate. Second item is the rest.</returns>
+        [Pure]
         public static (A[], B[]) Partition<T, A, B>(this IEnumerable<T> e, Func<T, bool> predicate, Func<T, A> trueTransform, Func<T, B> falseTransform) {
             var trueResult = new List<A>();
             var falseResult = new List<B>();
@@ -69,12 +84,16 @@ namespace RZ.Foundation.Extensions {
             return (trueResult.ToArray(), falseResult.ToArray());
         }
 
+        public static ImmutableDictionary<K, V> ToImmutableDictionary<K, V>(this IEnumerable<(K Key, V Value)> pairs) where K: notnull =>
+            pairs.ToImmutableDictionary(k => k.Key, v => v.Value);
+
         /// <summary>
         /// Try retrieving the first element from a sequence.
         /// </summary>
         /// <param name="seq">a sequence</param>
         /// <typeparam name="T">type parameter of seq</typeparam>
         /// <returns>an option value of first element.</returns>
+        [Pure]
         public static Option<T> TryFirst<T>(this IEnumerable<T> seq) {
             foreach (var item in seq) return Some(item);
             return None;
@@ -87,7 +106,34 @@ namespace RZ.Foundation.Extensions {
         /// <param name="predicate">condition for finding the first</param>
         /// <typeparam name="T">type parameter of seq</typeparam>
         /// <returns>an option value of first element.</returns>
+        [Pure]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Option<T> TryFirst<T>(this IEnumerable<T> seq, Func<T, bool> predicate) => seq.Where(predicate).TryFirst();
+
+        /// <summary>
+        /// Try retrieving the only single element from a sequence, assume that the sequence only has one element!
+        /// </summary>
+        /// <param name="seq">a sequence</param>
+        /// <typeparam name="T">type parameter of seq</typeparam>
+        /// <returns>an option value of the only element.</returns>
+        [Pure]
+        public static Option<T> TrySingle<T>(this IEnumerable<T> seq) {
+            using var itor = seq.GetEnumerator();
+            if (!itor.MoveNext()) return None;
+            var result = itor.Current;
+            return itor.MoveNext() ? throw new IndexOutOfRangeException("Sequence is expected to be a single element but it has many!") : result;
+        }
+
+        /// <summary>
+        /// Try retrieving the only single element from a sequence, assume that the sequence only has one element!
+        /// </summary>
+        /// <param name="seq">a sequence</param>
+        /// <param name="predicate">condition for finding the element</param>
+        /// <typeparam name="T">type parameter of seq</typeparam>
+        /// <returns>an option value of the only element.</returns>
+        [Pure]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Option<T> TrySingle<T>(this IEnumerable<T> seq, Func<T, bool> predicate) => seq.Where(predicate).TrySingle();
 
         /// <summary>
         /// Find an index number of the first element that satisfies the predicate.
@@ -96,6 +142,7 @@ namespace RZ.Foundation.Extensions {
         /// <param name="predicate">Condition predicate</param>
         /// <typeparam name="T">type parameter of seq</typeparam>
         /// <returns>an option value of first element index</returns>
+        [Pure]
         public static Option<int> TryFindIndex<T>(this IEnumerable<T> seq, Predicate<T> predicate) {
             var index = -1;
             foreach (var i in seq) {
@@ -113,12 +160,14 @@ namespace RZ.Foundation.Extensions {
         /// <param name="size"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
+        [Pure]
         public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> data, int size) {
             using var itor = data.GetEnumerator();
             while (itor.MoveNext())
                 yield return Take(itor, size - 1, itor.Current).ToArray();
         }
 
+        [Pure]
         static IEnumerable<T> Take<T>(IEnumerator<T> itor, int size, T init) {
             yield return init;
             for (var i = 0; i < size && itor.MoveNext(); ++i)

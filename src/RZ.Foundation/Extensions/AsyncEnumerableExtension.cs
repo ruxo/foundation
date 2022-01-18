@@ -55,6 +55,40 @@ namespace RZ.Foundation.Extensions
         }
         #endregion
 
+        #region Flatten methods
+
+        public static async IAsyncEnumerable<B> FlattenT<A,B>(this IEnumerable<A> source, Func<A, Task<IEnumerable<B>>> selector) {
+            foreach (var i in source)
+            foreach (var inner in await selector(i))
+                yield return inner;
+        }
+
+        public static async IAsyncEnumerable<B> FlattenAsync<A,B>(this IAsyncEnumerable<A> source, Func<A, Task<IEnumerable<B>>> selector) {
+            await foreach (var i in source)
+            foreach (var inner in await selector(i))
+                yield return inner;
+        }
+
+        public static async IAsyncEnumerable<B> Flatten<A,B>(this IAsyncEnumerable<A> source, Func<A, IEnumerable<B>> selector) {
+            await foreach (var i in source)
+            foreach (var inner in selector(i))
+                yield return inner;
+        }
+
+        public static async IAsyncEnumerable<B> FlattenT<A,B>(this IEnumerable<A> source, Func<A, IAsyncEnumerable<B>> selector) {
+            foreach (var i in source)
+            await foreach (var inner in selector(i))
+                yield return inner;
+        }
+
+        public static async IAsyncEnumerable<B> Flatten<A,B>(this IAsyncEnumerable<A> source, Func<A, IAsyncEnumerable<B>> selector) {
+            await foreach (var i in source)
+            await foreach (var inner in selector(i))
+                yield return inner;
+        }
+
+        #endregion
+
         #region Where methods
         public static async IAsyncEnumerable<T> Where<T>(this IAsyncEnumerable<T> source, Func<T, bool> predicate) {
             await foreach (var i in source)
@@ -69,40 +103,16 @@ namespace RZ.Foundation.Extensions
         }
         #endregion
 
-        #region Chain methods
-        public static async IAsyncEnumerable<B> ChainAsync<A, B>(this IEnumerable<A> source, Func<A, Task<IAsyncEnumerable<B>>> selector) {
-            foreach (var i in source)
-            await foreach (var inner in await selector(i))
-                yield return inner;
-        }
-
-        public static async IAsyncEnumerable<B> ChainAsync<A, B>(this IAsyncEnumerable<A> source, Func<A, Task<IAsyncEnumerable<B>>> selector) {
-            await foreach (var i in source)
-            await foreach (var inner in await selector(i))
-                yield return inner;
-        }
-
-        public static async IAsyncEnumerable<B> ChainAsync<A, B>(this IAsyncEnumerable<A> source, Func<A, Task<IEnumerable<B>>> selector) {
-            await foreach (var i in source)
-            foreach (var inner in await selector(i))
-                yield return inner;
-        }
-
-        public static async IAsyncEnumerable<B> Chain<A, B>(this IAsyncEnumerable<A> source, Func<A, IAsyncEnumerable<B>> selector) {
-            await foreach (var i in source)
-            await foreach (var inner in selector(i))
-                yield return inner;
-        }
-
-        public static async IAsyncEnumerable<B> Chain<A, B>(this IAsyncEnumerable<A> source, Func<A, IEnumerable<B>> selector) {
-            await foreach (var i in source)
-            foreach (var inner in selector(i))
-                yield return inner;
-        }
-        #endregion
-
         #region Choose methods
         public static async IAsyncEnumerable<B> ChooseAsync<A, B>(this IEnumerable<A> source, Func<A, Task<Option<B>>> selector) {
+            foreach (var i in source) {
+                var result = await selector(i);
+                if (result.IsSome)
+                    yield return result.Get();
+            }
+        }
+
+        public static async IAsyncEnumerable<B> ChooseAsync<A, B>(this IEnumerable<A> source, Func<A, ValueTask<Option<B>>> selector) {
             foreach (var i in source) {
                 var result = await selector(i);
                 if (result.IsSome)
@@ -119,6 +129,14 @@ namespace RZ.Foundation.Extensions
         }
 
         public static async IAsyncEnumerable<B> ChooseAsync<A, B>(this IAsyncEnumerable<A> source, Func<A, Task<Option<B>>> selector) {
+            await foreach (var i in source) {
+                var result = await selector(i);
+                if (result.IsSome)
+                    yield return result.Get();
+            }
+        }
+
+        public static async IAsyncEnumerable<B> ChooseAsync<A, B>(this IAsyncEnumerable<A> source, Func<A, ValueTask<Option<B>>> selector) {
             await foreach (var i in source) {
                 var result = await selector(i);
                 if (result.IsSome)
@@ -151,6 +169,31 @@ namespace RZ.Foundation.Extensions
         public static async Task Iter<T>(this IAsyncEnumerable<T> source, Func<T, Task> action) {
             await foreach (var i in source) await action(i);
         }
+        #endregion
+
+        #region First
+
+        public static async Task<Option<T>> TryFirst<T>(this IAsyncEnumerable<T> source) {
+            await using var enumerator = source.GetAsyncEnumerator();
+            return await enumerator.MoveNextAsync() ? enumerator.Current : LanguageExt.Prelude.None;
+        }
+
+        public static async Task<Option<T>> TryFirst<T>(this IAsyncEnumerable<T> source, Func<T, bool> predicate) {
+            await using var enumerator = source.GetAsyncEnumerator();
+            while(await enumerator.MoveNextAsync())
+                if (predicate(enumerator.Current))
+                    return enumerator.Current;
+            return LanguageExt.Prelude.None;
+        }
+
+        public static async Task<Option<T>> TryFirstAsync<T>(this IAsyncEnumerable<T> source, Func<T, Task<bool>> predicate) {
+            await using var enumerator = source.GetAsyncEnumerator();
+            while(await enumerator.MoveNextAsync())
+                if (await predicate(enumerator.Current))
+                    return enumerator.Current;
+            return LanguageExt.Prelude.None;
+        }
+
         #endregion
 
         public static async Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> source) {

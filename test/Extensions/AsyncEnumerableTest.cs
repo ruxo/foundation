@@ -39,12 +39,11 @@ namespace RZ.Foundation.Extensions
         public async Task ChainFromEnumerable() {
             var source = new[]{ 1, 2, 3 };
 
-            async Task<IAsyncEnumerable<int>> chainAsync(int i) {
-                await Task.Yield();
+            IAsyncEnumerable<int> chainAsync(int i) {
                 return Enumerable.Repeat(i, i).AsAsyncEnumerable();
             }
 
-            var result = await source.ChainAsync(chainAsync).ToArrayAsync();
+            var result = await source.FlattenT(chainAsync).ToArrayAsync();
             result.Should().BeEquivalentTo(new[] {1,2,2,3,3,3});
         }
     }

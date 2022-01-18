@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 #if NETSTANDARD2_1
 using System.Diagnostics.CodeAnalysis;
 #endif
@@ -7,6 +9,7 @@ using System.Threading.Tasks;
 using LanguageExt;
 using LanguageExt.Common;
 using static LanguageExt.Prelude;
+// ReSharper disable UnusedMethodReturnValue.Global
 
 namespace RZ.Foundation.Extensions
 {
@@ -29,10 +32,6 @@ namespace RZ.Foundation.Extensions
         public static Option<Unit> Call<A, B>(this Option<(A, B)> x, Action<A, B> f) => x.Map(p => p.CallFrom(f));
         public static Option<Unit> Call<A, B, C>(this Option<(A, B, C)> x, Action<A, B, C> f) => x.Map(p => p.CallFrom(f));
 
-        public static async Task<Option<TR>> Map<T, TR>(this Task<Option<T>> t, Func<T, TR> mapper) => (await t).Map(mapper);
-        public static async Task<Option<TR>> MapAsync<T, TR>(this Task<Option<T>> t, Func<T, Task<TR>> mapper) =>
-            await (await t).ToAsync().MapAsync(mapper).ToOption();
-
         public static async Task<Option<TR>> Chain<T, TR>(this Task<Option<T>> t, Func<T, Option<TR>> mapper) => (await t).Bind(mapper);
         public static async Task<Option<TR>> ChainAsync<T, TR>(this Task<Option<T>> t, Func<T, Task<Option<TR>>> mapper) =>
             await (await t).ToAsync().BindAsync(async x => (await mapper(x)).ToAsync()).ToOption();
@@ -49,8 +48,6 @@ namespace RZ.Foundation.Extensions
 
         public static async Task<TR> MatchAsync<T, TR>(this Task<Option<T>> t, Func<T, Task<TR>> someMapper, Func<Task<TR>> noneMapper) =>
             await (await t).MatchAsync(someMapper, noneMapper);
-
-        public static async Task<T> GetOrThrow<T>(this Task<Option<T>> t, Func<Exception> exceptionToThrow) => (await t).GetOrThrow(exceptionToThrow);
 
 #if NETSTANDARD2_1
         [return: MaybeNull]
@@ -71,28 +68,28 @@ namespace RZ.Foundation.Extensions
 
     public static class OptionExtensions
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Get<T>(this Option<T> opt) => opt.GetOrThrow(() => new InvalidOperationException());
+        public static B Get<A,B>(this Option<A> opt, Func<A,B> getter) => opt.IsSome? getter(opt.Get()) : throw new InvalidOperationException();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T GetOrThrow<T>(this Option<T> opt, Func<Exception> noneHandler) => opt.IfNone(() => throw noneHandler());
 
-        [Obsolete("use Match instead")]
-        public static TResult Get<T, TResult>(this Option<T> opt, Func<T, TResult> someHandler, Func<TResult> noneHandler) =>
-            opt.Match(someHandler,noneHandler);
+        public static async Task<T> GetOrThrowT<T>(this Option<T> opt, Func<Task<Exception>> noneHandler) {
+            if (opt.IsNone)
+                throw await noneHandler();
+            return opt.Get();
+        }
+        public static async ValueTask<T> GetOrThrowT<T>(this Option<T> opt, Func<ValueTask<Exception>> noneHandler) {
+            if (opt.IsNone)
+                throw await noneHandler();
+            return opt.Get();
+        }
 
-        [Obsolete("use MatchAsync instead")]
-        public static Task<TR> GetAsync<T, TR>(this Option<T> opt, Func<T, Task<TR>> someHandler, Func<Task<TR>> noneHandler) =>
-            opt.MatchAsync(someHandler, noneHandler);
-
-        #if NETSTANDARD2_1
-        [return: MaybeNull]
-        #endif
-        public static  T GetOrDefault<T>(this Option<T> opt) => opt.IfNoneUnsafe(() => default!);
-
-        [Obsolete("use IfNone instead")]
-        public static T GetOrElse<T>(this Option<T> opt, T defaultValue) => opt.IfNone(defaultValue);
-        [Obsolete("use IfNone instead")]
-        public static T GetOrElse<T>(this Option<T> opt, Func<T> noneHandler) => opt.IfNone(noneHandler);
-        [Obsolete("use IfNoneAsync instead")]
-        public static Task<T> GetOrElseAsync<T>(this Option<T> opt, Func<Task<T>> noneHandler) => opt.IfNoneAsync(noneHandler);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T? GetOrDefault<T>(this Option<T> opt) => opt.IfNoneUnsafe(() => default!);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static B? GetOrDefault<A,B>(this Option<A> opt, Func<A,B> getter) => opt.Map(getter).IfNoneUnsafe(() => default!);
 
         /// <summary>
         /// Replace current option value if current option is None.
@@ -140,31 +137,32 @@ namespace RZ.Foundation.Extensions
         /// <param name="elseFunc">A replace function to evaluate if none</param>
         /// <typeparam name="T">type parameter for opt</typeparam>
         /// <returns>Result option type</returns>
+        public static Task<Option<T>> OrElseT<T>(this Option<T> opt, Func<Task<Option<T>>> elseFunc) =>
+            opt.IsSome ? Task.FromResult(opt) : elseFunc();
+
+        /// <summary>
+        /// Replace current option value if current option is None.
+        /// </summary>
+        /// <param name="opt">current option</param>
+        /// <param name="elseFunc">A replace function to evaluate if none</param>
+        /// <typeparam name="T">type parameter for opt</typeparam>
+        /// <returns>Result option type</returns>
+        public static ValueTask<Option<T>> OrElseT<T>(this Option<T> opt, Func<ValueTask<Option<T>>> elseFunc) =>
+            opt.IsSome ? ValueTask.FromResult(opt) : elseFunc();
+
+        /// <summary>
+        /// Replace current option value if current option is None.
+        /// </summary>
+        /// <param name="opt">current option</param>
+        /// <param name="elseFunc">A replace function to evaluate if none</param>
+        /// <typeparam name="T">type parameter for opt</typeparam>
+        /// <returns>Result option type</returns>
+        [Obsolete("Use OrElseT")]
         public static Task<Option<T>> OrElseAsync<T>(this Option<T> opt, Func<Task<Option<T>>> elseFunc) =>
             opt.IsSome ? Task.FromResult(opt) : elseFunc();
 
-        public static Option<R> TryCast<T,R>(this Option<T> opt) => opt.Bind(value =>  value is R v? Some(v) : None);
-
-        public static Option<T> Then<T>(this Option<T> opt, Action<T> handler) {
-            opt.IfSome(handler);
-            return opt;
-        }
-
-        public static Option<T> Then<T>(this Option<T> opt, Action<T> someHandler, Action noneHandler) {
-            opt.Match(someHandler, noneHandler);
-            return opt;
-        }
-
-        public static async Task<Option<T>> ThenAsync<T>(this Option<T> opt, Func<T, Task> handler) {
-            await opt.IfSomeAsync(handler);
-            return opt;
-        }
-
-        public static async Task<Option<T>> ThenAsync<T>(this Option<T> opt, Func<T, Task> someHandler, Func<Task> noneHandler) {
-            if (opt.IsSome) await opt.IfSomeAsync(someHandler);
-            else await noneHandler();
-            return opt;
-        }
+        public static Option<R> TryCast<T,R>(this Option<T> opt) =>
+            opt.IsSome && opt.Get() is R v ? Some(v) : None;
     }
 
     [StructLayout(LayoutKind.Auto)]
