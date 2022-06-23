@@ -50,6 +50,9 @@ namespace RZ.Foundation.Extensions {
         [Pure]
         public static Option<T> Get<TKey, T>(this IImmutableDictionary<TKey, T> dict, TKey key) => dict.TryGetValue(key);
 
+        [Pure]
+        public static Option<T> Get<TKey, T>(this Map<TKey, T> dict, TKey key) => dict.Find(key);
+
         /// <summary>
         /// Split a sequence into two array by a predicate.
         /// </summary>

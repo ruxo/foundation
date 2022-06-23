@@ -30,6 +30,8 @@ namespace RZ.Foundation {
             return x;
         }
 
+        public static Option<Unit> BooleanToOption(bool b) => b ? Unit.Default : LanguageExt.Prelude.None;
+
         public static Result<T> Success<T>(T val) => val;
         public static Result<T> Failed<T>(Exception ex) => new Result<T>(ex);
 

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 #if NETSTANDARD2_1
 using System.Diagnostics.CodeAnalysis;
@@ -14,10 +16,19 @@ namespace RZ.Foundation.Extensions
 {
     public static class OptionHelper
     {
-        static readonly Exception DummyException = new Exception("Dummy extension in RZ.Foundation");
+        static readonly Exception DummyException = new ("Dummy extension in RZ.Foundation");
 
         public static Option<T> ToOption<T>(this T data) => data;
         public static Option<T> ToOption<T>(this T? data) where T : struct => data.HasValue? Some(data.Value) : Option<T>.None;
+
+        public static Option<ImmutableHashSet<T>> ToNotEmptyOption<T>(this ImmutableHashSet<T> data) =>
+            data.IsEmpty ? LanguageExt.Prelude.None : data;
+
+        public static Option<T[]> ToNotEmptyOption<T>(this IEnumerable<T> data) {
+            var array = data.AsArray();
+            return array.Length > 0 ? array : LanguageExt.Prelude.None;
+        }
+
         public static Option<T> None<T>() => Option<T>.None;
 
         public static Result<T> ToResult<T>(this Option<T> o) => o.IsSome ? o.Get().AsSuccess() : DummyException.AsFailure<T>();

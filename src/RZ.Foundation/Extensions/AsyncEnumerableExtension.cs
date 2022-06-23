@@ -103,6 +103,57 @@ namespace RZ.Foundation.Extensions
         }
         #endregion
 
+        public static async Task<bool> All<T>(this IAsyncEnumerable<T> source, Predicate<T> predicate) {
+            await foreach(var i in source)
+                if (!predicate(i))
+                    return false;
+            return true;
+        }
+
+        public static async Task<bool> Any<T>(this IAsyncEnumerable<T> source, Predicate<T> predicate) {
+            await foreach(var i in source)
+                if (predicate(i))
+                    return true;
+            return false;
+        }
+
+        public static async Task<bool> Any<T>(this IAsyncEnumerable<T> source) {
+            await using var itor = source.GetAsyncEnumerator();
+            return await itor.MoveNextAsync();
+        }
+
+        public static async IAsyncEnumerable<T> Append<T>(this IAsyncEnumerable<T> source, T element) {
+            await foreach (var i in source)
+                yield return i;
+            yield return element;
+        }
+
+        public static async IAsyncEnumerable<T> AppendAsync<T>(this IAsyncEnumerable<T> source, Task<T> element) {
+            await foreach (var i in source)
+                yield return i;
+            yield return await element;
+        }
+
+        public static async IAsyncEnumerable<T> AppendAsync<T>(this IAsyncEnumerable<T> source, ValueTask<T> element) {
+            await foreach (var i in source)
+                yield return i;
+            yield return await element;
+        }
+        
+        public static async IAsyncEnumerable<T> Concat<T>(this IAsyncEnumerable<T> first, IEnumerable<T> second) {
+            await foreach (var i in first)
+                yield return i;
+            foreach (var i in second)
+                yield return i;
+        }
+        
+        public static async IAsyncEnumerable<T> Concat<T>(this IAsyncEnumerable<T> first, IAsyncEnumerable<T> second) {
+            await foreach (var i in first)
+                yield return i;
+            await foreach (var i in second)
+                yield return i;
+        }
+
         #region Choose methods
         public static async IAsyncEnumerable<B> ChooseAsync<A, B>(this IEnumerable<A> source, Func<A, Task<Option<B>>> selector) {
             foreach (var i in source) {
@@ -195,7 +246,7 @@ namespace RZ.Foundation.Extensions
         }
 
         #endregion
-
+        
         public static async Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> source) {
             var result = new List<T>();
             await source.Iter(result.Add);
