@@ -42,7 +42,7 @@ namespace RZ.Foundation.Helpers
             T getter() {
                 try {
                     locker.EnterUpgradeableReadLock();
-                    if (expired >= now()) return data;
+                    if (expired > now()) return data;
 
                     try {
                         locker.EnterWriteLock();
@@ -86,32 +86,27 @@ namespace RZ.Foundation.Helpers
         public static AsyncContext<T> OfAsync<T>(Func<Task<T>> loader, TimeSpan lifetime, Func<DateTime>? timer = null) => OfAsync(loader, _ => lifetime, timer);
         
         public static AsyncContext<T> OfAsync<T>(Func<Task<T>> loader, Func<T, TimeSpan> getLifetime, Func<DateTime>? timer = null) {
-            var locker = new ReaderWriterLockSlim();
+            var locker = new SemaphoreSlim(1, 1);
             T data = default!;
             var expired = DateTime.MinValue;
             var now = timer ?? DefaultTimer;
             async Task<T> getter() {
+                if (expired > now()) return data;
+
+                await locker.WaitAsync();
                 try {
-                    locker.EnterUpgradeableReadLock();
-                    if (expired >= now()) return data;
+                    if (expired > now()) return data;
+                    if (data is IAsyncDisposable disposeAsync)
+                        await disposeAsync.DisposeAsync();
+                    else
+                        (data as IDisposable)?.Dispose();
 
-                    try {
-                        locker.EnterWriteLock();
-                        if (data is IAsyncDisposable disposeAsync)
-                            await disposeAsync.DisposeAsync();
-                        else
-                            (data as IDisposable)?.Dispose();
-
-                        data = await loader();
-                        expired = now() + getLifetime(data);
-                        return data;
-                    }
-                    finally {
-                        locker.ExitWriteLock();
-                    }
+                    data = await loader();
+                    expired = now() + getLifetime(data);
+                    return data;
                 }
                 finally {
-                    locker.ExitUpgradeableReadLock();
+                    locker.Release();
                 }
             }
             return new(getter, locker);
