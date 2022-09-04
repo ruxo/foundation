@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Collections.Specialized;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -44,11 +43,6 @@ namespace RZ.Foundation.Extensions {
 
         [Pure]
         public static Option<T> Get<TKey, T>(this IDictionary<TKey, T> dict, TKey key) => dict.TryGetValue(key);
-        [Pure]
-        public static Option<T> Get<TKey, T>(this ImmutableDictionary<TKey, T> dict, TKey key) where TKey : notnull =>
-            ((IImmutableDictionary<TKey, T>) dict).TryGetValue(key);
-        [Pure]
-        public static Option<T> Get<TKey, T>(this IImmutableDictionary<TKey, T> dict, TKey key) => dict.TryGetValue(key);
 
         [Pure]
         public static Option<T> Get<TKey, T>(this Map<TKey, T> dict, TKey key) => dict.Find(key);
