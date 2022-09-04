@@ -21,7 +21,7 @@ namespace RZ.Foundation
 
         [Fact]
         public void TestDeserializeInt() {
-            var x = JsonConvert.DeserializeObject<TestOptionInt>(@"{""A"":123}");
+            var x = JsonConvert.DeserializeObject<TestOptionInt>(@"{""A"":123}")!;
 
             x.A.IsSome.Should().BeTrue();
             x.A.Get().Should().Be(123);
@@ -38,7 +38,7 @@ namespace RZ.Foundation
 
         [Fact]
         public void TestDeserializeIntNone() {
-            var x = JsonConvert.DeserializeObject<TestOptionInt>(@"{""A"":null}");
+            var x = JsonConvert.DeserializeObject<TestOptionInt>(@"{""A"":null}")!;
 
             x.A.IsNone.Should().BeTrue();
         }
@@ -69,7 +69,7 @@ namespace RZ.Foundation
 
         [Fact]
         public void TestDeserializeOptionTimeRangeNone() {
-            var x = JsonConvert.DeserializeObject<TestOptionTimeRange>(@"{""A"":null}");
+            var x = JsonConvert.DeserializeObject<TestOptionTimeRange>(@"{""A"":null}")!;
 
             x.A.IsNone.Should().BeTrue();
         }

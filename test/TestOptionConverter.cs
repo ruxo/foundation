@@ -39,7 +39,7 @@ namespace RZ.Foundation
         [Fact]
         public void DeserializeStringWithOptionConverter()
         {
-            var data = JsonConvert.DeserializeObject<Sample>(@"{""OptionField"":""Test""}");
+            var data = JsonConvert.DeserializeObject<Sample>(@"{""OptionField"":""Test""}")!;
 
             data.OptionField.IsSome.Should().BeTrue();
             data.OptionField.IfNone("XXX").Should().Be("Test");
@@ -48,7 +48,7 @@ namespace RZ.Foundation
         [Fact]
         public void DeserializeNullStringWithOptionConverter()
         {
-            var data = JsonConvert.DeserializeObject<Sample>(@"{""OptionField"":null}");
+            var data = JsonConvert.DeserializeObject<Sample>(@"{""OptionField"":null}")!;
 
             data.OptionField.IsNone.Should().BeTrue();
         }
@@ -71,7 +71,7 @@ namespace RZ.Foundation
         public void TestDeserialize() {
             const string Load = @"{ ""complex_default"": { ""value"": ""abcdef"" }}";
 
-            var result = JsonConvert.DeserializeObject<ComplexWrapper>(Load);
+            var result = JsonConvert.DeserializeObject<ComplexWrapper>(Load)!;
 
             result.ComplexDefault.IsSome.Should().BeTrue();
         }
@@ -80,7 +80,7 @@ namespace RZ.Foundation
         public void TestDeserializeObjectWithNull() {
             const string Load = @"{""complex_default"": null}";
 
-            var result = JsonConvert.DeserializeObject<ComplexWrapper>(Load);
+            var result = JsonConvert.DeserializeObject<ComplexWrapper>(Load)!;
 
             result.ComplexDefault.IsNone.Should().BeTrue();
         }
@@ -89,7 +89,7 @@ namespace RZ.Foundation
         public void TestDeserializeObjectWithMissing() {
             const string Load = @"{}";
 
-            var result = JsonConvert.DeserializeObject<ComplexWrapper>(Load);
+            var result = JsonConvert.DeserializeObject<ComplexWrapper>(Load)!;
 
             result.ComplexDefault.IsNone.Should().BeTrue();
         }
