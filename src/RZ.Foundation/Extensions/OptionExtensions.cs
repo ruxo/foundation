@@ -47,6 +47,7 @@ namespace RZ.Foundation.Extensions
             await (await t).ToAsync().BindAsync(async x => (await mapper(x)).ToAsync()).ToOption();
 
         public static async Task<T> Get<T>(this Task<Option<T>> t) => (await t).Get();
+        
         [Obsolete("use Match instead")]
         public static Task<TR> Get<T, TR>(this Task<Option<T>> t, Func<T, TR> someMapper, Func<TR> noneMapper) => t.Match(someMapper, noneMapper);
         public static async Task<TR> Match<T, TR>(this Task<Option<T>> t, Func<T, TR> someMapper, Func<TR> noneMapper) =>

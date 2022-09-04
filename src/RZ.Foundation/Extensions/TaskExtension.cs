@@ -23,8 +23,6 @@ namespace RZ.Foundation.Extensions
         public static ConfiguredTaskAwaitable NoSync(this Task t) => t.ConfigureAwait(continueOnCapturedContext: false);
         public static ConfiguredTaskAwaitable<T> NoSync<T>(this Task<T> t) => t.ConfigureAwait(continueOnCapturedContext: false);
 
-        public static async Task<TB> Map<TA, TB>(this Task<TA> task, Func<TA, TB> mapper) => mapper(await task);
-
         public static async Task<T> Map<T>(this Task task, Func<T> mapper) {
             await task;
             return mapper();
@@ -38,6 +36,7 @@ namespace RZ.Foundation.Extensions
 
         #endregion
 
+        [Obsolete("Use LanguageExt's Task.Bind")]
         public static Task<TB> Chain<TA, TB>(this Task<TA> task, Func<TA, Task<TB>> chain)
         {
             var result = new TaskCompletionSource<TB>();
