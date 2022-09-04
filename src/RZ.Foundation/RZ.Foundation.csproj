@@ -23,8 +23,8 @@
     <OutputPath>bin\Debug\netcoreapp2.0\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LanguageExt.Core" Version="4.0.3" />
-    <PackageReference Include="MinVer" Version="2.5.0">
+    <PackageReference Include="LanguageExt.Core" Version="4.2.9" />
+    <PackageReference Include="MinVer" Version="4.2.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
