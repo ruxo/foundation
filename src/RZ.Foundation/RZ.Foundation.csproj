@@ -4,7 +4,7 @@
     <Company>RZ</Company>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <LangVersion>9</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Title>RZ.Foundation: Functional and utility functions</Title>
     <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
     <PackageTags>utility,functional</PackageTags>
@@ -13,7 +13,7 @@
     <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/ruxo/foundation</RepositoryUrl>
     <RepositoryType>public</RepositoryType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>../../lib/RZ.Foundation/</OutputPath>
@@ -23,8 +23,8 @@
     <OutputPath>bin\Debug\netcoreapp2.0\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LanguageExt.Core" Version="4.2.9" />
-    <PackageReference Include="MinVer" Version="4.2.0">
+    <PackageReference Include="LanguageExt.Core" Version="4.4.2" />
+    <PackageReference Include="MinVer" Version="4.3.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
