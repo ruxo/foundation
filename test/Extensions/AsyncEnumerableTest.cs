@@ -46,5 +46,13 @@ namespace RZ.Foundation.Extensions
             var result = await source.FlattenT(chainAsync).ToArrayAsync();
             result.Should().BeEquivalentTo(new[] {1,2,2,3,3,3});
         }
+
+        [Fact]
+        public async Task ContainsHappyPath() {
+            var source = new[]{ 1, 2, 3 };
+
+            var result = await source.AsAsyncEnumerable().Contains(2);
+            result.Should().BeTrue();
+        }
     }
 }

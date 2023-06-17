@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\src\RZ.Foundation.NewtonsoftJson\RZ.Foundation.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\src\RZ.Foundation\RZ.Foundation.csproj" />
   </ItemGroup>
 
 </Project>
