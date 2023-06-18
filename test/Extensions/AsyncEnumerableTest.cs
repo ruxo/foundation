@@ -64,5 +64,29 @@ namespace RZ.Foundation.Extensions
             var result = await source.AsAsyncEnumerable().Contains(2);
             result.Should().BeTrue();
         }
+
+        [Fact]
+        public async Task Skip()
+        {
+            var source = new[] {1, 2, 3};
+            var result = await source.AsAsyncEnumerable().Skip(2).ToArrayAsync();
+            result.Should().BeEquivalentTo(new[] {3});
+        }
+
+        [Fact]
+        public async Task SkipWhile()
+        {
+            var source = new[] {1, 2, 3};
+            var result = await source.AsAsyncEnumerable().SkipWhile(x => x < 3).ToArrayAsync();
+            result.Should().BeEquivalentTo(new[] {3});
+        }
+
+        [Fact]
+        public async Task Take()
+        {
+            var source = new[] {1, 2, 3};
+            var result = await source.AsAsyncEnumerable().Take(2).ToArrayAsync();
+            result.Should().BeEquivalentTo(new[] {1,2});
+        }
     }
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -42,7 +41,7 @@ namespace RZ.Foundation.Extensions
 
         #endregion
 
-        public static async ValueTask<bool> All<T>(this IAsyncEnumerable<T> source, Predicate<T> predicate,
+        public static async ValueTask<bool> All<T>(this IAsyncEnumerable<T> source, Func<T,bool> predicate,
             CancellationToken cancelToken = default) =>
             (await source.TryFind(i => !predicate(i), cancelToken)).IsNone;
 
@@ -57,7 +56,7 @@ namespace RZ.Foundation.Extensions
             }
         }
 
-        public static async ValueTask<bool> Any<T>(this IAsyncEnumerable<T> source, Predicate<T> predicate,
+        public static async ValueTask<bool> Any<T>(this IAsyncEnumerable<T> source, Func<T,bool> predicate,
             CancellationToken cancelToken = default) =>
             (await source.TryFind(predicate, cancelToken)).IsSome;
 
@@ -217,13 +216,13 @@ namespace RZ.Foundation.Extensions
         public static async ValueTask<int> Count<T>(this IAsyncEnumerable<T> seq, CancellationToken cancelToken = default)
         {
             var counter = 0;
-            await foreach (var i in seq.WithCancellation(cancelToken))
+            await foreach (var _ in seq.WithCancellation(cancelToken))
                 ++counter;
             return counter;
         }
 
-        public static ValueTask<int> Count<T>(this IAsyncEnumerable<T> seq, Predicate<T> predicate, CancellationToken cancelToken = default) =>
-            seq.Where(predicate).Count(cancelToken);
+        public static ValueTask<int> Count<T>(this IAsyncEnumerable<T> seq, Func<T,bool> predicate, CancellationToken cancelToken = default) =>
+            seq.Where(predicate, cancelToken).Count(cancelToken);
 
         public static async ValueTask<int> CountBy<T, R>(this IAsyncEnumerable<T> seq, Func<T, R> keyGetter, CancellationToken cancelToken = default)
         {
@@ -343,6 +342,16 @@ namespace RZ.Foundation.Extensions
         }
         #endregion
 
+        public static IAsyncEnumerable<R> OfType<T, R>(this IAsyncEnumerable<T> seq, CancellationToken cancelToken = default) =>
+            seq.Choose(x => x is R v ? Some(v) : None, cancelToken);
+
+        public static async IAsyncEnumerable<T> Prepend<T>(this IAsyncEnumerable<T> seq, T value, [EnumeratorCancellation] CancellationToken cancelToken = default)
+        {
+            yield return value;
+            await foreach (var i in seq.WithCancellation(cancelToken))
+                yield return i;
+        }
+
         public static async IAsyncEnumerable<T> Reverse<T>(this IAsyncEnumerable<T> seq, [EnumeratorCancellation] CancellationToken cancelToken = default)
         {
             var stack = new Stack<T>(16);
@@ -350,14 +359,61 @@ namespace RZ.Foundation.Extensions
             while(stack.TryPop(out var i))
                 yield return i;
         }
+       
+        public static IAsyncEnumerable<T> Skip<T>(this IAsyncEnumerable<T> seq, int n, CancellationToken cancelToken = default)
+        {
+            var counter = 0;
+            return seq.SkipWhile(_ => counter++ < n, cancelToken);
+        }
 
-        public static async ValueTask<Option<T>> TryFind<T>(this IAsyncEnumerable<T> seq, Predicate<T> finder, CancellationToken cancelToken = default)
+        public static async IAsyncEnumerable<T> SkipWhile<T>(this IAsyncEnumerable<T> seq, Func<T, bool> predicate, [EnumeratorCancellation] CancellationToken cancelToken = default)
+        {
+            await using var itor = seq.GetAsyncEnumerator(cancelToken);
+            if (!await itor.MoveNextAsync()) yield break;
+
+            var skipping = predicate(itor.Current);
+            var hasData = true;
+            while (skipping && hasData)
+            {
+                hasData = await itor.MoveNextAsync();
+                skipping = predicate(itor.Current);
+            }
+            if (skipping) yield break;
+            do
+            {
+                yield return itor.Current;
+            } while (await itor.MoveNextAsync());
+        }
+
+        public static IAsyncEnumerable<T> Take<T>(this IAsyncEnumerable<T> seq, int n, CancellationToken cancelToken = default)
+        {
+            var counter = 0;
+            return seq.TakeWhile(_ => counter++ < n, cancelToken);
+        }
+
+        public static async IAsyncEnumerable<T> TakeWhile<T>(this IAsyncEnumerable<T> seq, Func<T, bool> predicate,
+            [EnumeratorCancellation] CancellationToken cancelToken = default)
+        {
+            await using var itor = seq.GetAsyncEnumerator(cancelToken);
+            while(await itor.MoveNextAsync() && predicate(itor.Current))
+                yield return itor.Current;
+        }
+
+        public static async Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> source, CancellationToken cancelToken = default) {
+            var result = new List<T>(16);
+            await source.Iter(result.Add, cancelToken);
+            return result;
+        }
+
+        public static async Task<T[]> ToArrayAsync<T>(this IAsyncEnumerable<T> source, CancellationToken cancelToken = default) {
+            return (await source.ToListAsync(cancelToken)).ToArray();
+        }
+
+        public static async ValueTask<Option<T>> TryFind<T>(this IAsyncEnumerable<T> seq, Func<T,bool> finder, CancellationToken cancelToken = default)
         {
             await foreach(var i in seq.WithCancellation(cancelToken))
-            {
                 if (finder(i))
                     return i;
-            }
             return None;
         }
 
@@ -365,7 +421,7 @@ namespace RZ.Foundation.Extensions
 
         public static async ValueTask<Option<T>> TryFirst<T>(this IAsyncEnumerable<T> source, CancellationToken cancelToken = default) {
             await using var enumerator = source.GetAsyncEnumerator(cancelToken);
-            return await enumerator.MoveNextAsync() ? enumerator.Current : LanguageExt.Prelude.None;
+            return await enumerator.MoveNextAsync() ? enumerator.Current : None;
         }
 
         public static async ValueTask<Option<T>> TryFirst<T>(this IAsyncEnumerable<T> source, Func<T, bool> predicate, CancellationToken cancelToken = default) {
@@ -373,7 +429,7 @@ namespace RZ.Foundation.Extensions
             while(await enumerator.MoveNextAsync())
                 if (predicate(enumerator.Current))
                     return enumerator.Current;
-            return LanguageExt.Prelude.None;
+            return None;
         }
 
         public static async ValueTask<Option<T>> TryFirstAsync<T>(this IAsyncEnumerable<T> source, Func<T, Task<bool>> predicate, CancellationToken cancelToken = default) {
@@ -381,31 +437,22 @@ namespace RZ.Foundation.Extensions
             while(await enumerator.MoveNextAsync())
                 if (await predicate(enumerator.Current))
                     return enumerator.Current;
-            return LanguageExt.Prelude.None;
+            return None;
         }
 
         #endregion
 
-        /// <summary>
-        /// Attempt to fold <paramref name="seq"/>, if the sequence is empty, return <c>None</c>.
-        /// </summary>
-        /// <param name="seq">Data sequence</param>
-        /// <param name="folder">Folder function: (last, current) -> new value</param>
-        /// <param name="cancelToken">Cancellation token</param>
-        /// <typeparam name="T">Type of sequence</typeparam>
-        /// <returns>Some folded value if the sequence is not empty.</returns>
-        public static async ValueTask<Option<T>> TryFold<T>(this IAsyncEnumerable<T> seq, Func<T, T, T> folder, CancellationToken cancelToken = default) {
+        public static ValueTask<Option<T>> TryFold<T>(this IAsyncEnumerable<T> seq, Func<T, T, T> folder, CancellationToken cancelToken = default) => 
+            seq.TryFold(identity, folder, cancelToken);
+
+        public static async ValueTask<Option<R>> TryFold<T, R>(this IAsyncEnumerable<T> seq, Func<T,R> seeder, Func<R, T, R> folder, CancellationToken cancelToken = default)
+        {
             await using var itor = seq.GetAsyncEnumerator(cancelToken);
             if (!await itor.MoveNextAsync()) return None;
-            var v = itor.Current;
-            while (await itor.MoveNextAsync()) {
-                cancelToken.ThrowIfCancellationRequested();
-                v = folder(v, itor.Current);
-            }
-            return Some(v);
+            var result = seeder(itor.Current);
+            while (await itor.MoveNextAsync()) result = folder(result, itor.Current);
+            return result;
         }
-        
-        #region Unwrap
 
         public static async ValueTask<Option<T>> TryGetAt<T>(this IAsyncEnumerable<T> seq, int index, CancellationToken cancelToken = default)
         {
@@ -429,27 +476,45 @@ namespace RZ.Foundation.Extensions
             }
             return result;
         }
-        
-        public static async Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> source, CancellationToken cancelToken = default) {
-            var result = new List<T>(16);
-            await source.Iter(result.Add, cancelToken);
-            return result;
+
+        public static ValueTask<Option<T>> TryMax<T>(this IAsyncEnumerable<T> seq, IComparer<T>? comparer = null, CancellationToken cancelToken = default) =>
+            seq.TryMaxBy(identity, comparer, cancelToken);
+
+        public static ValueTask<Option<T>> TryMaxBy<T, K>(this IAsyncEnumerable<T> seq, Func<T, K> getKey, IComparer<K>? comparer=null, CancellationToken cancelToken = default)
+        {
+            comparer ??= Comparer<K>.Default;
+            return seq.TrySearch(getKey, (last,current) => comparer.Compare(current, last) > 0, cancelToken);
         }
 
-        public static async Task<T[]> ToArrayAsync<T>(this IAsyncEnumerable<T> source, CancellationToken cancelToken = default) {
-            return (await source.ToListAsync(cancelToken)).ToArray();
+        public static ValueTask<Option<T>> TryMin<T>(this IAsyncEnumerable<T> seq, IComparer<T>? comparer = null, CancellationToken cancelToken = default) => 
+            seq.TryMinBy(identity, comparer, cancelToken);
+
+        public static ValueTask<Option<T>> TryMinBy<T, K>(this IAsyncEnumerable<T> seq, Func<T, K> getKey, IComparer<K>? comparer=null, CancellationToken cancelToken = default)
+        {
+            comparer ??= Comparer<K>.Default;
+            return seq.TrySearch(getKey, (last,current) => comparer.Compare(current, last) < 0, cancelToken);
         }
-        
-        #endregion
+
+        public static ValueTask<Option<T>> TrySearch<T, K>(this IAsyncEnumerable<T> seq, Func<T, K> getKey, Func<K,K,bool> chooseCurrent, CancellationToken cancelToken = default)
+        {
+            return seq.TryFold(identity, selector, cancelToken);
+            T selector(T last, T current) => chooseCurrent(getKey(last), getKey(current)) ? current : last;
+        }
+
+        public static ValueTask<Option<T>> TrySingle<T>(this IAsyncEnumerable<T> seq, CancellationToken cancelToken = default) =>
+            seq.TrySingle(_ => true, cancelToken);
+
+        public static async ValueTask<Option<T>> TrySingle<T>(this IAsyncEnumerable<T> seq, Func<T, bool> predicate, CancellationToken cancelToken = default)
+        {
+            await using var itor = seq.Where(predicate, cancelToken).GetAsyncEnumerator(cancelToken);
+            if (!await itor.MoveNextAsync()) return None;
+            var result = itor.Current;
+            return await itor.MoveNextAsync() ? throw new InvalidOperationException("The sequence contains more than one element.") : result;
+        }
+
 
         #region Where methods
         public static async IAsyncEnumerable<T> Where<T>(this IAsyncEnumerable<T> source, Func<T, bool> predicate, [EnumeratorCancellation] CancellationToken cancelToken = default) {
-            await foreach (var i in source.WithCancellation(cancelToken))
-                if (predicate(i))
-                    yield return i;
-        }
-
-        public static async IAsyncEnumerable<T> Where<T>(this IAsyncEnumerable<T> source, Predicate<T> predicate, [EnumeratorCancellation] CancellationToken cancelToken = default) {
             await foreach (var i in source.WithCancellation(cancelToken))
                 if (predicate(i))
                     yield return i;
