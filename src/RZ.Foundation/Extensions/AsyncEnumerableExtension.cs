@@ -512,6 +512,15 @@ namespace RZ.Foundation.Extensions
             return await itor.MoveNextAsync() ? throw new InvalidOperationException("The sequence contains more than one element.") : result;
         }
 
+        public static async ValueTask<Option<R>> TrySum<T, R>(this IAsyncEnumerable<T> seq, Func<T, R> getValue, CancellationToken cancelToken = default)
+            where R: INumber<R> {
+            await using var itor = seq.GetAsyncEnumerator(cancelToken);
+            if (!await itor.MoveNextAsync()) return None;
+            
+            var sum = getValue(itor.Current);
+            while(await itor.MoveNextAsync()) sum += getValue(itor.Current);
+            return sum;
+        }
 
         #region Where methods
         public static async IAsyncEnumerable<T> Where<T>(this IAsyncEnumerable<T> source, Func<T, bool> predicate, [EnumeratorCancellation] CancellationToken cancelToken = default) {

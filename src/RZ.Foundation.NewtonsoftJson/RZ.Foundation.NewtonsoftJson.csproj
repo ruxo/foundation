@@ -27,7 +27,7 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(Configuration)' == 'Release'">
-        <PackageReference Include="RZ.Foundation" Version="6.0.0" />
+        <PackageReference Include="RZ.Foundation" Version="6.0.1" />
     </ItemGroup>
     <ItemGroup Condition="'$(Configuration)' != 'Release'">
       <ProjectReference Include="..\RZ.Foundation\RZ.Foundation.csproj" />
