@@ -11,6 +11,16 @@ namespace RZ.Foundation.Extensions
     public class AsyncEnumerableTest
     {
         [Fact]
+        public async Task AverageIntegers()
+        {
+            var source = new[] {1, 2, 3};
+
+            var result = await source.AsAsyncEnumerable().Average();
+
+            result.Should().Be(2);
+        }
+
+        [Fact]
         public async Task MapFromEnumerable() {
             var source = new[]{ 1, 2, 3, 4, 5 };
 
