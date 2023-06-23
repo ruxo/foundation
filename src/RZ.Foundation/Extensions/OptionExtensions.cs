@@ -18,6 +18,11 @@ namespace RZ.Foundation.Extensions
     {
         static readonly Exception DummyException = new ("Dummy extension in RZ.Foundation");
 
+        public static bool IfSome<T>(this Option<T> o, out T data) {
+            data = o.IsSome ? o.Get() : default!;
+            return o.IsSome;
+        }
+
         public static Option<T> ToOption<T>(this T data) => data;
         public static Option<T> ToOption<T>(this T? data) where T : struct => data.HasValue? Some(data.Value) : Option<T>.None;
 
