@@ -68,18 +68,12 @@ namespace RZ.Foundation.Extensions
 #if NETSTANDARD2_1
         [return: MaybeNull]
 #endif
+        [Obsolete("Use Option<T>.ToNullable extension method")]
         public static async Task<T> GetOrDefault<T>(this Task<Option<T>> t) => (await t).GetOrDefault()!;
 
         public static async Task<T> GetOrElse<T>(this Task<Option<T>> t, T noneValue) => (await t).IfNone(noneValue);
         public static async Task<T> GetOrElse<T>(this Task<Option<T>> t, Func<T> noneValue) => (await t).IfNone(noneValue);
         public static async Task<T> GetOrElseAsync<T>(this Task<Option<T>> t, Func<Task<T>> noneValue) => await (await t).IfNoneAsync(noneValue);
-
-        public static T? ToNullable<T>(this Option<T> opt) where T : class => opt.GetOrDefault();
-    }
-
-    public static class OptionNullableHelper
-    {
-        public static T? ToNullable<T>(this Option<T> opt) where T : struct => opt.GetOrDefault();
     }
 
     public static class OptionExtensions
