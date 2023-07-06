@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
+        <PackageId>RZ.Foundation.NewtonsoftJson</PackageId>
         <TargetFramework>net7.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
@@ -14,10 +15,6 @@
         <PackageTags>functional csharp extension json newtonsoft</PackageTags>
     </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <OutputPath>../../lib/RZ.Foundation.NewtonsoftJson/</OutputPath>
-    </PropertyGroup>
-
     <ItemGroup>
       <PackageReference Include="MinVer" Version="4.3.0">
         <PrivateAssets>all</PrivateAssets>
@@ -26,10 +23,7 @@
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(Configuration)' == 'Release'">
-        <PackageReference Include="RZ.Foundation" Version="6.0.1" />
-    </ItemGroup>
-    <ItemGroup Condition="'$(Configuration)' != 'Release'">
+    <ItemGroup>
       <ProjectReference Include="..\RZ.Foundation\RZ.Foundation.csproj" />
     </ItemGroup>
 
