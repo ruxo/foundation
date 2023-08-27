@@ -63,6 +63,12 @@ public static class ResultExtension
     public static Option<Exception> Fail<T>(this Result<T> either) => either.Match(_ => None, Some);
     public static Option<T> Success<T>(this Result<T> either) => either.Match(Some, _ => None);
     
+    public static bool IfFaulted<T>(this Result<T> either, out Exception error, out T data) {
+        error = either.IsFaulted ? either.GetFail() : default!;
+        data = either.IsSuccess ? either.GetSuccess() : default!;
+        return either.IsFaulted;
+    }
+    
     public static bool IfSuccess<T>(this Result<T> either, out T data, out Exception error) {
         error = either.IsFaulted ? either.GetFail() : default!;
         data = either.IsSuccess ? either.GetSuccess() : default!;

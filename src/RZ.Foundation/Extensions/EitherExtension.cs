@@ -14,6 +14,12 @@ public static class EitherExtension
     public static Option<L> Left<L, R>(this Either<L, R> either) => either.Match(_ => None, Some);
     public static Option<R> Right<L, R>(this Either<L, R> either) => either.Match(Some, _ => None);
     
+    public static bool IfLeft<L, R>(this Either<L, R> either, out L error, out R data) {
+        error = either.IsLeft ? either.GetLeft() : default!;
+        data = either.IsRight ? either.GetRight() : default!;
+        return either.IsLeft;
+    }
+    
     public static bool IfRight<L, R>(this Either<L, R> either, out R data, out L error) {
         error = either.IsLeft ? either.GetLeft() : default!;
         data = either.IsRight ? either.GetRight() : default!;

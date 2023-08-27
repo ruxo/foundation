@@ -24,6 +24,9 @@ namespace RZ.Foundation.Extensions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IfNone<T>(this Option<T> o, out T data) => !o.IfSome(out data);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Option<T> ToOption<T>(this T data) => data;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
