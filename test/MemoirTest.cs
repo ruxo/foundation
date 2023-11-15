@@ -26,7 +26,7 @@ namespace RZ.Foundation
         }
 
         [Fact]
-        public void MemoirDictSameKeyMultithread() {
+        public async Task MemoirDictSameKeyMultithread() {
             var sideeffect = 0;
             int test(int x) {
                 ++sideeffect;
@@ -41,9 +41,11 @@ namespace RZ.Foundation
 
             startLine.Set();    // go!
 
-            Task.WaitAll(tasks.Cast<Task>().ToArray());
+            await Task.WhenAll(tasks.Cast<Task>().ToArray());
 
+#pragma warning disable xUnit1031
             var results = tasks.Select(t => t.Result).ToArray();
+#pragma warning restore xUnit1031
 
             results.All(r => r == 2).Should().BeTrue();
             sideeffect.Should().Be(1, "sideeffect should be called just once!");

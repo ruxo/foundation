@@ -1,15 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
 
     <RootNamespace>RZ.Foundation</RootNamespace>
 
-    <LangVersion>default</LangVersion>
+    <LangVersion>preview</LangVersion>
 
     <Nullable>enable</Nullable>
+
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,7 +25,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\RZ.Foundation.NewtonsoftJson\RZ.Foundation.NewtonsoftJson.csproj" />
     <ProjectReference Include="..\src\RZ.Foundation\RZ.Foundation.csproj" />
   </ItemGroup>
 

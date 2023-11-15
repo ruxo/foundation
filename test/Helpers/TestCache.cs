@@ -81,7 +81,7 @@ public sealed class TestCache
             return cache.Get();
         }
 
-        Task.WaitAll(getCache(), getCache(), getCache(), getCache(), getCache(), getCache(), getCache(), getCache());
+        await Task.WhenAll(getCache(), getCache(), getCache(), getCache(), getCache(), getCache(), getCache(), getCache());
 
         result.Should().AllBe("1");
 

@@ -5,7 +5,7 @@
     <Company>RZ</Company>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>preview</LangVersion>
     <Title>RZ.Foundation: Functional and utility functions</Title>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
@@ -15,7 +15,7 @@
     <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/ruxo/foundation</RepositoryUrl>
     <RepositoryType>public</RepositoryType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
