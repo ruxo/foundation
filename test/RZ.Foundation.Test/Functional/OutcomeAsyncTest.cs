@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
 using FluentAssertions;
+using LanguageExt;
 using LanguageExt.Common;
 using Xunit;
 using static RZ.Foundation.Prelude;
+using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Functional;
 
@@ -20,10 +22,13 @@ public sealed class OutcomeAsyncTest
 
         outcome.IsSuccess.Should().BeTrue();
         outcome.IsFail.Should().BeFalse();
-        outcome.Unwrap().Should().Be(42);
 
-        new Action(() => outcome.UnwrapError()).Should().Throw<InvalidOperationException>();
+        (await outcomeAsync.Unwrap()).Should().Be(42);
+
+        Func<Task> action = async () => await outcomeAsync.UnwrapError();
+        await action.Should().ThrowAsync<InvalidOperationException>();
     }
+
     [Fact]
     public async Task OutcomeAsyncDirectFailureAssignment()
     {
@@ -33,9 +38,57 @@ public sealed class OutcomeAsyncTest
 
         outcome.IsSuccess.Should().BeFalse();
         outcome.IsFail.Should().BeTrue();
-        outcome.UnwrapError().Should().Match<Error>(e => e.Is(Error.New(123, "another dummy")));
 
-        new Action(() => outcome.Unwrap()).Should().Throw<ExpectedException>();
+        (await outcomeAsync.UnwrapError()).Should().Match<Error>(e => e.Is(Error.New(123, "another dummy")));
+
+        Func<Task> action = async () => await outcomeAsync.Unwrap();
+        await action.Should().ThrowAsync<ExpectedException>();
+    }
+
+    #endregion
+
+    #region Monad operations
+
+    [Fact]
+    public async Task Map_value_with_outcome_async() {
+        OutcomeAsync<int> outcomeAsync = 42;
+
+        var result = await outcomeAsync.Map(x => x + 1);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Unwrap().Should().Be(42 + 1);
+    }
+
+    [Fact]
+    public async Task Add_two_outcomes_async() {
+        OutcomeAsync<int> a = 42;
+        OutcomeAsync<int> b = 123;
+
+        var result = await (from x in a
+                            from y in b
+                            let r = x + y
+                            select r);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Unwrap().Should().Be(42 + 123);
+    }
+
+    [Fact]
+    public async Task Binding_async_with_sync_outcome() {
+        var result = from a in SuccessOutcomeAsync(42)
+                     from b in SuccessOutcomeAsync(a + 1)
+                     select b;
+
+        (await result).Should().Be(SuccessOutcome(43));
+    }
+
+    [Fact]
+    public async Task Binding_with_sync_outcome() {
+        var result = from a in SuccessOutcomeAsync(42)
+                     from b in SuccessOutcome(a + 1)
+                     select b;
+
+        (await result).Should().Be(SuccessOutcome(43));
     }
 
     #endregion
@@ -197,6 +250,44 @@ public sealed class OutcomeAsyncTest
 
         result.IsFail.Should().BeTrue();
         result.UnwrapError().Code.Should().Be(123);
+    }
+
+    [Fact]
+    public async Task Pipe_failure_outcome_async_and_a_success_outcome_returns_the_success_one() {
+        OutcomeAsync<int> a = Error.New(42, "dummy");
+        Outcome<int> b = 123;
+
+        var result = await (a | b);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Unwrap().Should().Be(123);
+    }
+
+    [Fact]
+    public async Task Pipe_failure_outcome_async_and_a_success_outcome_catch_returns_the_success_outcome() {
+        OutcomeAsync<int> a = Error.New(42, "dummy");
+        Outcome<int> b = 123;
+
+        var result = await (a | @ifFail(_ => b));
+
+        result.IsSuccess.Should().BeTrue();
+        result.Unwrap().Should().Be(123);
+    }
+
+    [Fact]
+    public async Task Pipe_failure_outcome_async_and_catch_for_sideeffect() {
+        OutcomeAsync<int> a = Error.New(42, "dummy");
+
+        var success = false;
+        async Task<Unit> doSomething() {
+            await Task.Yield();
+            success = true;
+            return unit;
+        }
+
+        _ = await (a | failDo(_ => doSomething()));
+
+        success.Should().BeTrue();
     }
 
     #endregion

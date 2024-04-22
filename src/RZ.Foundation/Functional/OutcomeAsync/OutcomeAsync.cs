@@ -26,7 +26,7 @@ public readonly struct OutcomeAsync<T>
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OutcomeAsync<T> operator |(OutcomeAsync<T> ma, Outcome<T> mb) =>
-        ma.value | mb.value.ToAsync();
+        ma.value.BindLeft(_ => mb.value.ToAsync());
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OutcomeAsync<T> operator |(OutcomeAsync<T> ma, OutcomeAsync<T> mb) =>

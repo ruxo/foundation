@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
 using FluentAssertions;
+using LanguageExt;
 using LanguageExt.Common;
 using Xunit;
+using static LanguageExt.Prelude;
 using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.Functional;
@@ -32,6 +34,49 @@ public sealed class OutcomeTest
         outcome.UnwrapError().Should().Match<Error>(e => e.Is(Error.New(123, "another dummy")));
 
         new Action(() => outcome.Unwrap()).Should().Throw<ExpectedException>();
+    }
+
+    #endregion
+
+    #region Monad operations
+
+    [Fact]
+    public void Map_value_with_outcome() {
+        Outcome<int> outcome = 42;
+
+        var result = from a in outcome
+                     select a + 1;
+
+        result.IsSuccess.Should().BeTrue();
+        result.Unwrap().Should().Be(42 + 1);
+    }
+
+    [Fact]
+    public void Map_error_with_outcome() {
+        Outcome<int> outcome = Error.New(123, "dummy");
+
+        var result = outcome.MapFailure(e => Error.New(456, e.Message));
+
+        result.IsFail.Should().BeTrue();
+        result.UnwrapError().Should().Be(Error.New(456, "dummy"));
+    }
+
+    [Fact]
+    public void Binding_sync_with_sync() {
+        var result = from a in SuccessOutcome(42)
+                     from b in SuccessOutcome(a + 1)
+                     select b;
+
+        result.Should().Be(SuccessOutcome(43));
+    }
+
+    [Fact]
+    public async Task Binding_sync_with_async() {
+        var result = from a in SuccessOutcome(42)
+                     from b in SuccessOutcomeAsync(a + 1)
+                     select b;
+
+        (await result).Should().Be(SuccessOutcome(43));
     }
 
     #endregion
@@ -245,6 +290,21 @@ public sealed class OutcomeTest
 
         result.IsFail.Should().BeTrue();
         result.UnwrapError().Code.Should().Be(123);
+    }
+
+    [Fact]
+    public void Pipe_failure_outcome_and_catch_for_sideeffect() {
+        Outcome<int> a = Error.New(42, "dummy");
+
+        var success = false;
+        Unit doSomething() {
+            success = true;
+            return unit;
+        }
+
+        _ = a | failDo(_ => doSomething());
+
+        success.Should().BeTrue();
     }
 
     #endregion

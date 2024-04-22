@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using LanguageExt;
@@ -38,8 +39,17 @@ public static partial class Prelude
 
     #endregion
 
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeAsync<T> FailedOutcomeAsync<T>(Error error) =>
+        LeftAsync<Error, T>(error);
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeAsync<T> SuccessOutcomeAsync<T>(T value) =>
+        RightAsync<Error, T>(value);
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OutcomeAsync<T> OutcomeAsync<T>(Task<T> f) =>
-        EitherAsync<Error, T>.RightAsync(f);
+        RightAsync<Error, T>(f);
 
     public static readonly OutcomeAsync<Unit> unitOutcomeAsync = unit;
 }
