@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\RZ.Foundation\RZ.Foundation.csproj" />
+    <ProjectReference Include="..\..\src\RZ.Foundation\RZ.Foundation.csproj" />
   </ItemGroup>
 
 </Project>

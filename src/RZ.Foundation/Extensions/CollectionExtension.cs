@@ -81,6 +81,11 @@ namespace RZ.Foundation.Extensions {
             return (trueResult.ToArray(), falseResult.ToArray());
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Option<V> TakeOut<K, V>(this IDictionary<K, V> dict, K key) =>
+            dict.Remove(key, out var v) ? v : None;
+
+        [Pure]
         public static ImmutableDictionary<K, V> ToImmutableDictionary<K, V>(this IEnumerable<(K Key, V Value)> pairs) where K: notnull =>
             pairs.ToImmutableDictionary(k => k.Key, v => v.Value);
 

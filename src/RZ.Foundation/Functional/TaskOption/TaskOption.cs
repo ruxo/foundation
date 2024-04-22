@@ -9,6 +9,7 @@ using LanguageExt;
 using LanguageExt.ClassInstances;
 using LanguageExt.Common;
 using LanguageExt.TypeClasses;
+using RZ.Foundation.Extensions;
 using static LanguageExt.OptionalAsync;
 using static LanguageExt.TypeClass;
 using static LanguageExt.Prelude;
@@ -37,6 +38,7 @@ namespace RZ.Foundation.Functional.TaskOption
     /// This is actually an adaptation of LanguageExt's OptionAsync type, but allowing for exception side-effects.
     /// </remarks>
     [AsyncMethodBuilder(typeof(TaskOptionMethodBuilder<>))]
+    [Obsolete("Replaced by Outcome and OutcomeAsync")]
     public readonly struct TaskOption<A> : IAsyncEnumerable<A>, IOptionalAsync
     {
         readonly Task<(bool IsSome, A? Value)> data;
@@ -44,7 +46,7 @@ namespace RZ.Foundation.Functional.TaskOption
         #region Constructors
 
         public TaskOption(Option<A> option) {
-            data = (option.IsSome, Extensions.OptionExtensions.GetOrDefault(option)).AsTask();
+            data = (option.IsSome, option.IsSome? (A?) option.Get() : default).AsTask();
         }
 
         /// <summary>
