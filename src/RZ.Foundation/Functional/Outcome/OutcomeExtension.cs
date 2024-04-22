@@ -42,4 +42,7 @@ public static partial class OutcomeExtension
     [Pure]
     public static Outcome<T> ToOutcome<T>(this Option<T> opt, Error? error = default) =>
         opt.Match(v => (Outcome<T>)v, () => error ?? StandardErrors.NotFound);
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Outcome<T> ToOutcome<T>(this Try<T> self) => self.ToEither(Error.New);
 }

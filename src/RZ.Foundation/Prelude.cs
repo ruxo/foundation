@@ -2,6 +2,7 @@
 global using static RZ.Foundation.Prelude;
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using LanguageExt;
@@ -11,53 +12,60 @@ using RZ.Foundation.Extensions;
 namespace RZ.Foundation;
 
 public static partial class Prelude {
+    [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Func<T> constant<T>(T x) => () => x;
 
+    [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.NoOptimization)]
     public static void Noop() { }
 
+    [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Func<T, T> SideEffect<T>(Action<T> f) => x => {
                                                                f(x);
                                                                return x;
                                                            };
 
+    [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Func<T, Task<T>> SideEffectAsync<T>(Func<T, Task> f) => async x => {
                                                                               await f(x);
                                                                               return x;
                                                                           };
 
+    [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T SideEffect<T>(this T x, Action<T> f) {
         f(x);
         return x;
     }
 
+    [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async Task<T> SideEffectAsync<T>(this T x, Func<T,Task> f) {
         await f(x);
         return x;
     }
 
-    public static Option<Unit> BooleanToOption(bool b) => b ? Unit.Default : LanguageExt.Prelude.None;
+    [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<Unit> BooleanToOption(bool b) => b ? unit : None;
 
-    [Obsolete("Use Outcome instead")]
+    [ExcludeFromCodeCoverage, Obsolete("Use Outcome instead")]
     public static Result<T> Success<T>(T val)       => val;
 
-    [Obsolete("Use Outcome instead")]
+    [ExcludeFromCodeCoverage, Obsolete("Use Outcome instead")]
     public static Result<T> Failed<T>(Exception ex) => new Result<T>(ex);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Func<Unit> ToUnit<T>(Func<T> effect) =>
         () => {
             effect();
             return unit;
         };
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Func<T, Unit> ToUnit<T>(Action<T> action) =>
         v => {
             action(v);
             return unit;
         };
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Unit ToUnit(Action action) {
         action();
         return unit;

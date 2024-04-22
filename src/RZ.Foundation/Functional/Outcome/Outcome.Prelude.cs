@@ -67,8 +67,9 @@ public static partial class Prelude
 
     /// <summary>
     /// Transform any action into Outcome<Unit>, the action SHOULD NOT throw exceptions.
+    /// Only work with Outcome<Unit>
     /// </summary>
-    public static OutcomeCatch<Unit> outcomeFailed(Action<Error> fail) =>
+    public static OutcomeCatch<Unit> @ifFail(Action<Error> fail) =>
         matchError(static _ => true, e => {
                                          fail(e);
                                          return (Outcome<Unit>) unit;

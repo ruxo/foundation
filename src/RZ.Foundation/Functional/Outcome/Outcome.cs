@@ -33,6 +33,10 @@ public readonly struct Outcome<T>
     public static Outcome<T> operator |(Outcome<T> ma, in Outcome<T> mb) =>
         ma.value | mb.value;
 
+    [Pure]
+    public static OutcomeAsync<T> operator |(Outcome<T> ma, OutcomeAsync<T> mb) =>
+        ma.value.ToAsync().BindLeft(_ => mb.Either);
+
     public static Outcome<T> operator |(Outcome<T> ma, OutcomeCatch<T> mb) =>
         ma.value.BindLeft(e => mb.Run(e).Either);
 

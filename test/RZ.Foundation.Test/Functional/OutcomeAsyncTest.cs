@@ -275,6 +275,17 @@ public sealed class OutcomeAsyncTest
     }
 
     [Fact]
+    public async Task Pipe_failure_outcome_async_and_async_failure_outcome_catch_returns_the_failure_outcome() {
+        OutcomeAsync<int> a = Error.New(42, "dummy");
+        OutcomeAsync<int> b = Error.New(123, "another dummy");
+
+        var result = await (a | @ifFail(_ => b));
+
+        result.IsFail.Should().BeTrue();
+        result.UnwrapError().Code.Should().Be(123);
+    }
+
+    [Fact]
     public async Task Pipe_failure_outcome_async_and_catch_for_sideeffect() {
         OutcomeAsync<int> a = Error.New(42, "dummy");
 
@@ -288,6 +299,29 @@ public sealed class OutcomeAsyncTest
         _ = await (a | failDo(_ => doSomething()));
 
         success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Perform_side_effect_when_error() {
+        OutcomeAsync<Unit> a = Error.New(42, "dummy");
+
+        var result = 0;
+        _ = await (a | @ifFail(e => {
+                                   result = e.Code + 1;
+                               }));
+
+        result.Should().Be(43);
+    }
+
+    [Fact]
+    public async Task Pipe_unit_outcome_with_iffail_condition_should_not_get_called() {
+        var called = false;
+
+        _ = await (unitOutcomeAsync | @ifFail(_ => {
+                                                  called = true;
+                                              }));
+
+        called.Should().BeFalse();
     }
 
     #endregion

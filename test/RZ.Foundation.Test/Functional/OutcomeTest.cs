@@ -38,6 +38,30 @@ public sealed class OutcomeTest
 
     #endregion
 
+    #region From other monads
+
+    [Fact]
+    public void From_option_some() {
+        Option<int> option = 42;
+
+        var result = option.ToOutcome(Error.New(123, "dummy"));
+
+        result.IsSuccess.Should().BeTrue();
+        result.Unwrap().Should().Be(42);
+    }
+
+    [Fact]
+    public void From_option_none() {
+        Option<int> option = Option<int>.None;
+
+        var result = option.ToOutcome(Error.New(123, "dummy"));
+
+        result.IsFail.Should().BeTrue();
+        result.UnwrapError().Should().Be(Error.New(123, "dummy"));
+    }
+
+    #endregion
+
     #region Monad operations
 
     [Fact]
@@ -305,6 +329,87 @@ public sealed class OutcomeTest
         _ = a | failDo(_ => doSomething());
 
         success.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Pipe_failure_outcome_is_caught_and_replaced_with_value() {
+        Outcome<int> a = Error.New(42, "dummy");
+
+        var result = a | @ifFail(Error.New(42, "any text"), 123);
+
+        result.Should().Be(SuccessOutcome(123));
+    }
+
+    [Fact]
+    public void Pipe_failure_outcome_is_caught_and_replaced_with_another_error() {
+        Outcome<int> a = Error.New(42, "dummy");
+
+        var result = a | @ifFail(Error.New(42, "any text"), Error.New(123, "another dummy"));
+
+        result.Should().Be(FailedOutcome<int>(Error.New(123, "another dummy")));
+    }
+
+    [Fact]
+    public void Pipe_failure_outcome_is_caught_and_replaced_with_value_by_function() {
+        Outcome<int> a = Error.New(42, "dummy");
+
+        var result = a | @ifFail(Error.New(42, "any text"), e => e.Code + 1);
+
+        result.Should().Be(SuccessOutcome(43));
+    }
+
+    [Fact]
+    public void Pipe_failure_outcome_is_caught_and_replaced_with_another_error_by_function() {
+        Outcome<int> a = Error.New(42, "dummy");
+
+        var result = a | @ifFail(Error.New(42, "any text"), e => Error.New(e.Code + 1, e.Message));
+
+        result.Should().Be(FailedOutcome<int>(Error.New(43, "dummy")));
+    }
+
+    [Fact]
+    public void Pipe_success_outcome_and_perform_side_effect_work() {
+        Outcome<int> a = 42;
+
+        var result = 0;
+        _ = a | @do<int>(v => {
+                             result = v + 1;
+                             return unit;
+                         });
+
+        result.Should().Be(43);
+    }
+
+    [Fact]
+    public async Task Pipe_failure_outcome_with_async_failure_outcome() {
+        Outcome<int> a = Error.New(42, "dummy");
+
+        var result = await (a | FailedOutcomeAsync<int>(Error.New(123, "another dummy")));
+
+        result.Should().Be(FailedOutcome<int>(Error.New(123, "another dummy")));
+    }
+
+    [Fact]
+    public void Perform_side_effect_when_error() {
+        Outcome<Unit> a = Error.New(42, "dummy");
+
+        var result = 0;
+        _ = a | @ifFail(e => {
+                                 result = e.Code + 1;
+                             });
+
+        result.Should().Be(43);
+    }
+
+    [Fact]
+    public void Pipe_unit_outcome_with_iffail_condition_should_not_get_called() {
+        var called = false;
+
+        _ = unitOutcome | @ifFail(_ => {
+                                      called = true;
+                                  });
+
+        called.Should().BeFalse();
     }
 
     #endregion

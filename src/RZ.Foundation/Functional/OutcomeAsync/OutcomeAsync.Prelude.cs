@@ -28,15 +28,6 @@ public static partial class Prelude
     public static OutcomeAsyncSideEffect failDo(Func<Error, Task<Unit>> fail) =>
         new(fail);
 
-    /// <summary>
-    /// Transform any action into OutcomeAsync<Unit>, the action SHOULD NOT throw exceptions.
-    /// </summary>
-    public static OutcomeAsyncCatch<Unit> @uncheckedOutcomeAsync(Action<Error> fail) =>
-        matchError(static _ => true, e => {
-                                         fail(e);
-                                         return (OutcomeAsync<Unit>) unit;
-                                     });
-
     #endregion
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,10 +37,6 @@ public static partial class Prelude
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OutcomeAsync<T> SuccessOutcomeAsync<T>(T value) =>
         RightAsync<Error, T>(value);
-
-    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static OutcomeAsync<T> OutcomeAsync<T>(Task<T> f) =>
-        RightAsync<Error, T>(f);
 
     public static readonly OutcomeAsync<Unit> unitOutcomeAsync = unit;
 }
