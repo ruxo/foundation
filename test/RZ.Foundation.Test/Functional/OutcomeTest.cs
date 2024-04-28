@@ -230,12 +230,12 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Pipe_two_success_outcomes_returns_first() {
-        Outcome<int> a = 42;
-        Outcome<int> b = 123;
+        var a = Success(42);
+        var b = Success(123);
 
         var result = a | b;
 
-        result.Should().Be(a);
+        result.EqualsTo(a).RunIO().Should().BeTrue();
     }
 
     [Fact]

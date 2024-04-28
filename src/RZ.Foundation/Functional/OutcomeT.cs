@@ -1,24 +1,55 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using LanguageExt.Common;
 
 namespace RZ.Foundation.Functional;
 
-public record SuccessT<IO, T>(HK<IO, T> Value) : OutcomeT<IO, T> where IO : Functor<IO>, Monad<IO>, Eq<IO>;
-
-public record FailureT<IO, T>(HK<IO, Error> Error) : OutcomeT<IO, T> where IO : Functor<IO>, Monad<IO>, Eq<IO>;
-
-public record MaybeT<IO, T>(HK<IO, Outcome<T>> Maybe) : OutcomeT<IO, T> where IO : Functor<IO>, Monad<IO>, Eq<IO>;
-
-public abstract record OutcomeT<IO, T> : HK<OutcomeX<IO>, T> where IO : Functor<IO>, Monad<IO>, Eq<IO>
+public sealed class SuccessT<IO, T>(HK<IO, T> value) : OutcomeT<IO, T> where IO : Functor<IO>, Monad<IO>, Eq<IO>
 {
+    public HK<IO, T> Value => value;
+}
+
+public sealed class FailureT<IO, T>(HK<IO, Error> error) : OutcomeT<IO, T> where IO : Functor<IO>, Monad<IO>, Eq<IO>
+{
+    public HK<IO, Error> Error => error;
+}
+
+public sealed class MaybeT<IO, T>(HK<IO, Outcome<T>> maybe) : OutcomeT<IO, T> where IO : Functor<IO>, Monad<IO>, Eq<IO>
+{
+    public HK<IO, Outcome<T>> Maybe => maybe;
+}
+
+public abstract class OutcomeT<IO, T> : HK<OutcomeX<IO>, T> where IO : Functor<IO>, Monad<IO>, Eq<IO>
+{
+    #region Pipe operators
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeT<IO, T> operator |(OutcomeT<IO, T> ma, OutcomeT<IO, T> mb) =>
+        BindFail(ma, _ => mb);
+
+    #endregion
+
+    public static OutcomeT<IO, T> BindFail(OutcomeT<IO, T> ma, Func<Error, OutcomeT<IO, T>> f) =>
+        ma switch
+        {
+            SuccessT<IO, T> s    => s,
+            FailureT<IO, T> fail => new MaybeT<IO, T>(IO.Bind(fail.Error, e => f(e).AsIo())),
+            MaybeT<IO, T> m => new MaybeT<IO, T>(
+                IO.Bind(m.Maybe, x => x.IfSuccess(out var v, out var e) ? new SuccessT<IO, T>(IO.Return(v)).AsIo() : f(e).AsIo())),
+
+            _ => throw new InvalidOperationException()
+        };
+
+    #region Equality typeclass
+
     public HK<IO, bool> EqualsTo(OutcomeT<IO, T> another) =>
         IO.EqualsTo(this.AsIo(), another.AsIo());
 
     public HK<IO, bool> NotEqualsTo(OutcomeT<IO, T> another) =>
         IO.NotEqualsTo(this.AsIo(), another.AsIo());
+
+    #endregion
 }
 
 public class OutcomeX<IO> : Functor<OutcomeX<IO>>, Monad<OutcomeX<IO>>, ErrorHandlerable<OutcomeX<IO>>
@@ -26,6 +57,8 @@ public class OutcomeX<IO> : Functor<OutcomeX<IO>>, Monad<OutcomeX<IO>>, ErrorHan
     Monad<IO>,
     Eq<IO>
 {
+    #region ErrorHandlerable typeclass
+
     public static HK<OutcomeX<IO>, T> Catch<T>(HK<OutcomeX<IO>, T> ma, Func<Error, Error> handler) {
         return ma switch {
             SuccessT<IO, T> s    => s,
@@ -55,6 +88,8 @@ public class OutcomeX<IO> : Functor<OutcomeX<IO>>, Monad<OutcomeX<IO>>, ErrorHan
 
             _ => throw new InvalidOperationException()
         };
+
+    #endregion
 
     public static HK<OutcomeX<IO>, B> Map<A, B>(HK<OutcomeX<IO>, A> ma, Func<A, B> f) =>
         ma.As() switch
