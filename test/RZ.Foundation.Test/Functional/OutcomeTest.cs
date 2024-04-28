@@ -134,25 +134,25 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Get_default_value_from_failure() {
-        Outcome<int> outcome = Error.New(123, "dummy");
+        var outcome = Failure<int>(Error.New(123, "dummy"));
 
-        var result = outcome.IfFail(42);
+        var result = outcome.IfFail(42).RunIO();
 
         result.Should().Be(42);
     }
 
     [Fact]
     public void Get_default_value_by_function_from_failure() {
-        Outcome<int> outcome = Error.New(123, "dummy");
+        var outcome = Failure<int>(Error.New(123, "dummy"));
 
-        var result = outcome.IfFail(e => e.Code);
+        var result = outcome.IfFail(e => e.Code).RunIO();
 
         result.Should().Be(123);
     }
 
     [Fact]
     public void Perform_action_if_failure() {
-        Outcome<int> outcome = Error.New(123, "dummy");
+        var outcome = Failure<int>(Error.New(123, "dummy"));
 
         var success = false;
         outcome.IfFail(_ => success = true);
@@ -162,7 +162,7 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Extract_values_and_success_state_from_success_outcome() {
-        Outcome<int> outcome = 42;
+        var outcome = Success(42);
 
         var success = outcome.IfSuccess(out var v, out _);
 
@@ -172,7 +172,7 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Extract_values_and_success_state_from_failure_outcome() {
-        Outcome<int> outcome = Error.New(123, "dummy");
+        var outcome = Failure<int>(Error.New(123, "dummy"));
 
         var success = outcome.IfSuccess(out _, out var e);
 
@@ -182,7 +182,7 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Extract_values_and_failure_state_from_success_outcome() {
-        Outcome<int> outcome = 42;
+        var outcome = Success(42);
 
         var success = outcome.IfFail(out _, out var v);
 
@@ -192,7 +192,7 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Extract_values_and_failure_state_from_failure_outcome() {
-        Outcome<int> outcome = Error.New(123, "dummy");
+        var outcome = Failure<int>(Error.New(123, "dummy"));
 
         var success = outcome.IfFail(out var e, out _);
 

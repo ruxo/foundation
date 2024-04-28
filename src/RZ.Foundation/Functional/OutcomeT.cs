@@ -6,15 +6,6 @@ using LanguageExt.Common;
 
 namespace RZ.Foundation.Functional;
 
-public static class OutcomeIO
-{
-    public static Outcome<T> RunIO<T>(this OutcomeT<Synchronous, T> ma) =>
-        ma.AsIo().RunIO();
-
-    public static ValueTask<Outcome<T>> RunIO<T>(this OutcomeT<Asynchronous, T> ma) =>
-        ma.AsIo().RunIO();
-}
-
 public record SuccessT<IO, T>(HK<IO, T> Value) : OutcomeT<IO, T> where IO : Functor<IO>, Monad<IO>, Eq<IO>;
 
 public record FailureT<IO, T>(HK<IO, Error> Error) : OutcomeT<IO, T> where IO : Functor<IO>, Monad<IO>, Eq<IO>;
