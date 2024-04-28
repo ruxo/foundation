@@ -18,6 +18,10 @@ public static class MonadExtensions
         M.Bind(ma, x => M.Map(bind(x), y => project(x,y)));
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HK<M, T> Join<M, T>(this HK<M, HK<M, T>> ma) where M : Monad<M> =>
+        M.Bind(ma, identity);
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HK<M, C> SelectMany<M, A, B, C>(this HK<M, A> ma, Func<A, HK<M, B>> bind, Func<A, B, C> project)
         where M : Monad<M>, Functor<M> =>
         Bind(ma, bind, project);

@@ -53,39 +53,44 @@ public static partial class Prelude
 
     #region Try/Catch
 
-    public static OutcomeAsync<T> TryCatch<T>(Func<Task<Outcome<T>>> handler) =>
-        from v in TryAsync(handler).ToOutcome()
-        from result in v.ToAsync()
-        select result;
+    public static OutcomeT<Asynchronous, T> TryCatch<T>(Func<Task<Outcome<T>>> handler) where T: notnull {
+        var @wrap = new FunctionAsyncYield<Outcome<T>>(async () => await handler());
+        var @try = Asynchronous.Try(() => @wrap);
+        return new MaybeT<Asynchronous, T>(Asynchronous.Map(@try, x => x.Bind(identity)));
+    }
 
-    public static OutcomeAsync<T> TryCatch<T>(Func<Task<Either<Error, T>>> handler) =>
-        from v in TryAsync(handler).ToEither()
-        from result in v.ToAsync()
-        select result;
+    public static OutcomeT<Asynchronous, T> TryCatch<T>(Func<Task<T>> handler) where T: notnull {
+        var @wrap = new FunctionAsyncYield<T>(async () => await handler());
+        var @try = Asynchronous.Try(() => @wrap);
+        return new MaybeT<Asynchronous, T>(@try);
+    }
 
-    public static OutcomeAsync<T> TryCatch<T>(Func<Task<T>> handler) =>
-        TryAsync(handler).ToOutcome();
+    public static OutcomeT<Asynchronous, Unit> TryCatch(Func<Task> handler) {
+        var @wrap = new FunctionAsyncYield<Unit>(async () => {
+                                                     await handler();
+                                                     return unit;
+                                                 });
+        var @try = Asynchronous.Try(() => @wrap);
+        return new MaybeT<Asynchronous, Unit>(@try);
+    }
 
-    public static OutcomeAsync<Unit> TryCatch(Func<Task> handler) =>
-        TryAsync(async () => {
-                     await handler();
-                     return Unit.Default;
-                 }).ToEither();
+    public static OutcomeT<IO, T> TryCatch<IO, T>(Func<OutcomeT<IO, T>> handler) where IO : IOT<IO> {
+        var @try = IO.Try(() => handler().AsIo());
+        var iop = @try.Map(x => x.Bind(identity));
+        return new MaybeT<IO, T>(iop);
+    }
 
-    public static Outcome<T> TryCatch<T>(Func<Outcome<T>> handler) =>
-        Try(handler).ToEither().Match(identity, e => FailedOutcome<T>(e));
+    public static OutcomeT<Synchronous, T> TryCatch<T>(Func<T> handler) where T: notnull {
+        var @try = Synchronous.Try(() => Synchronous.Return(handler()));
+        return new MaybeT<Synchronous, T>(@try);
+    }
 
-    public static Outcome<T> TryCatch<T>(Func<Either<Error, T>> handler) =>
-        Try(handler).ToEither(Error.New).Bind(identity);
 
-    public static Outcome<T> TryCatch<T>(Func<T> handler) =>
-        Try(handler).ToEither(Error.New);
-
-    public static Outcome<Unit> TryCatch(Action handler) =>
-        Try(() => {
-                handler();
-                return unit;
-            }).ToEither(Error.New);
+    public static OutcomeT<Synchronous, Unit> TryCatch(Action handler) =>
+        new MaybeT<Synchronous, Unit>(Synchronous.Try(() => {
+                                                          handler();
+                                                          return Synchronous.Return(unit);
+                                                      }));
 
     #endregion
 }

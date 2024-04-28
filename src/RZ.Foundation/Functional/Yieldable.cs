@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using LanguageExt.Common;
 
 namespace RZ.Foundation.Functional;
 
@@ -18,9 +18,7 @@ public sealed record ConstantYield<T>(T Value) : Yieldable<T>, HK<Synchronous, T
 
 public sealed class FunctionYield<T>(Func<T> effect) : Yieldable<T>, HK<Synchronous, T>
 {
-    readonly Lazy<T> value = new(effect);
-
-    public T Value => value.Value;
+    public T Value => effect();
 }
 
 public readonly record struct ConstantAsyncYield<T>(ValueTask<T> Value) : AsyncYieldable<T>, HK<Asynchronous, T>
@@ -28,7 +26,12 @@ public readonly record struct ConstantAsyncYield<T>(ValueTask<T> Value) : AsyncY
     public ConstantAsyncYield(T value) : this(new ValueTask<T>(value)) {}
 }
 
-public class Asynchronous : Functor<Asynchronous>, Monad<Asynchronous>, Eq<Asynchronous>
+public readonly struct FunctionAsyncYield<T>(Func<ValueTask<T>> effect) : AsyncYieldable<T>, HK<Asynchronous, T>
+{
+    public ValueTask<T> Value => effect();
+}
+
+public class Asynchronous : IOT<Asynchronous>
 {
     public static HK<Asynchronous, B> Map<A, B>(HK<Asynchronous, A> ma, Func<A, B> f) {
         return new ConstantAsyncYield<B>(ToMap());
@@ -62,9 +65,21 @@ public class Asynchronous : Functor<Asynchronous>, Monad<Asynchronous>, Eq<Async
             return !isNullEq && va?.Equals(vb) == false;
         }
     }
+
+    public static HK<Asynchronous, Outcome<T>> Try<T>(Func<HK<Asynchronous, T>> f) where T : notnull {
+        return new ConstantAsyncYield<Outcome<T>>(trap());
+        async ValueTask<Outcome<T>> trap() {
+            try {
+                return await f().As().Value;
+            }
+            catch (Exception e) {
+                return FailedOutcome<T>(Error.New(e));
+            }
+        }
+    }
 }
 
-public class Synchronous : Functor<Synchronous>, Monad<Synchronous>, Eq<Synchronous>
+public class Synchronous : IOT<Synchronous>
 {
     public static HK<Synchronous, B> Map<A, B>(HK<Synchronous, A> ma, Func<A, B> f) =>
         new ConstantYield<B>(f(ma.As().Value));
@@ -92,6 +107,15 @@ public class Synchronous : Functor<Synchronous>, Monad<Synchronous>, Eq<Synchron
     }
 
     #endregion
+
+    public static HK<Synchronous, Outcome<T>> Try<T>(Func<HK<Synchronous, T>> f) where T : notnull {
+        try {
+            return Return(SuccessOutcome(f().As().Value));
+        }
+        catch (Exception e) {
+            return Return(FailedOutcome<T>(Error.New(e)));
+        }
+    }
 }
 
 public static class SynchronousExtensions
@@ -101,6 +125,15 @@ public static class SynchronousExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Yieldable<T> As<T>(this HK<Synchronous, T> @yield) => (Yieldable<T>) @yield;
+}
+
+public interface IOT<M> : Functor<M>, Monad<M>, Eq<M>, TryCatchType<M>
+    where M : IOT<M>;
+
+
+public interface TryCatchType<M> where M : TryCatchType<M>
+{
+    public static abstract HK<M, Outcome<T>> Try<T>(Func<HK<M, T>> f) where T : notnull;
 }
 
 public interface Yieldable<out T>

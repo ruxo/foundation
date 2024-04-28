@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LanguageExt;
-using LanguageExt.Common;
 using Xunit;
 using static LanguageExt.Prelude;
 using static RZ.Foundation.Prelude;
@@ -13,9 +11,9 @@ public sealed class TryCatchTest
 {
     [Fact]
     public void Try_catch_sync_outcome() {
-        var outcome = SuccessOutcome(42);
+        var outcome = Success(42);
 
-        var result = TryCatch(() => outcome);
+        var result = TryCatch(() => outcome).RunIO();
 
         result.Should().Be(SuccessOutcome(42));
     }
@@ -24,39 +22,21 @@ public sealed class TryCatchTest
     public async Task Try_catch_async_outcome() {
         var outcome = Task.FromResult(SuccessOutcome(42));
 
-        var result = await TryCatch(() => outcome);
-
-        result.Should().Be(SuccessOutcome(42));
-    }
-
-    [Fact]
-    public void Try_catch_either_sync() {
-        var either = Either<Error, int>.Right(42);
-
-        var result = TryCatch(() => either);
-
-        result.Should().Be(SuccessOutcome(42));
-    }
-
-    [Fact]
-    public async Task Try_catch_either() {
-        var either = Task.FromResult(Either<Error, int>.Right(42));
-
-        var result = await TryCatch(() => either);
+        var result = await TryCatch(() => outcome).RunIO();
 
         result.Should().Be(SuccessOutcome(42));
     }
 
     [Fact]
     public void Try_catch_value() {
-        var result = TryCatch(() => 42);
+        var result = TryCatch(() => 42).RunIO();
 
         result.Should().Be(SuccessOutcome(42));
     }
 
     [Fact]
     public async Task Try_catch_async_value() {
-        var result = await TryCatch(() => Task.FromResult(42));
+        var result = await TryCatch(() => Task.FromResult(42)).RunIO();
 
         result.Should().Be(SuccessOutcome(42));
     }
@@ -66,7 +46,7 @@ public sealed class TryCatchTest
         var called = false;
         var result = TryCatch(() => {
                                   called = true;
-                              });
+                              }).RunIO();
 
         result.Should().Be(SuccessOutcome(unit));
         called.Should().BeTrue();
@@ -78,7 +58,7 @@ public sealed class TryCatchTest
         var result = await TryCatch(async () => {
             await Task.Yield();
             called = true;
-        });
+        }).RunIO();
 
         result.Should().Be(SuccessOutcome(unit));
         called.Should().BeTrue();
@@ -89,7 +69,7 @@ public sealed class TryCatchTest
         void test() {
             throw new Exception("test");
         }
-        var result = TryCatch(test);
+        var result = TryCatch(test).RunIO();
 
         result.IsFail.Should().BeTrue();
         result.UnwrapError().IsExceptional.Should().BeTrue();
@@ -101,7 +81,7 @@ public sealed class TryCatchTest
             await Task.Yield();
             throw new Exception("test");
         }
-        var result = await TryCatch(test);
+        var result = await TryCatch(test).RunIO();
 
         result.IsFail.Should().BeTrue();
         result.UnwrapError().IsExceptional.Should().BeTrue();
