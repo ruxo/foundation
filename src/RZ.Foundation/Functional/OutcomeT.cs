@@ -30,11 +30,31 @@ public abstract record OutcomeT<IO, T> : HK<OutcomeX<IO>, T> where IO : Functor<
         IO.NotEqualsTo(this.AsIo(), another.AsIo());
 }
 
-public class OutcomeX<IO> : Functor<OutcomeX<IO>>, Monad<OutcomeX<IO>>, OutcomeOperators<OutcomeX<IO>>
+public class OutcomeX<IO> : Functor<OutcomeX<IO>>, Monad<OutcomeX<IO>>, ErrorHandlerable<OutcomeX<IO>>
     where IO : Functor<IO>,
     Monad<IO>,
     Eq<IO>
 {
+    public static HK<OutcomeX<IO>, T> Catch<T>(HK<OutcomeX<IO>, T> ma, Func<Error, Error> handler) {
+        return ma switch {
+            SuccessT<IO, T> s    => s,
+            FailureT<IO, T> fail => new FailureT<IO, T>(IO.Map(fail.Error, handler)),
+            MaybeT<IO, T> m      => new MaybeT<IO, T>(IO.Map(m.Maybe, x => (Outcome<T>) x.Either.MapLeft(handler))),
+
+            _ => throw new InvalidOperationException()
+        };
+    }
+
+    public static HK<OutcomeX<IO>, T> Catch<T>(HK<OutcomeX<IO>, T> ma, Func<Error, T> handler) =>
+        ma.As() switch
+        {
+            SuccessT<IO, T> s    => s,
+            FailureT<IO, T> fail => new SuccessT<IO, T>(IO.Map(fail.Error, handler)),
+            MaybeT<IO, T> m      => new SuccessT<IO, T>(IO.Map(m.Maybe, x => x.Match(identity, handler))),
+
+            _ => throw new InvalidOperationException()
+        };
+
     public static HK<OutcomeX<IO>, T> MapFailure<T>(HK<OutcomeX<IO>, T> ma, Func<Error, Error> map) =>
         ma.As() switch
         {
@@ -123,16 +143,4 @@ public static class OutcomeExtensions
     public static OutcomeT<IO, T> As<IO, T>(this HK<OutcomeX<IO>, T> @outcome)
         where IO : Functor<IO>, Monad<IO>, Eq<IO> =>
         (OutcomeT<IO, T>) @outcome;
-}
-
-public static class OutcomeOperatorExtensions
-{
-    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static HK<M, T> MapFailure<M, T>(this HK<M, T> ma, Func<Error, Error> map) where M : OutcomeOperators<M> =>
-        M.MapFailure(ma, map);
-}
-
-public interface OutcomeOperators<M> where M : OutcomeOperators<M>
-{
-    public static abstract HK<M, T> MapFailure<T>(HK<M, T> ma, Func<Error, Error> map);
 }

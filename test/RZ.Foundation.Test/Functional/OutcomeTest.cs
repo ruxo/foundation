@@ -110,9 +110,9 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Catch_And_Success() {
-        Outcome<int> outcome = Error.New(123, "dummy");
+        var outcome = Failure<int>(Error.New(123, "dummy"));
 
-        var result = outcome.Catch(_ => 42);
+        var result = outcome.Catch(_ => 42).As().RunIO();
 
         result.IsSuccess.Should().BeTrue();
         result.Unwrap().Should().Be(42);
@@ -120,9 +120,9 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Catch_And_Failure() {
-        Outcome<int> outcome = Error.New(123, "dummy");
+        var outcome = Failure<int>(Error.New(123, "dummy"));
 
-        var result = outcome.Catch(_ => Error.New(456, "another dummy"));
+        var result = outcome.Catch(_ => Error.New(456, "another dummy")).As().RunIO();
 
         result.IsFail.Should().BeTrue();
         result.UnwrapError().Should().Be(Error.New(456, "another dummy"));
