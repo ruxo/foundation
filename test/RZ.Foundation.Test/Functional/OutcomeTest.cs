@@ -206,24 +206,22 @@ public sealed class OutcomeTest
 
     [Fact]
     public async Task Convert_success_sync_outcome_to_async_outcome() {
-        Outcome<int> outcome = 123;
-        OutcomeAsync<int> expected = 123;
+        var outcome = Success(123);
+        var expected = SuccessAsync(123);
 
-        var actual = await outcome.ToAsync();
-        var expectedValue = await expected;
+        var actual = outcome.ToAsync();
 
-        actual.Should().Be(expectedValue);
+        (await actual.EqualsTo(expected).RunIO()).Should().BeTrue();
     }
 
     [Fact]
     public async Task Convert_failure_sync_outcome_to_async_outcome() {
-        Outcome<int> outcome = Error.New(123, "dummy");
-        OutcomeAsync<int> expected = Error.New(123, "dummy");
+        var outcome = Failure<int>(Error.New(123, "dummy"));
+        var expected = FailureAsync<int>(Error.New(123, "dummy"));
 
-        var actual = await outcome.ToAsync();
-        var expectedValue = await expected;
+        var actual = outcome.ToAsync();
 
-        actual.Should().Be(expectedValue);
+        (await actual.EqualsTo(expected).RunIO()).Should().BeTrue();
     }
 
     #endregion

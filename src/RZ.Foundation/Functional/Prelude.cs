@@ -31,6 +31,10 @@ public static partial class Prelude
         new SuccessT<Asynchronous, T>(Asynchronous.Return(value));
 
     [Pure]
+    public static OutcomeT<Asynchronous, T> FailureAsync<T>(Error error) =>
+        new FailureT<Asynchronous, T>(Asynchronous.Return(error));
+
+    [Pure]
     public static OutcomeT<Synchronous, T> ToOutcome<T>(this Option<T> opt, Error? error = default) =>
         opt.Match(Success, () => Failure<T>(error ?? StandardErrors.NotFound));
 
