@@ -79,6 +79,19 @@ public class OutcomeX<IO> : Functor<OutcomeX<IO>>, Monad<OutcomeX<IO>>, OutcomeO
 
 public static class OutcomeT
 {
+    public static OutcomeT<Asynchronous, C> SelectMany<A, B, C>(this OutcomeT<Synchronous, A> ma, Func<A, OutcomeT<Asynchronous, B>> bind,
+                                                          Func<A, B, C> project) {
+        return new MaybeT<Asynchronous, C>(new ConstantAsyncYield<Outcome<C>>(SyncToAsync()));
+        async ValueTask<Outcome<C>> SyncToAsync() {
+            if (ma.AsIo().RunIO().IfSuccess(out var a, out var e)) {
+                var ba = await bind(a).AsIo().RunIO();
+                return ba.Map(b => project(a, b)).As();
+            }
+            else
+                return e;
+        }
+    }
+
     public static HK<IO, Outcome<T>> AsIo<IO, T>(this OutcomeT<IO, T> ma) where IO : Functor<IO>, Monad<IO>, Eq<IO> =>
         ma switch
         {
@@ -97,7 +110,7 @@ public class OutcomeFunctor : Functor<OutcomeFunctor>
 {
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HK<OutcomeFunctor, B> Map<A, B>(HK<OutcomeFunctor, A> ma, Func<A, B> f) =>
-        ma.As().Map(f);
+        (Outcome<B>) ma.As().Either.Map(f);
 }
 
 public static class OutcomeExtensions

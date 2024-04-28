@@ -97,11 +97,11 @@ public sealed class OutcomeTest
 
     [Fact]
     public async Task Binding_sync_with_async() {
-        var result = from a in SuccessOutcome(42)
-                     from b in SuccessOutcomeAsync(a + 1)
+        var result = from a in Success(42)
+                     from b in SuccessAsync(a + 1)
                      select b;
 
-        (await result).Should().Be(SuccessOutcome(43));
+        (await result.RunIO()).Should().Be(SuccessOutcome(43));
     }
 
     #endregion
