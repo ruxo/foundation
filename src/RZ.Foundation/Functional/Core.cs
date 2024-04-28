@@ -12,6 +12,10 @@ public interface Eq<M> where M: Eq<M>
 
 public static class MonadExtensions
 {
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HK<M, B> Bind<M, A, B>(this HK<M, A> ma, Func<A, HK<M, B>> f) where M : Monad<M> =>
+        M.Bind(ma, f);
+
     [Pure]
     public static HK<M, C> Bind<M, A, B, C>(this HK<M, A> ma, Func<A, HK<M, B>> bind, Func<A, B, C> project)
         where M : Monad<M>, Functor<M> =>

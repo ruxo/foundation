@@ -3,9 +3,6 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
-using LanguageExt;
-using LanguageExt.Common;
-using RZ.Foundation.Functional;
 
 namespace RZ.Foundation;
 
@@ -14,10 +11,6 @@ public static partial class OutcomeExtension
     [Pure]
     public static Outcome<B> Bind<A,B>(this Outcome<A> ma, Func<A, Outcome<B>> bind) =>
         ma.Either.Bind(a => bind(a).Either);
-
-    [Pure]
-    public static OutcomeAsync<B> Bind<A,B>(this Outcome<A> ma, Func<A, OutcomeAsync<B>> bind) =>
-        ma.Either.ToAsync().Bind(a => bind(a).Either);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Outcome<B> Map<A,B>(this Outcome<A> ma, Func<A, B> map) =>
@@ -29,9 +22,5 @@ public static partial class OutcomeExtension
 
     [Pure]
     public static Outcome<C> SelectMany<A, B, C>(this Outcome<A> ma, Func<A, Outcome<B>> bind, Func<A, B, C> project) =>
-        Bind(ma, x => Map(bind(x), y => project(x,y)));
-
-    [Pure]
-    public static OutcomeAsync<C> SelectMany<A, B, C>(this Outcome<A> ma, Func<A, OutcomeAsync<B>> bind, Func<A, B, C> project) =>
         Bind(ma, x => Map(bind(x), y => project(x,y)));
 }

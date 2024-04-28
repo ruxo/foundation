@@ -12,10 +12,12 @@ namespace RZ.Foundation;
 
 public static partial class Prelude
 {
-    #region Outcome
+    #region OutcomeT
 
     public static readonly OutcomeT<Synchronous, Unit> UnitOutcome = Success(unit);
     public static readonly OutcomeT<Asynchronous, Unit> UnitOutcomeAsync = SuccessAsync(unit);
+
+    #region Success / Failure
 
     [Pure]
     public static OutcomeT<Synchronous, T> Success<T>(Func<T> value) =>
@@ -34,8 +36,16 @@ public static partial class Prelude
         new SuccessT<Asynchronous, T>(Asynchronous.Return(value));
 
     [Pure]
+    public static OutcomeT<Asynchronous, T> SuccessAsync<T>(Func<Task<T>> value) =>
+        new SuccessT<Asynchronous, T>(new FunctionAsyncYield<T>(async () => await value()));
+
+    [Pure]
     public static OutcomeT<Asynchronous, T> FailureAsync<T>(Error error) =>
         new FailureT<Asynchronous, T>(Asynchronous.Return(error));
+
+    #endregion
+
+    #region ToOutcome
 
     [Pure]
     public static OutcomeT<Synchronous, T> ToOutcome<T>(this Option<T> opt, Error? error = default) =>
@@ -48,6 +58,39 @@ public static partial class Prelude
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OutcomeT<Synchronous, T> ToOutcome<T>(this Try<T> self) =>
         self.ToEither(Error.New).ToOutcome();
+
+    #endregion
+
+    #region Catches
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    static OutcomeAsyncCatch<T> matchError<T>(Func<Error, bool> predicate, Func<Error, OutcomeT<Asynchronous, T>> fail) =>
+        new(predicate, fail);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeAsyncCatch<T> ifFail<T>(OutcomeT<Asynchronous,T> replacement) =>
+        matchError(static _ => true, _ => replacement);
+
+    public static OutcomeAsyncCatch<T> ifFail<T>(Func<Error, OutcomeT<Asynchronous,T>> fail) =>
+        matchError(static _ => true, fail);
+
+    #endregion
+
+    #endregion
+
+    #region IOT
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HK<Asynchronous, T> AsyncValue<T>(T value) =>
+        Asynchronous.Return(value);
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HK<Asynchronous, T> AsyncValue<T>(Task<T> value) =>
+        new FunctionAsyncYield<T>(async () => await value);
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HK<Asynchronous, T> AsyncValue<T>(Func<Task<T>> f) =>
+        new FunctionAsyncYield<T>(async () => await f());
 
     #endregion
 

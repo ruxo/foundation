@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -183,4 +184,17 @@ public static class OutcomeExtensions
     public static OutcomeT<IO, T> As<IO, T>(this HK<OutcomeX<IO>, T> @outcome)
         where IO : Functor<IO>, Monad<IO>, Eq<IO> =>
         (OutcomeT<IO, T>) @outcome;
+}
+
+public readonly struct OutcomeAsyncCatch<T>(Func<Error, OutcomeT<Asynchronous, T>> fail)
+{
+    public OutcomeAsyncCatch(Func<Error, bool> predicate, Func<Error, OutcomeT<Asynchronous, T>> fail)
+        : this(e => predicate(e) ? fail(e) : FailureAsync<T>(e)){}
+
+    public OutcomeT<Asynchronous, T> Run(Error error) => fail(error);
+}
+
+public readonly struct OutcomeAsyncSideEffect(Func<Error, Task<Unit>> sideEffect)
+{
+    public Task<Unit> Run(Error error) => sideEffect(error);
 }

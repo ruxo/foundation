@@ -34,10 +34,6 @@ public readonly struct Outcome<T> : HK<OutcomeFunctor, T>
     public static Outcome<T> operator |(Outcome<T> ma, in Outcome<T> mb) =>
         ma.value | mb.value;
 
-    [Pure]
-    public static OutcomeAsync<T> operator |(Outcome<T> ma, OutcomeAsync<T> mb) =>
-        ma.value.ToAsync().BindLeft(_ => mb.Either);
-
     public static Outcome<T> operator |(Outcome<T> ma, OutcomeCatch<T> mb) =>
         ma.value.BindLeft(e => mb.Run(e).Either);
 
@@ -60,9 +56,6 @@ public readonly struct Outcome<T> : HK<OutcomeFunctor, T>
         ma.value.BindLeft(e => mb.Match(e)? FailedOutcome<T>(mb.Value(e)).Either : e);
 
     #endregion
-
-    [Pure]
-    public OutcomeAsync<T> ToAsync() => value.ToAsync();
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Outcome<T> Catch(Func<Error, T> handler) =>
