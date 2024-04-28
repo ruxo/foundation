@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
+using LanguageExt;
 using LanguageExt.Common;
 
 namespace RZ.Foundation.Functional;
@@ -26,20 +27,44 @@ public abstract class OutcomeT<IO, T> : HK<OutcomeX<IO>, T> where IO : Functor<I
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OutcomeT<IO, T> operator |(OutcomeT<IO, T> ma, OutcomeT<IO, T> mb) =>
-        BindFail(ma, _ => mb);
+        ma.Catch(_ => mb).As();
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeT<IO, T> operator |(OutcomeT<IO, T> ma, CatchValue<T> @catch) =>
+        ma.Catch(e => @catch.Match(e)
+                          ? new SuccessT<IO, T>(IO.Return(@catch.Value(e)))
+                          : new FailureT<IO, T>(IO.Return(e))).As();
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeT<IO, T> operator |(OutcomeT<IO, T> ma, CatchError @error) =>
+        ma.MapFailure(e => @error.Match(e) ? @error.Value(e) : e).As();
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeT<IO, T> operator |(OutcomeT<IO, T> ma, OutcomeSideEffect sideEffect) =>
+        ma.MapFailure(e => {
+                          sideEffect.Run(e);
+                          return e;
+                      }).As();
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeT<IO, T> operator |(OutcomeT<IO, T> ma, OutcomeSideEffect<T> sideEffect) =>
+        ma.Map(e => {
+                   sideEffect.Run(e);
+                   return e;
+               }).As();
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeT<IO, Unit> operator |(OutcomeT<IO, T> ma, OutcomeCatch<Unit> sideEffect) =>
+        new MaybeT<IO, Unit>(ma.AsIo().Map(x => x.Match(_ => unit, sideEffect.Run)));
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeT<IO, T> operator |(OutcomeT<IO, T> ma, OutcomeCatch<T> sideEffect) =>
+        ma.Catch(e => {
+                     var v = sideEffect.Run(e);
+                     return new MaybeT<IO, T>(IO.Return(v));
+                 }).As();
 
     #endregion
-
-    public static OutcomeT<IO, T> BindFail(OutcomeT<IO, T> ma, Func<Error, OutcomeT<IO, T>> f) =>
-        ma switch
-        {
-            SuccessT<IO, T> s    => s,
-            FailureT<IO, T> fail => new MaybeT<IO, T>(IO.Bind(fail.Error, e => f(e).AsIo())),
-            MaybeT<IO, T> m => new MaybeT<IO, T>(
-                IO.Bind(m.Maybe, x => x.IfSuccess(out var v, out var e) ? new SuccessT<IO, T>(IO.Return(v)).AsIo() : f(e).AsIo())),
-
-            _ => throw new InvalidOperationException()
-        };
 
     #region Equality typeclass
 
@@ -59,15 +84,17 @@ public class OutcomeX<IO> : Functor<OutcomeX<IO>>, Monad<OutcomeX<IO>>, ErrorHan
 {
     #region ErrorHandlerable typeclass
 
-    public static HK<OutcomeX<IO>, T> Catch<T>(HK<OutcomeX<IO>, T> ma, Func<Error, Error> handler) {
-        return ma switch {
+    public static HK<OutcomeX<IO>, T> Catch<T>(HK<OutcomeX<IO>, T> ma, Func<Error, HK<OutcomeX<IO>, T>> handler) =>
+        ma.As() switch
+        {
             SuccessT<IO, T> s    => s,
-            FailureT<IO, T> fail => new FailureT<IO, T>(IO.Map(fail.Error, handler)),
-            MaybeT<IO, T> m      => new MaybeT<IO, T>(IO.Map(m.Maybe, x => (Outcome<T>) x.Either.MapLeft(handler))),
+            FailureT<IO, T> fail => new MaybeT<IO, T>(IO.Bind(fail.Error, e => handler(e).As().AsIo())),
+            MaybeT<IO, T> m => new MaybeT<IO, T>(IO.Bind(m.Maybe, x => x.IfSuccess(out var v, out var e)
+                                                                           ? IO.Return(SuccessOutcome(v))
+                                                                           : handler(e).As().AsIo())),
 
             _ => throw new InvalidOperationException()
         };
-    }
 
     public static HK<OutcomeX<IO>, T> Catch<T>(HK<OutcomeX<IO>, T> ma, Func<Error, T> handler) =>
         ma.As() switch

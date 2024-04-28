@@ -128,6 +128,17 @@ public sealed class OutcomeTest
         result.UnwrapError().Should().Be(Error.New(456, "another dummy"));
     }
 
+    [Fact]
+    public void Catch_failure_outcome_with_another_outcome_returns_catch_outcome() {
+        var a = Failure<int>(Error.New(42, "dummy"));
+        var expected = Failure<int>(Error.New(123, "another dummy"));
+
+        var result = a.Catch(_ => expected).As().RunIO();
+
+        result.IsFail.Should().BeTrue();
+        result.UnwrapError().Code.Should().Be(123);
+    }
+
     #endregion
 
     #region IfFail / IfSuccess
@@ -240,29 +251,29 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Pipe_two_failure_outcomes_returns_second() {
-        Outcome<int> a = Error.New(42, "dummy");
-        Outcome<int> b = Error.New(123, "another dummy");
+        var a = Failure<int>(Error.New(42, "dummy"));
+        var b = Failure<int>(Error.New(123, "another dummy"));
 
         var result = a | b;
 
-        result.Should().Be(b);
+        result.EqualsTo(b).RunIO().Should().BeTrue();
     }
 
     [Fact]
     public void Pipe_first_failure_outcome_with_second_success_outcome_returns_second() {
-        Outcome<int> a = Error.New(42, "dummy");
-        Outcome<int> b = 123;
+        var a = Failure<int>(Error.New(42, "dummy"));
+        var b = Success(123);
 
         var result = a | b;
 
-        result.Should().Be(b);
+        result.EqualsTo(b).RunIO().Should().BeTrue();
     }
 
     [Fact]
     public void Pipe_first_failure_outcome_with_success_catch_returns_catch_value() {
-        Outcome<int> a = Error.New(42, "dummy");
+        var a = Failure<int>(Error.New(42, "dummy"));
 
-        var result = a | @ifFail(_ => 123);
+        var result = (a | @ifFail(_ => 123)).RunIO();
 
         result.IsSuccess.Should().BeTrue();
         result.Unwrap().Should().Be(123);
@@ -270,9 +281,9 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Pipe_first_failure_outcome_with_failure_catch_returns_catch_value() {
-        Outcome<int> a = Error.New(42, "dummy");
+        var a = Failure<int>(Error.New(42, "dummy"));
 
-        var result = a | @ifFail(_ => Error.New(123, "another dummy"));
+        var result = (a | @ifFail(_ => Error.New(123, "another dummy"))).RunIO();
 
         result.IsFail.Should().BeTrue();
         result.UnwrapError().Code.Should().Be(123);
@@ -280,7 +291,7 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Pipe_failure_outcome_and_perform_side_effect() {
-        Outcome<int> a = Error.New(42, "dummy");
+        var a = Failure<int>(Error.New(42, "dummy"));
 
         var success = false;
         var noChange = true;
@@ -293,7 +304,7 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Pipe_success_outcome_and_perform_side_effect() {
-        Outcome<int> a = 42;
+        var a = Success(42);
 
         var success = false;
         var noChange = true;
@@ -305,19 +316,8 @@ public sealed class OutcomeTest
     }
 
     [Fact]
-    public void Pipe_failure_outcome_and_catch_with_another_outcome_returns_catch_outcome() {
-        Outcome<int> a = Error.New(42, "dummy");
-        Outcome<int> expected = Error.New(123, "another dummy");
-
-        var result = a | @ifFail(expected);
-
-        result.IsFail.Should().BeTrue();
-        result.UnwrapError().Code.Should().Be(123);
-    }
-
-    [Fact]
     public void Pipe_failure_outcome_and_catch_for_sideeffect() {
-        Outcome<int> a = Error.New(42, "dummy");
+        var a = Failure<int>(Error.New(42, "dummy"));
 
         var success = false;
         Unit doSomething() {
@@ -332,43 +332,43 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Pipe_failure_outcome_is_caught_and_replaced_with_value() {
-        Outcome<int> a = Error.New(42, "dummy");
+        var a = Failure<int>(Error.New(42, "dummy"));
 
-        var result = a | @ifFail(Error.New(42, "any text"), 123);
+        var result = (a | @ifFail(Error.New(42, "any text"), 123)).RunIO();
 
         result.Should().Be(SuccessOutcome(123));
     }
 
     [Fact]
     public void Pipe_failure_outcome_is_caught_and_replaced_with_another_error() {
-        Outcome<int> a = Error.New(42, "dummy");
+        var a = Failure<int>(Error.New(42, "dummy"));
 
-        var result = a | @ifFail(Error.New(42, "any text"), Error.New(123, "another dummy"));
+        var result = (a | @ifFail(Error.New(42, "any text"), Error.New(123, "another dummy"))).RunIO();
 
         result.Should().Be(FailedOutcome<int>(Error.New(123, "another dummy")));
     }
 
     [Fact]
     public void Pipe_failure_outcome_is_caught_and_replaced_with_value_by_function() {
-        Outcome<int> a = Error.New(42, "dummy");
+        var a = Failure<int>(Error.New(42, "dummy"));
 
-        var result = a | @ifFail(Error.New(42, "any text"), e => e.Code + 1);
+        var result = (a | @ifFail(Error.New(42, "any text"), e => e.Code + 1)).RunIO();
 
         result.Should().Be(SuccessOutcome(43));
     }
 
     [Fact]
     public void Pipe_failure_outcome_is_caught_and_replaced_with_another_error_by_function() {
-        Outcome<int> a = Error.New(42, "dummy");
+        var a = Failure<int>(Error.New(42, "dummy"));
 
-        var result = a | @ifFail(Error.New(42, "any text"), e => Error.New(e.Code + 1, e.Message));
+        var result = (a | @ifFail(Error.New(42, "any text"), e => Error.New(e.Code + 1, e.Message))).RunIO();
 
         result.Should().Be(FailedOutcome<int>(Error.New(43, "dummy")));
     }
 
     [Fact]
     public void Pipe_success_outcome_and_perform_side_effect_work() {
-        Outcome<int> a = 42;
+        var a = Success(42);
 
         var result = 0;
         _ = a | @do<int>(v => {
@@ -380,17 +380,17 @@ public sealed class OutcomeTest
     }
 
     [Fact]
-    public async Task Pipe_failure_outcome_with_async_failure_outcome() {
-        Outcome<int> a = Error.New(42, "dummy");
+    public async Task Pipe_failure_async_outcome_with_async_failure_outcome() {
+        var a = Failure<int>(Error.New(42, "dummy"));
 
-        var result = await (a | FailedOutcomeAsync<int>(Error.New(123, "another dummy")));
+        var result = await (a.ToAsync() | FailureAsync<int>(Error.New(123, "another dummy"))).RunIO();
 
         result.Should().Be(FailedOutcome<int>(Error.New(123, "another dummy")));
     }
 
     [Fact]
     public void Perform_side_effect_when_error() {
-        Outcome<Unit> a = Error.New(42, "dummy");
+        var a = Failure<int>(Error.New(42, "dummy"));
 
         var result = 0;
         _ = a | @ifFail(e => {
@@ -404,7 +404,7 @@ public sealed class OutcomeTest
     public void Pipe_unit_outcome_with_iffail_condition_should_not_get_called() {
         var called = false;
 
-        _ = unitOutcome | @ifFail(_ => {
+        _ = UnitOutcome | @ifFail(_ => {
                                       called = true;
                                   });
 

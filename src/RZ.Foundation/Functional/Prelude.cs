@@ -14,6 +14,9 @@ public static partial class Prelude
 {
     #region Outcome
 
+    public static readonly OutcomeT<Synchronous, Unit> UnitOutcome = Success(unit);
+    public static readonly OutcomeT<Asynchronous, Unit> UnitOutcomeAsync = SuccessAsync(unit);
+
     [Pure]
     public static OutcomeT<Synchronous, T> Success<T>(Func<T> value) =>
         new SuccessT<Synchronous, T>(new FunctionYield<T>(value));

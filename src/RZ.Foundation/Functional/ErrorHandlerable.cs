@@ -9,10 +9,14 @@ public static class ErrorHandlerableExtensions
 {
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HK<M, T> Catch<M, T>(this HK<M, T> ma, Func<Error, Error> handler) where M : ErrorHandlerable<M> =>
-        M.Catch(ma, handler);
+        M.MapFailure(ma, handler);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HK<M, T> Catch<M, T>(this HK<M, T> ma, Func<Error, T> handler) where M : ErrorHandlerable<M> =>
+        M.Catch(ma, handler);
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HK<M, T> Catch<M, T>(this HK<M, T> ma, Func<Error, HK<M, T>> handler) where M : ErrorHandlerable<M> =>
         M.Catch(ma, handler);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -22,8 +26,9 @@ public static class ErrorHandlerableExtensions
 
 public interface ErrorHandlerable<M> where M : ErrorHandlerable<M>
 {
-    public static abstract HK<M, T> Catch<T>(HK<M, T> ma, Func<Error, Error> handler);
     public static abstract HK<M, T> Catch<T>(HK<M, T> ma, Func<Error, T> handler);
+
+    public static abstract HK<M, T> Catch<T>(HK<M, T> ma, Func<Error, HK<M, T>> handler);
 
     public static abstract HK<M, T> MapFailure<T>(HK<M, T> ma, Func<Error, Error> map);
 }
