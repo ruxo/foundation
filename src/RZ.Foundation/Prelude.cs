@@ -45,12 +45,6 @@ public static partial class Prelude {
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Option<Unit> BooleanToOption(bool b) => b ? unit : None;
 
-    [ExcludeFromCodeCoverage, Obsolete("Use Outcome instead")]
-    public static Result<T> Success<T>(T val)       => val;
-
-    [ExcludeFromCodeCoverage, Obsolete("Use Outcome instead")]
-    public static Result<T> Failed<T>(Exception ex) => new Result<T>(ex);
-
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Func<Unit> ToUnit<T>(Func<T> effect) =>
         () => {

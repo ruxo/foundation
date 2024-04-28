@@ -7,12 +7,13 @@ using System.Runtime.CompilerServices;
 using LanguageExt;
 using LanguageExt.Common;
 using RZ.Foundation.Extensions;
+using RZ.Foundation.Functional;
 
 // ReSharper disable InconsistentNaming
 
 namespace RZ.Foundation;
 
-public readonly struct Outcome<T>
+public readonly struct Outcome<T> : HK<OutcomeFunctor, T>
 {
     internal readonly Either<Error, T> value;
 
@@ -85,6 +86,10 @@ public readonly struct Outcome<T>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IfSuccess(out T v, out Error e) => value.IfRight(out v, out e);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public V Match<V>(Func<T, V> success, Func<Error, V> fail) =>
+        value.Match(success, fail);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Unwrap() =>

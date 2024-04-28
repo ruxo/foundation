@@ -14,9 +14,8 @@ public sealed class OutcomeTest
     #region General
 
     [Fact]
-    public void OutcomeDirectSuccessAssignment()
-    {
-        Outcome<int> outcome = 42;
+    public void OutcomeDirectSuccessAssignment() {
+        var outcome = Success(42).RunIO();
 
         outcome.IsSuccess.Should().BeTrue();
         outcome.IsFail.Should().BeFalse();
@@ -27,7 +26,7 @@ public sealed class OutcomeTest
     [Fact]
     public void OutcomeDirectFailureAssignment()
     {
-        Outcome<int> outcome = Error.New(123, "dummy");
+        var outcome = Failure<int>(Error.New(123, "dummy")).RunIO();
 
         outcome.IsSuccess.Should().BeFalse();
         outcome.IsFail.Should().BeTrue();
@@ -44,7 +43,7 @@ public sealed class OutcomeTest
     public void From_option_some() {
         Option<int> option = 42;
 
-        var result = option.ToOutcome(Error.New(123, "dummy"));
+        var result = option.ToOutcome(Error.New(123, "dummy")).RunIO();
 
         result.IsSuccess.Should().BeTrue();
         result.Unwrap().Should().Be(42);
@@ -54,7 +53,7 @@ public sealed class OutcomeTest
     public void From_option_none() {
         Option<int> option = Option<int>.None;
 
-        var result = option.ToOutcome(Error.New(123, "dummy"));
+        var result = option.ToOutcome(Error.New(123, "dummy")).RunIO();
 
         result.IsFail.Should().BeTrue();
         result.UnwrapError().Should().Be(Error.New(123, "dummy"));
@@ -66,10 +65,11 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Map_value_with_outcome() {
-        Outcome<int> outcome = 42;
+        var outcome = Success(42);
 
-        var result = from a in outcome
-                     select a + 1;
+        var result = (from a in outcome
+                      select a + 1
+                     ).As().RunIO();
 
         result.IsSuccess.Should().BeTrue();
         result.Unwrap().Should().Be(42 + 1);
@@ -77,9 +77,9 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Map_error_with_outcome() {
-        Outcome<int> outcome = Error.New(123, "dummy");
+        var outcome = Failure<int>(Error.New(123, "dummy"));
 
-        var result = outcome.MapFailure(e => Error.New(456, e.Message));
+        var result = outcome.MapFailure(e => Error.New(456, e.Message)).As().RunIO();
 
         result.IsFail.Should().BeTrue();
         result.UnwrapError().Should().Be(Error.New(456, "dummy"));
@@ -87,11 +87,12 @@ public sealed class OutcomeTest
 
     [Fact]
     public void Binding_sync_with_sync() {
-        var result = from a in SuccessOutcome(42)
-                     from b in SuccessOutcome(a + 1)
+        var result = from a in Success(42)
+                     from b in Success(a + 1)
                      select b;
 
-        result.Should().Be(SuccessOutcome(43));
+        result.As().EqualsTo(Success(43)).RunIO().Should().BeTrue();
+        result.As().RunIO().Should().Be(SuccessOutcome(43));
     }
 
     [Fact]

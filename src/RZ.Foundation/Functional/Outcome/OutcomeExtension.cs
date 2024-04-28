@@ -24,10 +24,6 @@ public static partial class OutcomeExtension
         ma.Either.Map(map);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Outcome<A> MapFailure<A>(this Outcome<A> ma, Func<Error, Error> map) =>
-        ma.Either.MapLeft(map);
-
-    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Outcome<B> Select<A,B>(this Outcome<A> ma, Func<A, B> map) =>
         Map(ma, map);
 
@@ -38,11 +34,4 @@ public static partial class OutcomeExtension
     [Pure]
     public static OutcomeAsync<C> SelectMany<A, B, C>(this Outcome<A> ma, Func<A, OutcomeAsync<B>> bind, Func<A, B, C> project) =>
         Bind(ma, x => Map(bind(x), y => project(x,y)));
-
-    [Pure]
-    public static Outcome<T> ToOutcome<T>(this Option<T> opt, Error? error = default) =>
-        opt.Match(v => (Outcome<T>)v, () => error ?? StandardErrors.NotFound);
-
-    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Outcome<T> ToOutcome<T>(this Try<T> self) => self.ToEither(Error.New);
 }
