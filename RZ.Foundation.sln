@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{6E9465BC-CB39-44DE-86AD-BD88652E319C}"
 ProjectSection(SolutionItems) = preProject
 	README.md = README.md
+	CHANGES.md = CHANGES.md
 EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RZ.Foundation.Test", "test\RZ.Foundation.Test\RZ.Foundation.Test.csproj", "{B81E8070-7867-49BA-B26A-BC0389F5B890}"
