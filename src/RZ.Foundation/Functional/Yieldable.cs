@@ -14,9 +14,9 @@ public static class YieldableExtensions
     public static ValueTask<T> RunIO<T>(this HK<Asynchronous, T> ma) => ma.As().Value;
 }
 
-public sealed record ConstantYield<T>(T Value) : Yieldable<T>, HK<Synchronous, T>;
+public readonly record struct ConstantYield<T>(T Value) : Yieldable<T>, HK<Synchronous, T>;
 
-public sealed class FunctionYield<T>(Func<T> effect) : Yieldable<T>, HK<Synchronous, T>
+public readonly struct FunctionYield<T>(Func<T> effect) : Yieldable<T>, HK<Synchronous, T>
 {
     public T Value => effect();
 }
