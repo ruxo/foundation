@@ -1,5 +1,6 @@
 ﻿using System.Reactive;
 using System.Reactive.Linq;
+using ReactiveUI;
 using RZ.Foundation.Types;
 using Unit = LanguageExt.Unit;
 
@@ -16,5 +17,14 @@ public static class ObservableExtensions
                    : new ErrorInfo(StandardErrorCodes.Unhandled, e.ToString());
 
     public static IObservable<Unit> Ignore<_>(this IObservable<_> stream) =>
-        stream.Select(_ => LanguageExt.Prelude.unit);
+        stream.Select(_ => unit);
+
+    /// <summary>
+    /// Get the execution handler for a reactive command
+    /// </summary>
+    public static Func<Task<T>> OnExecute<T>(this ReactiveCommand<Unit, T> command) => async () =>
+        await command.Execute();
+
+    public static Func<Task<TOut>> OnExecute<TIn,TOut>(this ReactiveCommand<TIn, TOut> command, Func<TIn> value) => async () =>
+        await command.Execute(value());
 }
