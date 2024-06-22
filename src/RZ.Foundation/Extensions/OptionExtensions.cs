@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using LanguageExt;
 using LanguageExt.Common;
-using static LanguageExt.Prelude;
+
 // ReSharper disable UnusedMethodReturnValue.Global
 
 namespace RZ.Foundation.Extensions

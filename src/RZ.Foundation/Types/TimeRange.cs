@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using LanguageExt;
 using RZ.Foundation.Extensions;
-using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Types
 {

@@ -5,8 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using LanguageExt;
 using RZ.Foundation.Extensions;
-using static RZ.Foundation.Prelude;
-using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Helpers
 {

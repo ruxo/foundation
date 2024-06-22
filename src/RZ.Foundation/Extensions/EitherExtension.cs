@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using LanguageExt;
-using static LanguageExt.Prelude;
+
 // ReSharper disable UnusedType.Global
 
 namespace RZ.Foundation.Extensions;

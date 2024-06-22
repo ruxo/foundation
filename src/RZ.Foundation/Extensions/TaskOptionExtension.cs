@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using LanguageExt;
 using RZ.Foundation.Types;
-using static LanguageExt.Prelude;
+
 // ReSharper disable UnusedType.Global
 // ReSharper disable UnusedMethodReturnValue.Global
 

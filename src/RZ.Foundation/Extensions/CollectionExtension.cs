@@ -6,7 +6,6 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using LanguageExt;
-using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Extensions {
     public static class CollectionExtension{

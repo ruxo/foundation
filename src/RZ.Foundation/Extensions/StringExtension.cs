@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using LanguageExt;
-using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Extensions;
 
