@@ -11,9 +11,10 @@ namespace RZ.Foundation.Json;
 public sealed class MapJsonConverter : JsonConverterFactory
 {
     public static readonly MapJsonConverter Default = new();
-    
+
     static readonly Type MapType = typeof(Map<,>);
-    public override bool CanConvert(Type typeToConvert) => 
+    public override bool CanConvert(Type typeToConvert) =>
+        // TODO: support key as other type (e.g. GUID)
         JsonConverterHelper.CanConvert(MapType, typeToConvert) && typeToConvert.GetGenericArguments().First() == typeof(string);
 
     static readonly Type MapSerializerType = typeof(MapSerializer<>);
@@ -36,7 +37,7 @@ public sealed class MapJsonConverter : JsonConverterFactory
             }
             return map;
         }
-        
+
         public override void Write(Utf8JsonWriter writer, Map<string,T> value, JsonSerializerOptions options) {
             writer.WriteStartObject();
             foreach (var kv in value) {
