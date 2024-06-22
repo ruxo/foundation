@@ -27,4 +27,7 @@ public static class ObservableExtensions
 
     public static Func<Task<TOut>> OnExecute<TIn,TOut>(this ReactiveCommand<TIn, TOut> command, Func<TIn> value) => async () =>
         await command.Execute(value());
+
+    public static IObservable<T> Shared<T>(this IObservable<T> coldObservable) =>
+        coldObservable.Publish().RefCount();
 }

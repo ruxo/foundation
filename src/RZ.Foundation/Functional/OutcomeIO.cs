@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using LanguageExt;
 using RZ.Foundation.Types;
+// ReSharper disable InconsistentNaming
 
 namespace RZ.Foundation.Functional;
 

@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\RZ.Foundation.Blazor\RZ.Foundation.Blazor.csproj" />
     <ProjectReference Include="..\..\src\RZ.Foundation\RZ.Foundation.csproj" />
   </ItemGroup>
 
