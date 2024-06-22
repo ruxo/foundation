@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -75,14 +76,22 @@ public sealed record ErrorInfo
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Stack { get; init; }
 
-    public bool Is(ErrorInfo another) =>
-        Code == another.Code || InnerError?.Is(another) == true || SubErrors?.Any(e => e.Is(another)) == true;
+    [Pure]
+    public bool Is(string code)
+        => Code == code || InnerError?.Is(code) == true || SubErrors?.Any(e => e.Is(code)) == true;
 
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Is(ErrorInfo another) => Is(another.Code);
+
+    [Pure]
     public string ToString(JsonSerializerOptions? options) => JsonSerializer.Serialize(this, options);
+
+    [Pure]
     public override string ToString() => ToString(null);
 
     static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions().UseRzRecommendedSettings();
 
+    [Pure]
     public static Option<ErrorInfo> TryParse(string s) =>
         Try(() => JsonSerializer.Deserialize<ErrorInfo>(s, SerializerOptions)!).ToOption();
 

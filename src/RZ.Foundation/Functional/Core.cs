@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace RZ.Foundation.Functional;
 
-public interface Eq<M> where M: Eq<M>
+public interface Eq<M> where M : Eq<M>
 {
     public static abstract HK<M, bool> EqualsTo<T>(HK<M, T> a, HK<M, T> b);
     public static abstract HK<M, bool> NotEqualsTo<T>(HK<M, T> a, HK<M, T> b);
@@ -19,7 +19,7 @@ public static class MonadExtensions
     [Pure]
     public static HK<M, C> Bind<M, A, B, C>(this HK<M, A> ma, Func<A, HK<M, B>> bind, Func<A, B, C> project)
         where M : Monad<M>, Functor<M> =>
-        M.Bind(ma, x => M.Map(bind(x), y => project(x,y)));
+        M.Bind(ma, x => M.Map(bind(x), y => project(x, y)));
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HK<M, T> Join<M, T>(this HK<M, HK<M, T>> ma) where M : Monad<M> =>

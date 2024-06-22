@@ -66,24 +66,30 @@ public sealed class TryCatchTest
 
     [Fact]
     public void Try_catch_action_exception() {
-        void test() {
-            throw new Exception("test");
-        }
-        var result = TryCatch(test).RunIO();
+        var result = TryCatch(Test).RunIO();
 
         result.IsFail.Should().BeTrue();
-        result.UnwrapError().IsExceptional.Should().BeTrue();
+        result.UnwrapError().Is(StandardErrorCodes.Unhandled).Should().BeTrue();
+        result.UnwrapError().Message.Should().Be("test");
+        return;
+
+        void Test() {
+            throw new Exception("test");
+        }
     }
 
     [Fact]
     public async Task Try_catch_async_action_exception() {
-        async Task test() {
+        var result = await TryCatch(Test).RunIO();
+
+        result.IsFail.Should().BeTrue();
+        result.UnwrapError().Is(StandardErrorCodes.Unhandled).Should().BeTrue();
+        result.UnwrapError().Message.Should().Be("test");
+        return;
+
+        async Task Test() {
             await Task.Yield();
             throw new Exception("test");
         }
-        var result = await TryCatch(test).RunIO();
-
-        result.IsFail.Should().BeTrue();
-        result.UnwrapError().IsExceptional.Should().BeTrue();
     }
 }

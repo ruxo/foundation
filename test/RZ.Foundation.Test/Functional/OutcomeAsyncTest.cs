@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using FluentAssertions;
 using LanguageExt;
-using LanguageExt.Common;
+using RZ.Foundation.Types;
 using Xunit;
 using static RZ.Foundation.Prelude;
 using static LanguageExt.Prelude;
@@ -26,14 +26,14 @@ public sealed class OutcomeAsyncTest
     [Fact]
     public async Task OutcomeAsyncDirectFailureAssignment()
     {
-        var outcomeAsync = FailureAsync<int>(Error.New(123, "dummy"));
+        var outcomeAsync = FailureAsync<int>(new ErrorInfo("dummy", "dummy"));
 
         var outcome = await outcomeAsync.RunIO();
 
         outcome.IsSuccess.Should().BeFalse();
         outcome.IsFail.Should().BeTrue();
 
-        outcome.UnwrapError().Should().Match<Error>(e => e.Is(Error.New(123, "another dummy")));
+        outcome.UnwrapError().Should().Match<ErrorInfo>(e => e.Is("dummy"));
     }
 
     #endregion
@@ -88,7 +88,7 @@ public sealed class OutcomeAsyncTest
 
     [Fact]
     public async Task Catch_And_Success() {
-        var outcomeAsync = FailureAsync<int>(Error.New(123, "dummy"));
+        var outcomeAsync = FailureAsync<int>(new ErrorInfo("123", "dummy"));
 
         var result = await outcomeAsync.Catch(_ => 42).As().RunIO();
 
@@ -98,12 +98,12 @@ public sealed class OutcomeAsyncTest
 
     [Fact]
     public async Task Catch_And_Failure() {
-        var outcomeAsync = FailureAsync<int>(Error.New(123, "dummy"));
+        var outcomeAsync = FailureAsync<int>(new ErrorInfo("123", "dummy"));
 
-        var result = await outcomeAsync.Catch(_ => Error.New(456, "another dummy")).As().RunIO();
+        var result = await outcomeAsync.Catch(_ => new ErrorInfo("456", "another dummy")).As().RunIO();
 
         result.IsFail.Should().BeTrue();
-        result.UnwrapError().Should().Be(Error.New(456, "another dummy"));
+        result.UnwrapError().Should().Be(new ErrorInfo("456", "another dummy"));
     }
 
     #endregion
@@ -112,7 +112,7 @@ public sealed class OutcomeAsyncTest
 
     [Fact]
     public async Task Get_default_value_from_failure() {
-        var outcomeAsync = FailureAsync<int>(Error.New(123, "dummy"));
+        var outcomeAsync = FailureAsync<int>(new ErrorInfo("123", "dummy"));
 
         var result = await outcomeAsync.IfFail(42).RunIO();
 
@@ -121,16 +121,16 @@ public sealed class OutcomeAsyncTest
 
     [Fact]
     public async Task Get_default_value_by_function_from_failure() {
-        var outcomeAsync = FailureAsync<int>(Error.New(123, "dummy"));
+        var outcomeAsync = FailureAsync<int>(new ErrorInfo("123", "dummy"));
 
-        var result = await outcomeAsync.IfFail(e => e.Code).RunIO();
+        var result = await outcomeAsync.IfFail(e => int.Parse(e.Code)).RunIO();
 
         result.Should().Be(123);
     }
 
     [Fact]
     public async Task Perform_action_if_failure() {
-        var outcomeAsync = FailureAsync<int>(Error.New(123, "dummy"));
+        var outcomeAsync = FailureAsync<int>(new ErrorInfo("123", "dummy"));
 
         var success = false;
         await outcomeAsync.IfFail(_ => success = true).RunIO();
@@ -154,17 +154,17 @@ public sealed class OutcomeAsyncTest
 
     [Fact]
     public async Task Pipe_two_failure_outcomes_returns_second() {
-        var a = FailureAsync<int>(Error.New(42, "dummy"));
-        var b = FailureAsync<int>(Error.New(123, "another dummy"));
+        var a = FailureAsync<int>(new ErrorInfo("42", "dummy"));
+        var b = FailureAsync<int>(new ErrorInfo("123", "another dummy"));
 
         var result = await (a | b).RunIO();
 
-        result.Should().Be(FailedOutcome<int>(Error.New(123, "another dummy")));
+        result.Should().Be(FailedOutcome<int>(new ErrorInfo("123", "another dummy")));
     }
 
     [Fact]
     public async Task Pipe_first_failure_outcome_with_second_success_outcome_returns_second() {
-        var a = FailureAsync<int>(Error.New(42, "dummy"));
+        var a = FailureAsync<int>(new ErrorInfo("42", "dummy"));
         var b = SuccessAsync(123);
 
         var result = await (a | b).RunIO();
@@ -174,9 +174,9 @@ public sealed class OutcomeAsyncTest
 
     [Fact]
     public async Task Pipe_first_failure_outcome_with_success_catch_returns_catch_value() {
-        var a = FailureAsync<int>(Error.New(42, "dummy"));
+        var a = FailureAsync<int>(new ErrorInfo("42", "dummy"));
 
-        var result = await (a | @ifFail(_ => 123)).RunIO();
+        var result = await (a | @catch(_ => 123)).RunIO();
 
         result.IsSuccess.Should().BeTrue();
         result.Unwrap().Should().Be(123);
@@ -184,17 +184,17 @@ public sealed class OutcomeAsyncTest
 
     [Fact]
     public async Task Pipe_first_failure_outcome_with_failure_catch_returns_catch_value() {
-        var a = FailureAsync<int>(Error.New(42, "dummy"));
+        var a = FailureAsync<int>(new ErrorInfo("42", "dummy"));
 
-        var result = await (a | @ifFail(_ => Error.New(123, "another dummy"))).RunIO();
+        var result = await (a | @catch<int>(_ => new ErrorInfo("123", "another dummy"))).RunIO();
 
         result.IsFail.Should().BeTrue();
-        result.UnwrapError().Code.Should().Be(123);
+        result.UnwrapError().Code.Should().Be("123");
     }
 
     [Fact]
     public async Task Pipe_failure_outcome_and_perform_side_effect() {
-        var a = FailureAsync<int>(Error.New(42, "dummy"));
+        var a = FailureAsync<int>(new ErrorInfo("42", "dummy"));
 
         var success = false;
         var noChange = true;
@@ -220,18 +220,18 @@ public sealed class OutcomeAsyncTest
 
     [Fact]
     public async Task Pipe_failure_outcome_and_catch_with_another_outcome_returns_catch_outcome() {
-        var a = FailureAsync<int>(Error.New(42, "dummy"));
-        var expected = FailureAsync<int>(Error.New(123, "another dummy"));
+        var a = FailureAsync<int>(new ErrorInfo("42", "dummy"));
+        var expected = FailureAsync<int>(new ErrorInfo("123", "another dummy"));
 
         var result = await (a | expected).RunIO();
 
         result.IsFail.Should().BeTrue();
-        result.UnwrapError().Code.Should().Be(123);
+        result.UnwrapError().Code.Should().Be("123");
     }
 
     [Fact]
     public async Task Pipe_failure_outcome_async_and_a_success_outcome_returns_the_success_one() {
-        var a = FailureAsync<int>(Error.New(42, "dummy"));
+        var a = FailureAsync<int>(new ErrorInfo("42", "dummy"));
         var b = Success(123);
 
         var result = await (a | b.ToAsync()).RunIO();
@@ -242,10 +242,10 @@ public sealed class OutcomeAsyncTest
 
     [Fact]
     public async Task Pipe_failure_outcome_async_and_a_success_outcome_catch_returns_the_success_outcome() {
-        var a = FailureAsync<int>(Error.New(42, "dummy"));
+        var a = FailureAsync<int>(new ErrorInfo("42", "dummy"));
         Outcome<int> b = 123;
 
-        var result = await (a | @ifFail(_ => b)).RunIO();
+        var result = await (a | @catch(_ => b)).RunIO();
 
         result.IsSuccess.Should().BeTrue();
         result.Unwrap().Should().Be(123);
@@ -253,18 +253,18 @@ public sealed class OutcomeAsyncTest
 
     [Fact]
     public async Task Pipe_failure_outcome_async_and_async_failure_outcome_catch_returns_the_failure_outcome() {
-        var a = FailureAsync<int>(Error.New(42, "dummy"));
-        var b = FailureAsync<int>(Error.New(123, "another dummy"));
+        var a = FailureAsync<int>(new ErrorInfo("42", "dummy"));
+        var b = FailureAsync<int>(new ErrorInfo("123", "another dummy"));
 
         var result = await a.Catch(_ => b).As().RunIO();
 
         result.IsFail.Should().BeTrue();
-        result.UnwrapError().Code.Should().Be(123);
+        result.UnwrapError().Code.Should().Be("123");
     }
 
     [Fact]
     public async Task Pipe_failure_outcome_async_and_catch_for_sideeffect() {
-        var a = FailureAsync<int>(Error.New(42, "dummy"));
+        var a = FailureAsync<int>(new ErrorInfo("42", "dummy"));
 
         var success = false;
         async Task<Unit> doSomething() {
@@ -280,12 +280,10 @@ public sealed class OutcomeAsyncTest
 
     [Fact]
     public async Task Perform_side_effect_when_error() {
-        var a = FailureAsync<int>(Error.New(42, "dummy"));
+        var a = FailureAsync<int>(new ErrorInfo("42", "dummy"));
 
         var result = 0;
-        _ = await (a | @ifFail(e => {
-                                   result = e.Code + 1;
-                               })).RunIO();
+        _ = await (a | @failDo(e => result = int.Parse(e.Code) + 1)).RunIO();
 
         result.Should().Be(43);
     }
@@ -294,9 +292,7 @@ public sealed class OutcomeAsyncTest
     public async Task Pipe_unit_outcome_with_iffail_condition_should_not_get_called() {
         var called = false;
 
-        _ = await (UnitOutcomeAsync | @ifFail(_ => {
-                                                  called = true;
-                                              })).RunIO();
+        _ = await (UnitOutcomeAsync | @failDo(_ => called = true)).RunIO();
 
         called.Should().BeFalse();
     }

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using LanguageExt.Common;
+using RZ.Foundation.Types;
+
+// ReSharper disable InconsistentNaming
 
 namespace RZ.Foundation.Functional;
 
@@ -23,7 +25,8 @@ public readonly struct FunctionYield<T>(Func<T> effect) : Yieldable<T>, HK<Synch
 
 public readonly record struct ConstantAsyncYield<T>(ValueTask<T> Value) : AsyncYieldable<T>, HK<Asynchronous, T>
 {
-    public ConstantAsyncYield(T value) : this(new ValueTask<T>(value)) {}
+    public ConstantAsyncYield(T value) : this(new ValueTask<T>(value)) {
+    }
 }
 
 public readonly struct FunctionAsyncYield<T>(Func<ValueTask<T>> effect) : AsyncYieldable<T>, HK<Asynchronous, T>
@@ -48,6 +51,7 @@ public class Asynchronous : IOT<Asynchronous>
 
     public static HK<Asynchronous, bool> EqualsTo<T>(HK<Asynchronous, T> a, HK<Asynchronous, T> b) {
         return new ConstantAsyncYield<bool>(eq());
+
         async ValueTask<bool> eq() {
             var va = await a.As().Value;
             var vb = await b.As().Value;
@@ -58,6 +62,7 @@ public class Asynchronous : IOT<Asynchronous>
 
     public static HK<Asynchronous, bool> NotEqualsTo<T>(HK<Asynchronous, T> a, HK<Asynchronous, T> b) {
         return new ConstantAsyncYield<bool>(neq());
+
         async ValueTask<bool> neq() {
             var va = await a.As().Value;
             var vb = await b.As().Value;
@@ -66,14 +71,15 @@ public class Asynchronous : IOT<Asynchronous>
         }
     }
 
-    public static HK<Asynchronous, Outcome<T>> Try<T>(Func<HK<Asynchronous, T>> f) where T : notnull {
+    public static HK<Asynchronous, Outcome<T>> Try<T>(Func<HK<Asynchronous, T>> f) {
         return new ConstantAsyncYield<Outcome<T>>(trap());
+
         async ValueTask<Outcome<T>> trap() {
-            try {
+            try{
                 return await f().As().Value;
             }
-            catch (Exception e) {
-                return FailedOutcome<T>(Error.New(e));
+            catch (Exception e){
+                return FailedOutcome<T>(ErrorFrom.Exception(e));
             }
         }
     }
@@ -108,12 +114,12 @@ public class Synchronous : IOT<Synchronous>
 
     #endregion
 
-    public static HK<Synchronous, Outcome<T>> Try<T>(Func<HK<Synchronous, T>> f) where T : notnull {
-        try {
+    public static HK<Synchronous, Outcome<T>> Try<T>(Func<HK<Synchronous, T>> f) {
+        try{
             return Return(SuccessOutcome(f().As().Value));
         }
-        catch (Exception e) {
-            return Return(FailedOutcome<T>(Error.New(e)));
+        catch (Exception e){
+            return Return(FailedOutcome<T>(ErrorFrom.Exception(e)));
         }
     }
 }
@@ -121,19 +127,18 @@ public class Synchronous : IOT<Synchronous>
 public static class SynchronousExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static AsyncYieldable<T> As<T>(this HK<Asynchronous, T> @yield) => (AsyncYieldable<T>) @yield;
+    public static AsyncYieldable<T> As<T>(this HK<Asynchronous, T> @yield) => (AsyncYieldable<T>)@yield;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Yieldable<T> As<T>(this HK<Synchronous, T> @yield) => (Yieldable<T>) @yield;
+    public static Yieldable<T> As<T>(this HK<Synchronous, T> @yield) => (Yieldable<T>)@yield;
 }
 
 public interface IOT<M> : Functor<M>, Monad<M>, Eq<M>, TryCatchType<M>
     where M : IOT<M>;
 
-
 public interface TryCatchType<M> where M : TryCatchType<M>
 {
-    public static abstract HK<M, Outcome<T>> Try<T>(Func<HK<M, T>> f) where T : notnull;
+    public static abstract HK<M, Outcome<T>> Try<T>(Func<HK<M, T>> f);
 }
 
 public interface Yieldable<out T>
