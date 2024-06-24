@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{6E9465BC-C
 ProjectSection(SolutionItems) = preProject
 	README.md = README.md
 	CHANGES.md = CHANGES.md
+	src\CommonGlobalUsings.cs = src\CommonGlobalUsings.cs
+	src\Directory.Build.props = src\Directory.Build.props
 EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RZ.Foundation.Test", "test\RZ.Foundation.Test\RZ.Foundation.Test.csproj", "{B81E8070-7867-49BA-B26A-BC0389F5B890}"
@@ -18,6 +20,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F9CB1006-0064-4296-AB5B-B974E9DC566B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RZ.Foundation.Blazor", "src\RZ.Foundation.Blazor\RZ.Foundation.Blazor.csproj", "{162C0A3C-D1FF-48BE-A198-75605F71C537}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RZ.Foundation.Blazor.MudBlazor", "src\RZ.Foundation.Blazor.MudBlazor\RZ.Foundation.Blazor.MudBlazor.csproj", "{F916EB51-5E8A-4B9D-9E01-5E46F3FE2755}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,6 +41,10 @@ Global
 		{162C0A3C-D1FF-48BE-A198-75605F71C537}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{162C0A3C-D1FF-48BE-A198-75605F71C537}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{162C0A3C-D1FF-48BE-A198-75605F71C537}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F916EB51-5E8A-4B9D-9E01-5E46F3FE2755}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F916EB51-5E8A-4B9D-9E01-5E46F3FE2755}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F916EB51-5E8A-4B9D-9E01-5E46F3FE2755}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F916EB51-5E8A-4B9D-9E01-5E46F3FE2755}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -48,5 +56,6 @@ Global
 		{B5997C5E-B8AB-4635-8D2E-87C5F5BECF64} = {957B5502-99A7-4F67-AF5F-E0063B132AAF}
 		{B81E8070-7867-49BA-B26A-BC0389F5B890} = {F9CB1006-0064-4296-AB5B-B974E9DC566B}
 		{162C0A3C-D1FF-48BE-A198-75605F71C537} = {957B5502-99A7-4F67-AF5F-E0063B132AAF}
+		{F916EB51-5E8A-4B9D-9E01-5E46F3FE2755} = {957B5502-99A7-4F67-AF5F-E0063B132AAF}
 	EndGlobalSection
 EndGlobal

@@ -5,7 +5,6 @@
     <Company>RZ</Company>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <LangVersion>preview</LangVersion>
     <Title>RZ.Foundation: Functional and utility functions</Title>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
@@ -18,11 +17,6 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LanguageExt.Core" Version="4.4.8" />
-    <PackageReference Include="MinVer" Version="5.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

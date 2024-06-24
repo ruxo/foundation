@@ -1,0 +1,32 @@
+﻿<MudGrid Spacing="2" Class="pa-4">
+    <MudItem md="6">
+        <MudPaper Class="pa-8 rounded-xl" Style="@paperStyle">
+            @LeftPanel
+        </MudPaper>
+    </MudItem>
+
+    @if (RightPanel is not null){
+        <MudItem md="6">
+            <MudPaper Class="pa-8 rounded-xl" Style="@paperStyle">
+                @RightPanel
+            </MudPaper>
+        </MudItem>
+    }
+</MudGrid>
+
+@code {
+
+    [Parameter, EditorRequired]
+    public required RenderFragment LeftPanel { get; set; }
+
+    [Parameter]
+    public RenderFragment? RightPanel { get; set; }
+
+    string paperStyle = string.Empty;
+
+    protected override void OnParametersSet() {
+        paperStyle = "height: 90vh; overflow: auto";
+        base.OnParametersSet();
+    }
+
+}
