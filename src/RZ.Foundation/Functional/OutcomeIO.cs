@@ -49,19 +49,23 @@ public static class OutcomeIO
     public static ValueTask<Outcome<T>> RunIO<T>(this OutcomeT<Asynchronous, T> ma) =>
         ma.AsIo().RunIO();
 
-    public static OutcomeT<Asynchronous, C> SelectMany<A, B, C>(this OutcomeT<Synchronous, A> ma, Func<A, OutcomeT<Asynchronous, B>> bind,
-                                                                Func<A, B, C> project) {
+    public static HK<OutcomeX<Asynchronous>, C> SelectMany<A, B, C>(this HK<OutcomeX<Synchronous>, A> ma,
+                                                                    Func<A, HK<OutcomeX<Asynchronous>, B>> bind, Func<A, B, C> project) {
         return new MaybeT<Asynchronous, C>(new ConstantAsyncYield<Outcome<C>>(SyncToAsync()));
 
         async ValueTask<Outcome<C>> SyncToAsync() {
-            if (ma.AsIo().RunIO().IfSuccess(out var a, out var e)){
-                var ba = await bind(a).AsIo().RunIO();
+            if (ma.As().RunIO().IfSuccess(out var a, out var e)){
+                var ba = await bind(a).As().AsIo().RunIO();
                 return ba.Map(b => project(a, b)).As();
             }
             else
                 return e;
         }
     }
+
+    public static OutcomeT<Asynchronous, C> SelectMany<A, B, C>(this OutcomeT<Synchronous, A> ma, Func<A, OutcomeT<Asynchronous, B>> bind,
+                                                                Func<A, B, C> project)
+        => ((HK<OutcomeX<Synchronous>, A>)ma).SelectMany(bind, project).As();
 
     public static OutcomeT<Asynchronous, C> SelectMany<A, B, C>(this OutcomeT<Asynchronous, A> ma, Func<A, OutcomeT<Synchronous, B>> bind,
                                                                 Func<A, B, C> project) {

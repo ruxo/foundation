@@ -298,4 +298,23 @@ public sealed class OutcomeAsyncTest
     }
 
     #endregion
+
+    #region Async + Sync
+
+    [Fact]
+    public async Task Sync_With_Async() {
+        var sync = Success(123);
+        var async = SuccessAsync("string");
+        var r =
+            from a in sync
+            from _ in UnitOutcome
+            from b in async
+            select b + a;
+
+        var result = await r.As().RunIO();
+        result.IsSuccess.Should().BeTrue();
+        result.Unwrap().Should().Be("string123");
+    }
+
+    #endregion
 }

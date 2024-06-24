@@ -110,8 +110,7 @@ public class OutcomeX<IO> : Functor<OutcomeX<IO>>, Monad<OutcomeX<IO>>, ErrorHan
     #endregion
 
     public static HK<OutcomeX<IO>, B> Map<A, B>(HK<OutcomeX<IO>, A> ma, Func<A, B> f)
-        =>
-            ma.As() switch {
+        => ma.As() switch {
                 SuccessT<IO, A> s    => new SuccessT<IO, B>(IO.Map(s.Value, f)),
                 FailureT<IO, A> fail => new FailureT<IO, B>(fail.ErrorInfo),
                 MaybeT<IO, A> d      => new MaybeT<IO, B>(IO.Map(d.Maybe, x => x.Map(f).As())),
@@ -121,31 +120,30 @@ public class OutcomeX<IO> : Functor<OutcomeX<IO>>, Monad<OutcomeX<IO>>, ErrorHan
 
     #region Monad typeclass
 
-    public static HK<OutcomeX<IO>, T> Return<T>(T value) =>
-        new SuccessT<IO, T>(IO.Return(value));
+    public static HK<OutcomeX<IO>, T> Return<T>(T value)
+        => new SuccessT<IO, T>(IO.Return(value));
 
     public static HK<OutcomeX<IO>, B> Bind<A, B>(HK<OutcomeX<IO>, A> ma, Func<A, HK<OutcomeX<IO>, B>> f)
-        =>
-            new MaybeT<IO, B>(ma.As() switch {
-                // HK<IO,A> -> HK<IO, HK<OutcomeX<IO>, B>> -> HK<IO, OutcomeT<IO, B>> -> HK<IO, Outcome<B>>
-                SuccessT<IO, A> s    => IO.Bind(s.Value, a => f(a).As().AsIo()),
-                FailureT<IO, B> fail => IO.Map(fail.ErrorInfo, FailedOutcome<B>),
+        => new MaybeT<IO, B>(ma.As() switch {
+            // HK<IO,A> -> HK<IO, HK<OutcomeX<IO>, B>> -> HK<IO, OutcomeT<IO, B>> -> HK<IO, Outcome<B>>
+            SuccessT<IO, A> s    => IO.Bind(s.Value, a => f(a).As().AsIo()),
+            FailureT<IO, B> fail => IO.Map(fail.ErrorInfo, FailedOutcome<B>),
 
-                // HK<IO, Outcome<A>> -map-> HK<IO, Outcome<HK<IO, Outcome<B>>> -> HK<IO, Outcome<B>>
-                MaybeT<IO, A> d =>
-                    IO.Bind(d.Maybe, x => x.Map(a => f(a).As().AsIo()).As().AsIo()),
+            // HK<IO, Outcome<A>> -map-> HK<IO, Outcome<HK<IO, Outcome<B>>> -> HK<IO, Outcome<B>>
+            MaybeT<IO, A> d => IO.Bind(d.Maybe, x => x.Map(a => f(a).As().AsIo()).As().AsIo()),
 
-                _ => throw new InvalidOperationException()
-            });
+            _ => throw new InvalidOperationException()
+        });
 
     #endregion
 }
 
 public static class OutcomeT
 {
+    [Pure]
     public static HK<IO, Outcome<T>> AsIo<IO, T>(this OutcomeT<IO, T> ma)
-        where IO : Functor<IO>, Monad<IO>, Eq<IO> =>
-        ma switch {
+        where IO : Functor<IO>, Monad<IO>, Eq<IO>
+        => ma switch {
             SuccessT<IO, T> s    => IO.Map(s.Value, SuccessOutcome),
             FailureT<IO, T> fail => IO.Map(fail.ErrorInfo, FailedOutcome<T>),
             MaybeT<IO, T> m      => m.Maybe,
@@ -153,18 +151,21 @@ public static class OutcomeT
             _ => throw new InvalidOperationException()
         };
 
+    [Pure]
     public static HK<IO, Outcome<T>> AsIo<IO, T>(this Outcome<HK<IO, Outcome<T>>> ma)
         where IO : Functor<IO>, Monad<IO>, Eq<IO>
-        =>
-            ma.Match(identity, e => IO.Return((Outcome<T>)e));
+        => ma.Match(identity, e => IO.Return((Outcome<T>)e));
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static HK<OutcomeX<Synchronous>, T> AsIo<T>(this Outcome<T> ma)
+        => (OutcomeT<Synchronous, T>)ma;
 }
 
 public class OutcomeFunctor : Functor<OutcomeFunctor>
 {
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static HK<OutcomeFunctor, B> Map<A, B>(HK<OutcomeFunctor, A> ma, Func<A, B> f)
-        =>
-            ma.As().Map(f);
+        => ma.As().Map(f);
 }
 
 public static class OutcomeExtensions
@@ -176,8 +177,7 @@ public static class OutcomeExtensions
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OutcomeT<IO, T> As<IO, T>(this HK<OutcomeX<IO>, T> @outcome)
         where IO : Functor<IO>, Monad<IO>, Eq<IO>
-        =>
-            (OutcomeT<IO, T>)@outcome;
+        => (OutcomeT<IO, T>)@outcome;
 }
 
 public readonly struct OutcomeAsyncCatch<T>(Func<ErrorInfo, OutcomeT<Asynchronous, T>> fail)
