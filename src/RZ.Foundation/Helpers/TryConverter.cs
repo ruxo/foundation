@@ -1,6 +1,4 @@
-﻿using LanguageExt;
-
-namespace RZ.Foundation.Helpers
+﻿namespace RZ.Foundation.Helpers
 {
     public static class TryConvert
     {

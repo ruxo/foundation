@@ -2,7 +2,6 @@
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using LanguageExt;
 using RZ.Foundation.Functional;
 using RZ.Foundation.Types;
 

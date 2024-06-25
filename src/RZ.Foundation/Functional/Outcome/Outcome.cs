@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using System.Text;
-using LanguageExt;
 using LanguageExt.Common;
 using RZ.Foundation.Functional;
 using RZ.Foundation.Types;
@@ -126,7 +125,6 @@ public readonly struct Outcome<T> : HK<OutcomeFunctor, T>
             return false;
         }
     }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public V Match<V>(Func<T, V> success, Func<ErrorInfo, V> fail) =>
         status == EitherStatus.IsRight ? success(data!) : fail(error!);

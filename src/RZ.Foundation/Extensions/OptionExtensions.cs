@@ -7,7 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 #endif
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using LanguageExt;
 using LanguageExt.Common;
 
 // ReSharper disable UnusedMethodReturnValue.Global

@@ -5,7 +5,6 @@ using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using LanguageExt;
 
 namespace RZ.Foundation.Extensions {
     public static class CollectionExtension{

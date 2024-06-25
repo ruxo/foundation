@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
-using LanguageExt;
 using RZ.Foundation.Types;
 
 // ReSharper disable InconsistentNaming
