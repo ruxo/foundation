@@ -1,5 +1,11 @@
 # Version changes
 
+## 7.0.0
+
+* Introduce two new libraries: `RZ.Foundation.Blazor` and `RZ.Foundation.Blazor.MudBlazor`
+* Improve `Outcome` types
+  * Support `guard` and `guardnot`
+
 ## 6.5.0
 
 * Introduce new `OutcomeT`, `Synchronous` IO, and `Asynchronous` IO. Also using "typeclass" style

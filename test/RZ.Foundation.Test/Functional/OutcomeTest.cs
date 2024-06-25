@@ -44,6 +44,16 @@ public sealed class OutcomeTest
         result.Should().Be(SuccessOutcome(42));
     }
 
+    [Fact]
+    public void Outcome_success_equality() {
+        var a = SuccessOutcome(42);
+        var b = SuccessOutcome(42);
+
+        var result = a.Equals(b);
+
+        result.Should().BeTrue();
+    }
+
     #endregion
 
     #region From other monads
@@ -415,6 +425,71 @@ public sealed class OutcomeTest
         _ = UnitOutcome | @failDo(_ => called = true);
 
         called.Should().BeFalse();
+    }
+
+    #endregion
+
+    #region Use (disposables)
+
+    #endregion
+
+    #region Guard
+
+    [Fact]
+    public void Guard_passed() {
+        var data = Success(123);
+
+        var result = from d in data
+                     from _ in guard(d > 0, new ErrorInfo("dummy"))
+                     let b = 1
+                     select d + b;
+
+        result.As().RunIO().Should().Be(SuccessOutcome(124));
+    }
+
+    [Fact]
+    public void Guard_nested_Outcome_passed() {
+        var data = Success(123);
+
+        var result = from d in data
+                     from _ in guard(d > 0, new ErrorInfo("dummy"))
+                     from b in Success(1)
+                     select d + b;
+
+        result.As().RunIO().Should().Be(SuccessOutcome(124));
+    }
+
+    [Fact]
+    public void Guard_failed() {
+        var data = Success(123);
+
+        var result = from d in data
+                     from _ in guard(d > 123, new ErrorInfo("dummy"))
+                     select d + 1;
+
+        result.As().RunIO().Should().Be(FailedOutcome<int>(new ErrorInfo("dummy")));
+    }
+
+    [Fact]
+    public void Guard_not_passed() {
+        var data = Success(123);
+
+        var result = from d in data
+                     from _ in guardnot(d > 0, new ErrorInfo("dummy"))
+                     select d + 1;
+
+        result.As().RunIO().Should().Be(FailedOutcome<int>(new ErrorInfo("dummy")));
+    }
+
+    [Fact]
+    public void Guard_not_failed() {
+        var data = Success(123);
+
+        var result = from d in data
+                     from _ in guardnot(d > 123, new ErrorInfo("dummy"))
+                     select d + 1;
+
+        result.As().RunIO().Should().Be(SuccessOutcome(124));
     }
 
     #endregion

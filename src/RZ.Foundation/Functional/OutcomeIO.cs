@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using LanguageExt;
 using RZ.Foundation.Types;
 // ReSharper disable InconsistentNaming
 
@@ -49,6 +48,8 @@ public static class OutcomeIO
     public static ValueTask<Outcome<T>> RunIO<T>(this OutcomeT<Asynchronous, T> ma) =>
         ma.AsIo().RunIO();
 
+    #region LINQ sync to async
+
     public static HK<OutcomeX<Asynchronous>, C> SelectMany<A, B, C>(this HK<OutcomeX<Synchronous>, A> ma,
                                                                     Func<A, HK<OutcomeX<Asynchronous>, B>> bind, Func<A, B, C> project) {
         return new MaybeT<Asynchronous, C>(new ConstantAsyncYield<Outcome<C>>(SyncToAsync()));
@@ -63,16 +64,13 @@ public static class OutcomeIO
         }
     }
 
-    public static OutcomeT<Asynchronous, C> SelectMany<A, B, C>(this OutcomeT<Synchronous, A> ma, Func<A, OutcomeT<Asynchronous, B>> bind,
-                                                                Func<A, B, C> project)
-        => ((HK<OutcomeX<Synchronous>, A>)ma).SelectMany(bind, project).As();
-
-    public static OutcomeT<Asynchronous, C> SelectMany<A, B, C>(this OutcomeT<Asynchronous, A> ma, Func<A, OutcomeT<Synchronous, B>> bind,
+    public static HK<OutcomeX<Asynchronous>, C> SelectMany<A, B, C>(this HK<OutcomeX<Asynchronous>, A> ma,
+                                                                Func<A, HK<OutcomeX<Synchronous>, B>> bind,
                                                                 Func<A, B, C> project) {
         return new MaybeT<Asynchronous, C>(new ConstantAsyncYield<Outcome<C>>(AsyncWithSync()));
 
         async ValueTask<Outcome<C>> AsyncWithSync() {
-            var va = await ma.AsIo().RunIO();
+            var va = await ma.As().RunIO();
             if (va.IfSuccess(out var a, out var e)){
                 var ba = from b in bind(a)
                          select project(a, b);
@@ -82,6 +80,32 @@ public static class OutcomeIO
                 return e;
         }
     }
+
+    public static OutcomeT<Asynchronous, C> SelectMany<A, B, C>(this OutcomeT<Synchronous, A> ma,
+                                                                Func<A, OutcomeT<Asynchronous, B>> bind,
+                                                                Func<A, B, C> project)
+        => ((HK<OutcomeX<Synchronous>, A>)ma).SelectMany(bind, project).As();
+
+    public static OutcomeT<Asynchronous, C> SelectMany<A, B, C>(this OutcomeT<Asynchronous, A> ma,
+                                                                Func<A, OutcomeT<Synchronous, B>> bind,
+                                                                Func<A, B, C> project)
+        => ((HK<OutcomeX<Asynchronous>, A>)ma).SelectMany(bind, project).As();
+
+    #endregion
+
+    public static HK<OutcomeX<Asynchronous>, B> SelectMany<A, B>(this HK<OutcomeX<Asynchronous>, A> ma,
+                                                                 Func<A, Guard<ErrorInfo>> bind, Func<A, A, B> project)
+        => from a in ma
+           let b = bind(a)
+           from result in b.Flag ? SuccessAsync(a) : FailureAsync<A>(b.OnFalse())
+           select project(a, result);
+
+    public static HK<OutcomeX<Synchronous>, B> SelectMany<A, B>(this HK<OutcomeX<Synchronous>, A> ma,
+                                                                Func<A, Guard<ErrorInfo>> bind, Func<A, A, B> project)
+        => from a in ma
+           let b = bind(a)
+           from result in b.Flag ? Success(a) : Failure<A>(b.OnFalse())
+           select project(a, result);
 
     public static OutcomeT<Asynchronous, T> ToAsync<T>(this OutcomeT<Synchronous, T> ma) =>
         new MaybeT<Asynchronous, T>(Asynchronous.Return(ma.RunIO()));

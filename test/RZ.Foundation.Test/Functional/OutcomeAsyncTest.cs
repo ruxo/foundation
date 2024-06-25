@@ -317,4 +317,83 @@ public sealed class OutcomeAsyncTest
     }
 
     #endregion
+
+    #region Guard
+
+    [Fact]
+    public async Task Guard_passed() {
+        var data = SuccessAsync(123);
+
+        var result = from d in data
+                     from _ in guard(d > 0, new ErrorInfo("dummy"))
+                     let b = 1
+                     select d + b;
+
+        (await result.As().RunIO()).Should().Be(SuccessOutcome(124));
+    }
+
+    [Fact]
+    public async Task Guard_nested_Outcome_passed() {
+        var result = from d in SuccessAsync(123)
+                     from _ in guard(d > 0, new ErrorInfo("dummy"))
+                     from b in SuccessAsync(1)
+                     select d + b;
+
+        (await result.As().RunIO()).Should().Be(SuccessOutcome(124));
+    }
+
+    [Fact]
+    public async Task Guard_sync_nested_async_passed() {
+        var result = from d in Success(123)
+                     from _ in guard(d > 0, new ErrorInfo("dummy"))
+                     from b in SuccessAsync(1)
+                     select d + b;
+
+        (await result.As().RunIO()).Should().Be(SuccessOutcome(124));
+    }
+
+    [Fact]
+    public async Task Guard_async_nested_sync_passed() {
+        var result = from d in SuccessAsync(123)
+                     from _ in guard(d > 0, new ErrorInfo("dummy"))
+                     from b in Success(1)
+                     select d + b;
+
+        (await result.As().RunIO()).Should().Be(SuccessOutcome(124));
+    }
+
+    [Fact]
+    public async Task Guard_failed() {
+        var data = SuccessAsync(123);
+
+        var result = from d in data
+                     from _ in guard(d > 123, new ErrorInfo("dummy"))
+                     select d + 1;
+
+        (await result.As().RunIO()).Should().Be(FailedOutcome<int>(new ErrorInfo("dummy")));
+    }
+
+    [Fact]
+    public async Task Guard_not_passed() {
+        var data = SuccessAsync(123);
+
+        var result = from d in data
+                     from _ in guardnot(d > 0, new ErrorInfo("dummy"))
+                     select d + 1;
+
+        (await result.As().RunIO()).Should().Be(FailedOutcome<int>(new ErrorInfo("dummy")));
+    }
+
+    [Fact]
+    public async Task Guard_not_failed() {
+        var data = SuccessAsync(123);
+
+        var result = from d in data
+                     from _ in guardnot(d > 123, new ErrorInfo("dummy"))
+                     select d + 1;
+
+        (await result.As().RunIO()).Should().Be(SuccessOutcome(124));
+    }
+
+    #endregion
 }

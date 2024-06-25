@@ -12,6 +12,7 @@ public static class StandardErrorCodes
     public const string InvalidRequest = "invalid-request";
     public const string InvalidResponse = "invalid-response";
     public const string InvalidOrder = "invalid-order";
+    public const string MissingConfiguration = "missing-configuration";
     public const string NetworkError = "network";
     public const string NotFound = "not-found";
     public const string PermissionNeeded = "permission-needed";
