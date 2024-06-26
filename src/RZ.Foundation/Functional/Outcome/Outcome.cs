@@ -65,8 +65,12 @@ public readonly struct Outcome<T> : HK<OutcomeFunctor, T>
         status == EitherStatus.IsRight ? bind(data!) : new Outcome<B>(error!);
 
     [Pure]
-    public Outcome<B> Map<B>(Func<T, B> map) =>
-        status == EitherStatus.IsRight ? new Outcome<B>(map(data!)) : new Outcome<B>(error!);
+    public Outcome<B> Map<B>(Func<T, B> map)
+        => status == EitherStatus.IsRight ? new Outcome<B>(map(data!)) : new Outcome<B>(error!);
+
+    [Pure]
+    public Outcome<B> BiMap<B>(Func<T, B> success, Func<ErrorInfo, ErrorInfo> fail)
+        => status == EitherStatus.IsRight ? new Outcome<B>(success(data!)) : new Outcome<B>(fail(error!));
 
     #region Pipe operators
 

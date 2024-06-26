@@ -5,6 +5,7 @@
 * Introduce two new libraries: `RZ.Foundation.Blazor` and `RZ.Foundation.Blazor.MudBlazor`
 * Improve `Outcome` types
   * Support `guard` and `guardnot`
+  * Support `BiMap`
 
 ## 6.5.0
 

@@ -97,8 +97,18 @@ public class OutcomeX<IO> : Functor<OutcomeX<IO>>, Monad<OutcomeX<IO>>, ErrorHan
             _ => throw new InvalidOperationException()
         };
 
-    public static HK<OutcomeX<IO>, T> MapFailure<T>(HK<OutcomeX<IO>, T> ma, Func<ErrorInfo, ErrorInfo> map) =>
-        ma.As() switch {
+    public static HK<OutcomeX<IO>, B> BiMap<A, B>(HK<OutcomeX<IO>, A> ma, Func<A, B> mapSuccess, Func<ErrorInfo, ErrorInfo> mapFailure) {
+        return ma.As() switch {
+            SuccessT<IO, A> s    => new SuccessT<IO, B>(IO.Map(s.Value, mapSuccess)),
+            FailureT<IO, A> fail => new FailureT<IO, B>(IO.Map(fail.ErrorInfo, mapFailure)),
+            MaybeT<IO, A> m      => new MaybeT<IO, B>(IO.Map(m.Maybe, x => x.BiMap(mapSuccess, mapFailure))),
+
+            _ => throw new InvalidOperationException()
+        };
+    }
+
+    public static HK<OutcomeX<IO>, T> MapFailure<T>(HK<OutcomeX<IO>, T> ma, Func<ErrorInfo, ErrorInfo> map)
+        => ma.As() switch {
             SuccessT<IO, T> s    => s,
             FailureT<IO, T> fail => new FailureT<IO, T>(IO.Map(fail.ErrorInfo, map)),
             MaybeT<IO, T> m      => new MaybeT<IO, T>(IO.Map(m.Maybe, x => x.Catch(map))),

@@ -34,5 +34,9 @@ public interface ErrorHandlerable<M> where M : ErrorHandlerable<M>
 
     public static abstract HK<M, T> Catch<T>(HK<M, T> ma, Func<ErrorInfo, HK<M, T>> handler);
 
+    [Pure]
+    public static abstract HK<M, B> BiMap<A,B>(HK<M, A> ma, Func<A,B> mapSuccess, Func<ErrorInfo, ErrorInfo> mapFailure);
+
+    [Pure]
     public static abstract HK<M, T> MapFailure<T>(HK<M, T> ma, Func<ErrorInfo, ErrorInfo> map);
 }
