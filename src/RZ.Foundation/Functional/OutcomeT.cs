@@ -7,26 +7,26 @@ using RZ.Foundation.Types;
 namespace RZ.Foundation.Functional;
 
 public sealed class SuccessT<IO, T>(HK<IO, T> value) : OutcomeT<IO, T>
-    where IO : Functor<IO>, Monad<IO>, Eq<IO>
+    where IO : IOT<IO>
 {
     public HK<IO, T> Value => value;
 }
 
 public sealed class FailureT<IO, T>(HK<IO, ErrorInfo> error) : OutcomeT<IO, T>
-    where IO : Functor<IO>, Monad<IO>, Eq<IO>
+    where IO : IOT<IO>
 {
     public HK<IO, ErrorInfo> ErrorInfo => error;
 }
 
 public sealed class MaybeT<IO, T>(HK<IO, Outcome<T>> maybe) : OutcomeT<IO, T>
-    where IO : Functor<IO>, Monad<IO>, Eq<IO>
+    where IO : IOT<IO>
 
 {
     public HK<IO, Outcome<T>> Maybe => maybe;
 }
 
 public abstract class OutcomeT<IO, T> : HK<OutcomeX<IO>, T>
-    where IO : Functor<IO>, Monad<IO>, Eq<IO>
+    where IO : IOT<IO>
 {
     #region Pipe operators
 
@@ -73,7 +73,7 @@ public abstract class OutcomeT<IO, T> : HK<OutcomeX<IO>, T>
 }
 
 public class OutcomeX<IO> : Functor<OutcomeX<IO>>, Monad<OutcomeX<IO>>, ErrorHandlerable<OutcomeX<IO>>
-    where IO : Functor<IO>, Monad<IO>, Eq<IO>
+    where IO : IOT<IO>
 {
     #region ErrorHandlerable typeclass
 
@@ -151,7 +151,7 @@ public static class OutcomeT
 {
     [Pure]
     public static HK<IO, Outcome<T>> AsIo<IO, T>(this OutcomeT<IO, T> ma)
-        where IO : Functor<IO>, Monad<IO>, Eq<IO>
+        where IO : IOT<IO>
         => ma switch {
             SuccessT<IO, T> s    => IO.Map(s.Value, SuccessOutcome),
             FailureT<IO, T> fail => IO.Map(fail.ErrorInfo, FailedOutcome<T>),
@@ -162,7 +162,7 @@ public static class OutcomeT
 
     [Pure]
     public static HK<IO, Outcome<T>> AsIo<IO, T>(this Outcome<HK<IO, Outcome<T>>> ma)
-        where IO : Functor<IO>, Monad<IO>, Eq<IO>
+        where IO : IOT<IO>
         => ma.Match(identity, e => IO.Return((Outcome<T>)e));
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -185,7 +185,7 @@ public static class OutcomeExtensions
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OutcomeT<IO, T> As<IO, T>(this HK<OutcomeX<IO>, T> @outcome)
-        where IO : Functor<IO>, Monad<IO>, Eq<IO>
+        where IO : IOT<IO>
         => (OutcomeT<IO, T>)@outcome;
 }
 

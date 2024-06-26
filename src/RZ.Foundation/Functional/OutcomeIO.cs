@@ -17,12 +17,12 @@ public static class OutcomeIO
                                                             })));
 
     public static HK<IO, T> IfFail<IO, T>(this OutcomeT<IO, T> ma, T value)
-        where IO : Functor<IO>, Monad<IO>, Eq<IO>
+        where IO : IOT<IO>
         =>
             IO.Map(ma.AsIo(), x => x.Match(identity, _ => value));
 
     public static HK<IO, Outcome<T>> IfFail<IO, T>(this OutcomeT<IO, T> ma, Action<ErrorInfo> value)
-        where IO : Functor<IO>, Monad<IO>, Eq<IO>
+        where IO : IOT<IO>
         =>
             IO.Map(ma.AsIo(), x => {
                 x.IfFail(value);
@@ -30,7 +30,7 @@ public static class OutcomeIO
             });
 
     public static HK<IO, T> IfFail<IO, T>(this OutcomeT<IO, T> ma, Func<ErrorInfo, T> value)
-        where IO : Functor<IO>, Monad<IO>, Eq<IO>
+        where IO : IOT<IO>
         =>
             IO.Map(ma.AsIo(), x => x.IfFail(value));
 
