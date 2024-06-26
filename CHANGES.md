@@ -6,6 +6,8 @@
 * Improve `Outcome` types
   * Support `guard` and `guardnot`
   * Support `BiMap`
+  * Introduce `Use` for disposable cleanup
+  * Remove redundant `SelectMany`
 
 ## 6.5.0
 

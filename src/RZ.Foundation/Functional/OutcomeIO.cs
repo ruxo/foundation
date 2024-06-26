@@ -81,16 +81,6 @@ public static class OutcomeIO
         }
     }
 
-    public static OutcomeT<Asynchronous, C> SelectMany<A, B, C>(this OutcomeT<Synchronous, A> ma,
-                                                                Func<A, OutcomeT<Asynchronous, B>> bind,
-                                                                Func<A, B, C> project)
-        => ((HK<OutcomeX<Synchronous>, A>)ma).SelectMany(bind, project).As();
-
-    public static OutcomeT<Asynchronous, C> SelectMany<A, B, C>(this OutcomeT<Asynchronous, A> ma,
-                                                                Func<A, OutcomeT<Synchronous, B>> bind,
-                                                                Func<A, B, C> project)
-        => ((HK<OutcomeX<Asynchronous>, A>)ma).SelectMany(bind, project).As();
-
     #endregion
 
     public static HK<OutcomeX<Asynchronous>, B> SelectMany<A, B>(this HK<OutcomeX<Asynchronous>, A> ma,

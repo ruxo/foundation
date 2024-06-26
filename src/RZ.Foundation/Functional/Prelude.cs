@@ -78,6 +78,38 @@ public static partial class Prelude
 
     #endregion
 
+    #region use
+
+    [Pure]
+    public static HK<OutcomeX<IO>, T> Use<IO, T, TDisposable>(TDisposable disposable, Func<TDisposable, HK<OutcomeX<IO>, T>> f)
+        where TDisposable : IDisposable
+        where IO : IOT<IO>
+        => f(disposable).As() | @do<T>(_ => disposable.Dispose());
+
+    [Pure]
+    public static HK<OutcomeX<Asynchronous>, T> Use<T, TDisposable>(TDisposable disposable,
+                                                                    Func<TDisposable, HK<OutcomeX<Synchronous>, T>> f)
+        where TDisposable : IAsyncDisposable
+        => from v in f(disposable)
+           from _ in SuccessAsync(async () => {
+               await disposable.DisposeAsync();
+               return unit;
+           })
+           select v;
+
+    [Pure]
+    public static HK<OutcomeX<Asynchronous>, T> Use<T, TDisposable>(TDisposable disposable,
+                                                                    Func<TDisposable, HK<OutcomeX<Asynchronous>, T>> f)
+        where TDisposable : IAsyncDisposable
+        => from v in f(disposable)
+           from _ in SuccessAsync(async () => {
+               await disposable.DisposeAsync();
+               return unit;
+           })
+           select v;
+
+    #endregion
+
     #endregion
 
     #region IOT

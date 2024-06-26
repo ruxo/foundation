@@ -120,7 +120,7 @@ public sealed class OutcomeTest
                      from b in SuccessAsync(a + 1)
                      select b;
 
-        (await result.RunIO()).Should().Be(SuccessOutcome(43));
+        (await result.As().RunIO()).Should().Be(SuccessOutcome(43));
     }
 
     #endregion
@@ -430,6 +430,28 @@ public sealed class OutcomeTest
     #endregion
 
     #region Use (disposables)
+
+    [Fact]
+    public void Dispose_resource_after_call() {
+        var disposable = new DisposableResource(1);
+
+        var result = from a in Success(42)
+                     from b in Use(disposable,
+                                   v => Success(() => {
+                                       v.Disposed.Should().BeFalse("Resource should be disposed after this execution, not before");
+                                       return v.Value;
+                                   }))
+                     select a + b;
+
+        disposable.Disposed.Should().BeTrue();
+        result.As().RunIO().Should().Be(SuccessOutcome(43));
+    }
+
+    sealed record DisposableResource(int Value) : IDisposable {
+        public bool Disposed { get; private set; }
+
+        public void Dispose() => Disposed = true;
+    }
 
     #endregion
 

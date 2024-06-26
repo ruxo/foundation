@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using LanguageExt;
 using RZ.Foundation.Types;
@@ -314,6 +316,115 @@ public sealed class OutcomeAsyncTest
         var result = await r.As().RunIO();
         result.IsSuccess.Should().BeTrue();
         result.Unwrap().Should().Be("string123");
+    }
+
+    #endregion
+
+    #region Use (disposables)
+
+    sealed record DisposableResource(int Value) : IDisposable {
+        public bool Disposed { get; private set; }
+
+        public void Dispose() => Disposed = true;
+    }
+
+    [Fact]
+    public async Task Dispose_resource_after_call() {
+        var disposable = new DisposableResource(1);
+
+        var result = from a in SuccessAsync(42)
+                     from b in use(disposable, v => {
+                         v.Disposed.Should().BeFalse();
+                         return SuccessAsync(v.Value);
+                     })
+                     select a + b;
+
+        disposable.Disposed.Should().BeTrue();
+        (await result.As().RunIO()).Should().Be(SuccessOutcome(43));
+    }
+
+    [Fact]
+    public async Task Dispose_resource_after_sync_call() {
+        var disposable = new DisposableResource(1);
+
+        var result = from a in SuccessAsync(42)
+                     from b in use(disposable, v => {
+                         v.Disposed.Should().BeFalse();
+                         return Success(v.Value);
+                     })
+                     select a + b;
+
+        disposable.Disposed.Should().BeTrue();
+        (await result.As().RunIO()).Should().Be(SuccessOutcome(43));
+    }
+
+    [Fact]
+    public async Task Dispose_resource_after_async_call() {
+        var disposable = new DisposableResource(1);
+
+        var result = from a in Success(42)
+                     from b in use(disposable, v => {
+                         v.Disposed.Should().BeFalse();
+                         return SuccessAsync(v.Value);
+                     })
+                     select a + b;
+
+        disposable.Disposed.Should().BeTrue();
+        (await result.As().RunIO()).Should().Be(SuccessOutcome(43));
+    }
+
+    sealed record AsyncDisposableResource(int Value) : IAsyncDisposable {
+        public bool Disposed { get; private set; }
+
+        public async ValueTask DisposeAsync() {
+            await Task.Yield();
+            Disposed = true;
+        }
+    }
+
+    [Fact]
+    public async Task AsyncDispose_resource_after_call() {
+        var disposable = new AsyncDisposableResource(1);
+
+        var result = from a in SuccessAsync(42)
+                     from b in Use(disposable, v => {
+                         v.Disposed.Should().BeFalse();
+                         return SuccessAsync(v.Value);
+                     })
+                     select a + b;
+
+        disposable.Disposed.Should().BeTrue();
+        (await result.As().RunIO()).Should().Be(SuccessOutcome(43));
+    }
+
+    [Fact]
+    public async Task AsyncDispose_resource_after_sync_call() {
+        var disposable = new AsyncDisposableResource(1);
+
+        var result = from a in SuccessAsync(42)
+                     from b in Use(disposable, v => {
+                         v.Disposed.Should().BeFalse();
+                         return Success(v.Value);
+                     })
+                     select a + b;
+
+        disposable.Disposed.Should().BeTrue();
+        (await result.As().RunIO()).Should().Be(SuccessOutcome(43));
+    }
+
+    [Fact]
+    public async Task AsyncDispose_resource_after_async_call() {
+        var disposable = new AsyncDisposableResource(1);
+
+        var result = from a in Success(42)
+                     from b in Use(disposable, v => {
+                         v.Disposed.Should().BeFalse();
+                         return SuccessAsync(v.Value);
+                     })
+                     select a + b;
+
+        disposable.Disposed.Should().BeTrue();
+        (await result.As().RunIO()).Should().Be(SuccessOutcome(43));
     }
 
     #endregion
