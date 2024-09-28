@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using LanguageExt;
 using LanguageExt.TypeClasses;
 
 namespace RZ.Foundation.Functional
@@ -16,30 +15,26 @@ namespace RZ.Foundation.Functional
         /// </summary>
         /// <param name="option">An Option class.</param>
         /// <param name="someHandler">Default "Some" handler.</param>
-        public SomeAsyncUnitContext(OA option, Action<A> someHandler)
-        {
+        public SomeAsyncUnitContext(OA option, Action<A> someHandler) {
             this.option = option;
             this.someHandler = someHandler;
         }
 
         /// <summary>The None branch of the matching operation</summary>
         /// <param name="f">None branch operation</param>
-        public Task<Unit> None(Action f)
-        {
+        public Task<Unit> None(Action f) {
             noneHandler = f;
-            return default (OPT).Match(option, HandleSome, HandleNone);
+            return default(OPT).Match(option, HandleSome, HandleNone);
         }
 
-        Unit HandleSome(A value)
-        {
+        Unit HandleSome(A value) {
             someHandler(value);
-            return LanguageExt.Prelude.unit;
+            return unit;
         }
 
-        Unit HandleNone()
-        {
+        Unit HandleNone() {
             noneHandler();
-            return LanguageExt.Prelude.unit;
+            return unit;
         }
     }
 }

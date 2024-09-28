@@ -1,0 +1,36 @@
+﻿@using RZ.Foundation.Blazor.MVVM
+
+@inject IViewFinder ViewFinder
+
+@switch (state){
+    case ViewResolution.Empty:
+        break;
+
+    case ViewResolution.InvalidModel:
+        <MudText Typo="Typo.body2">Model @ViewModel.GetType().Name does not have a correct naming convention.</MudText>
+        break;
+
+    case ViewResolution.ViewTypeNotFound s:
+        <MudText Typo="Typo.body2">View type @s.ViewTypeName not found.</MudText>
+        break;
+
+    case ViewResolution.View view:
+        @view.Content
+        break;
+
+    default:
+        <MudAlert Severity="Severity.Error">Unknown state</MudAlert>
+        break;
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public required ViewModel ViewModel { get; set; }
+
+    ViewResolution state = ViewResolution.Empty.Instance;
+
+    protected override void OnParametersSet() {
+        state = ViewFinder.Locate(ViewModel);
+        base.OnParametersSet();
+    }
+}

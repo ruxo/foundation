@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LanguageExt;
-using LanguageExt.Common;
 using Xunit;
 using static LanguageExt.Prelude;
 using static RZ.Foundation.Prelude;
@@ -22,27 +20,9 @@ public sealed class TryCatchTest
 
     [Fact]
     public async Task Try_catch_async_outcome() {
-        var outcome = Task.FromResult(SuccessOutcome(42));
+        var outcome = ValueTask.FromResult(SuccessOutcome(42));
 
         var result = await TryCatch(() => outcome);
-
-        result.Should().Be(SuccessOutcome(42));
-    }
-
-    [Fact]
-    public void Try_catch_either_sync() {
-        var either = Either<Error, int>.Right(42);
-
-        var result = TryCatch(() => either);
-
-        result.Should().Be(SuccessOutcome(42));
-    }
-
-    [Fact]
-    public async Task Try_catch_either() {
-        var either = Task.FromResult(Either<Error, int>.Right(42));
-
-        var result = await TryCatch(() => either);
 
         result.Should().Be(SuccessOutcome(42));
     }
@@ -56,7 +36,7 @@ public sealed class TryCatchTest
 
     [Fact]
     public async Task Try_catch_async_value() {
-        var result = await TryCatch(() => Task.FromResult(42));
+        var result = await TryCatch(() => ValueTask.FromResult(42));
 
         result.Should().Be(SuccessOutcome(42));
     }
@@ -86,24 +66,30 @@ public sealed class TryCatchTest
 
     [Fact]
     public void Try_catch_action_exception() {
-        void test() {
-            throw new Exception("test");
-        }
-        var result = TryCatch(test);
+        var result = TryCatch(Test);
 
         result.IsFail.Should().BeTrue();
-        result.UnwrapError().IsExceptional.Should().BeTrue();
+        result.UnwrapError().Is(StandardErrorCodes.Unhandled).Should().BeTrue();
+        result.UnwrapError().Message.Should().Be("test");
+        return;
+
+        void Test() {
+            throw new Exception("test");
+        }
     }
 
     [Fact]
     public async Task Try_catch_async_action_exception() {
-        async Task test() {
+        var result = await TryCatch(Test);
+
+        result.IsFail.Should().BeTrue();
+        result.UnwrapError().Is(StandardErrorCodes.Unhandled).Should().BeTrue();
+        result.UnwrapError().Message.Should().Be("test");
+        return;
+
+        async ValueTask Test() {
             await Task.Yield();
             throw new Exception("test");
         }
-        var result = await TryCatch(test);
-
-        result.IsFail.Should().BeTrue();
-        result.UnwrapError().IsExceptional.Should().BeTrue();
     }
 }

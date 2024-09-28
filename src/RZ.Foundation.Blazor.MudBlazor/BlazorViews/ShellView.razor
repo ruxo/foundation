@@ -1,0 +1,30 @@
+﻿@typeparam T where T: RZ.Foundation.Blazor.MVVM.ViewModel
+
+@using Microsoft.Extensions.DependencyInjection
+@using RZ.Foundation.Blazor.Layout
+@inherits ReactiveUI.Blazor.ReactiveInjectableComponentBase<ShellViewModel>
+@inject IServiceProvider ServiceProvider
+@if (ViewModel!.AppMode is AppMode.Page p && p.ContentWidth() is not null){
+    <MudContainer MaxWidth="p.ContentWidth()!.Value" Class="max-height">
+        <ShellViewContent ViewModel="ViewModel!" />
+    </MudContainer>
+}
+else{
+    <ShellViewContent ViewModel="ViewModel!" />
+}
+
+@code {
+
+    [Parameter] public AppMode? AppMode { get; set; }
+
+    [Parameter] public bool IsDual { get; set; }
+
+    [Parameter] public T? InitialViewModel { get; set; }
+
+    protected override void OnParametersSet() {
+        var vm = InitialViewModel ?? ActivatorUtilities.GetServiceOrCreateInstance<T>(ServiceProvider);
+        ViewModel!.InitView(vm, IsDual, Optional(AppMode));
+        base.OnParametersSet();
+    }
+
+}

@@ -1,0 +1,38 @@
+﻿@using RZ.Foundation.Blazor.MVVM
+@using RZ.Foundation.Types
+@switch (Status){
+    case ViewStatus.Loading:
+        <MudStack AlignItems="AlignItems.Center">
+            <MudText>@WaitMessage</MudText>
+            <MudProgressCircular Color="Color.Info" Size="Size.Medium" Indeterminate="true"/>
+        </MudStack>
+        break;
+
+    case ViewStatus.Failed m:
+        if (OnError is null){
+            <MudAlert Severity="Severity.Error">@m.Message</MudAlert>
+        }
+        else{
+            @OnError(m.Error)
+        }
+        break;
+
+    default:
+        @ChildContent
+        break;
+}
+
+@code {
+
+    [Parameter, EditorRequired]
+    public required ViewStatus Status { get; set; }
+
+    [Parameter, EditorRequired]
+    public required RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment<ErrorInfo>? OnError { get; set; }
+
+    [Parameter]
+    public string WaitMessage { get; set; } = "โปรดรอสักครู่";
+}

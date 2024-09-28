@@ -1,0 +1,27 @@
+﻿<MudGrid Spacing="2" Class="pa-4 max-height">
+    <MudItem md="6" Class="max-height">
+        <MudPaper Class="pa-8 rounded-xl max-height" Style="@PaperStyle">
+            @LeftPanel
+        </MudPaper>
+    </MudItem>
+
+    @if (ShowRightPanel && RightPanel is not null){
+        <MudItem md="6" Class="max-height">
+            <MudPaper Class="pa-8 rounded-xl max-height" Style="@PaperStyle">
+                @RightPanel
+            </MudPaper>
+        </MudItem>
+    }
+</MudGrid>
+
+@code {
+
+    [Parameter, EditorRequired] public required RenderFragment LeftPanel { get; set; }
+
+    [Parameter] public RenderFragment? RightPanel { get; set; }
+
+    [Parameter] public bool ShowRightPanel { get; set; } = true;
+
+    const string PaperStyle = "overflow: auto";
+
+}

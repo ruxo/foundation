@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using LanguageExt;
-using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Extensions
 {
