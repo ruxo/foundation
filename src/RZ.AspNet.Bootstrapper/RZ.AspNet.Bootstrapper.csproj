@@ -5,11 +5,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>RZ.AspNet</RootNamespace>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" />
+    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\RZ.Foundation\RZ.Foundation.csproj" />
-    <FrameworkReference Include="Microsoft.AspNetCore.App" /> 
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>

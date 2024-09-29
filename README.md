@@ -103,3 +103,11 @@ would simplify error handling code when writing in functional paradigm.
 
 So `TaskOption<T>` is made to work similar to `OptionAsync` but with async/await pattern that allows
 exceptions to be escalated normally, as well as, support `None` returning value.
+
+## Nullable as Option like
+
+```c#
+int? x = 123;
+string MyToString(int a) => a.ToString();
+string? y = x.Apply(MyToString);    // "123"
+```

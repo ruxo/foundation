@@ -3,22 +3,21 @@
     <PackageId>RZ.Foundation</PackageId>
     <Authors>Ruxo Zheng</Authors>
     <Company>RZ</Company>
-    <LicenseUrl>https://opensource.org/licenses/MIT</LicenseUrl>
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Title>RZ.Foundation: Functional and utility functions</Title>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageLicense>https://opensource.org/licenses/MIT</PackageLicense>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageTags>utility,functional</PackageTags>
     <PackageReleaseNotes>Embrace LanguageExt lib.</PackageReleaseNotes>
     <Nullable>enable</Nullable>
-    <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/ruxo/foundation</RepositoryUrl>
     <RepositoryType>public</RepositoryType>
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="" />
+    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />

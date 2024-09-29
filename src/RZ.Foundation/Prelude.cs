@@ -13,6 +13,7 @@ using Seq = LanguageExt.Seq;
 
 namespace RZ.Foundation;
 
+[PublicAPI]
 public static partial class Prelude {
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Func<T> constant<T>(T x) => () => x;
@@ -75,16 +76,13 @@ public static partial class Prelude {
     public static Result<(A, B, C)> With<A, B, C>(Result<A> a, Result<B> b, Result<C> c) =>
         a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx,cx))));
 
-    [PublicAPI]
     public static T ThrowIfError<T>(Outcome<T> value)
         => value.Match(identity, e => throw new ErrorInfoException(e));
 
-    [PublicAPI]
     public static T ThrowIfNotFound<T>(this Option<T> optionValue, string message)
         => optionValue.GetOrThrow(() => new ErrorInfoException("not-found", message));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [PublicAPI]
     public static T ThrowIfNotFound<T>(Option<T> value)
         => value.ThrowIfNotFound("Not found");
 
@@ -93,7 +91,6 @@ public static partial class Prelude {
         => ei.With(debug: None, stack: default(ErrorInfo.StackInfo), inner: None, subErrors: None);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [PublicAPI]
     public static ErrorInfo With(this ErrorInfo ei, string? code = null, Option<string>? debug = null, ErrorInfo.StackInfo? stack = null,
                                  Option<ErrorInfo>? inner = null, Option<Seq<ErrorInfo>>? subErrors = null)
         => new(code ?? ei.Code, ei.Message, (debug ?? Optional(ei.DebugInfo)).ToNullable(), ei.Data,
@@ -109,7 +106,6 @@ public static partial class Prelude {
         return new ErrorInfo(code, ex.Message, ex.ToString(), data: default, ex.InnerException?.ToErrorInfo(), stack: ex.StackTrace);
     }
 
-    [PublicAPI]
     public static ErrorInfo ToErrorInfo(this Error e) {
         if (e.Exception.ToNullable() is ErrorInfoException ei) return ei.ToErrorInfo();
 
@@ -127,4 +123,36 @@ public static partial class Prelude {
                              stack: e.Exception.Bind(ex => Optional(ex.StackTrace))
             );
     }
+
+    public static B? Apply<A,B>(this A? a, Func<A,B> f)
+        where A: class where B: class
+        => a is null ? null : f(a);
+
+    public static B? Bind<A,B>(this A? a, Func<A,B?> f)
+        where A: class where B: class
+        => a is null ? null : f(a);
+
+    public static B? Apply<A,B>(this A? a, Func<A,B> f)
+        where A: struct where B: class
+        => a is null ? null : f(a.Value);
+
+    public static B? Bind<A,B>(this A? a, Func<A,B?> f)
+        where A: struct where B: class
+        => a is null ? null : f(a.Value);
+
+    public static B? ApplyValue<A,B>(this A? a, Func<A,B> f)
+        where A: class where B: struct
+        => a is null ? null : f(a);
+
+    public static B? BindValue<A,B>(this A? a, Func<A,B?> f)
+        where A: class where B: struct
+        => a is null ? null : f(a);
+
+    public static B? ApplyValue<A,B>(this A? a, Func<A,B> f)
+        where A: struct where B: struct
+        => a is null ? null : f(a.Value);
+
+    public static B? BindValue<A,B>(this A? a, Func<A,B?> f)
+        where A: struct where B: struct
+        => a is null ? null : f(a.Value);
 }
