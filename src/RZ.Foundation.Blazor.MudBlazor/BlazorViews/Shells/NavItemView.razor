@@ -1,0 +1,38 @@
+﻿@using Microsoft.AspNetCore.Components.Routing
+
+@switch (Item){
+    case Navigation.Item navItem:
+        if (navItem.Policy is null){
+            <MudNavLink Icon="@navItem.Icon" Href="@navItem.NavPath"
+                        Match="@(navItem.IsPartialMatch ? NavLinkMatch.Prefix : NavLinkMatch.All)">
+                @navItem.Title
+            </MudNavLink>
+        }
+        else{
+            <AuthorizeView Policy="@navItem.Policy">
+                <MudNavLink Icon="@navItem.Icon" Href="@navItem.NavPath"
+                            Match="@(navItem.IsPartialMatch ? NavLinkMatch.Prefix : NavLinkMatch.All)">
+                    @navItem.Title
+                </MudNavLink>
+            </AuthorizeView>
+        }
+        break;
+
+    case Navigation.Group group:
+        <MudNavGroup Icon="@group.Icon" Title="@group.Title">
+            @foreach (var item in group.Items){
+                <NavItemView Item="item" />
+            }
+        </MudNavGroup>
+        break;
+
+    case Navigation.Divider:
+        <MudDivider />
+        break;
+}
+
+@code {
+
+    [Parameter, EditorRequired] public required Navigation Item { get; set; }
+
+}

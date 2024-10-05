@@ -1,33 +1,75 @@
 ﻿using System.Collections;
+using System.Collections.ObjectModel;
+using System.Reactive.Subjects;
 using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using RZ.Foundation.Blazor.MVVM;
 using RZ.Foundation.Blazor.Views;
 
-namespace RZ.Foundation.Blazor.Layout;
+namespace RZ.Foundation.Blazor.Shells;
 
 [PublicAPI]
 public class ShellViewModel : ViewModel, IEnumerable<ViewState>
 {
+    readonly ILogger<ShellViewModel> logger;
+    readonly TimeProvider clock;
     readonly Stack<ViewState> content = [];
-    readonly MainLayoutViewModel mainVm;
+    readonly Subject<NotificationMessage> notifications = new();
+    readonly ObservableAsPropertyHelper<int> messageCount;
+    const int MaxNotifications = 20;
 
-    public ShellViewModel(MainLayoutViewModel mainVm) {
-        this.mainVm = mainVm;
+    AppMode appMode = AppMode.Page.Instance;
+    bool isDarkMode;
 
+    public ShellViewModel(ILogger<ShellViewModel> logger, TimeProvider clock) {
+        this.logger = logger;
+        this.clock = clock;
         content.Push(new ViewState(AppMode.Page.Instance, BlankContentViewModel.Instance, ViewMode.Single.Instance));
+
+        messageCount = NotificationMessages.WhenAnyValue(x => x.Count).ToProperty(this, x => x.MessageCount);
+    }
+
+    public bool IsDarkMode
+    {
+        get => isDarkMode;
+        set => this.RaiseAndSetIfChanged(ref isDarkMode, value);
+    }
+
+    public bool IsDrawerOpen
+    {
+        get => appMode is AppMode.Page { IsDrawerOpen: true };
+        set
+        {
+            if (appMode is AppMode.Page p){
+                this.RaisePropertyChanging();
+                p.IsDrawerOpen = value;
+                this.RaisePropertyChanged();
+            }
+            else
+                logger.LogWarning("Cannot set drawer open state when not in page mode");
+        }
     }
 
     public AppMode AppMode => content.Peek().AppMode;
     public ViewModel Content => content.Peek().Content;
     public ViewMode ViewMode => content.Peek().ViewMode;
 
-    public void InitView(ViewModel viewModel, bool isDualMode, Option<AppMode> initAppMode = default) {
-        content.Clear();
+    public ObservableCollection<Navigation> NavItems { get; } = new();
 
-        initAppMode.IfSome(m => mainVm.AppMode = m);
-        var view = isDualMode ? new ViewMode.Dual() : ViewMode.Single.Instance;
-        content.Push(new(mainVm.AppMode, viewModel, view));
+    public IObservable<NotificationMessage> Notifications => notifications;
+
+    public ObservableCollection<NotificationEvent> NotificationMessages { get; } = new();
+
+    public int MessageCount => messageCount.Value;
+
+    public ReactiveCommand<RUnit, RUnit> ToggleDrawer => ReactiveCommand.Create(() => { IsDrawerOpen = !IsDrawerOpen; });
+
+    public void InitView(ShellOptions options) {
+        content.Clear();
+        content.Push(new(options.InitialAppMode ?? AppMode.Page.Instance,
+                         options.InitialView ?? BlankContentViewModel.Instance,
+                         options.IsDualMode ? new ViewMode.Dual() : ViewMode.Single.Instance));
     }
 
     #region Dual mode
@@ -53,19 +95,18 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
     public Unit CloseCurrentView() {
         this.RaisePropertyChanging(nameof(Content));
         this.RaisePropertyChanging(nameof(ViewMode));
-        content.Pop();
-
         this.RaisePropertyChanging(nameof(AppMode));
-        mainVm.AppMode = content.Peek().AppMode;
+        content.Pop();
         this.RaisePropertyChanged(nameof(AppMode));
-
         this.RaisePropertyChanged(nameof(ViewMode));
         this.RaisePropertyChanged(nameof(Content));
         return unit;
     }
 
-    public NotificationMessage Notify(NotificationMessage message)
-        => mainVm.Notify(message);
+    public NotificationMessage Notify(NotificationMessage message) {
+        NotificationMessages.Add(new(clock.GetLocalNow(), message.Severity, message.Message));
+        return message;
+    }
 
     public Unit CloneState(Func<ViewState, ViewState> stateBuilder) {
         this.RaisePropertyChanging(nameof(Content));
@@ -73,7 +114,6 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
         this.RaisePropertyChanging(nameof(AppMode));
         var newState = stateBuilder(content.Peek());
         content.Push(newState);
-        mainVm.AppMode = newState.AppMode;
         this.RaisePropertyChanged(nameof(AppMode));
         this.RaisePropertyChanged(nameof(ViewMode));
         this.RaisePropertyChanged(nameof(Content));
@@ -91,8 +131,6 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
             AppMode = appMode,
             Content = viewModel ?? current.Content
         });
-        mainVm.AppMode = appMode;
-
         this.RaisePropertyChanged(nameof(AppMode));
         this.RaisePropertyChanged(nameof(ViewMode));
         this.RaisePropertyChanged(nameof(Content));
@@ -111,16 +149,15 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
 
     public Unit Replace(ViewModel replacement, AppMode? appMode = default) {
         this.RaisePropertyChanging(nameof(Content));
+        if (appMode is not null)
+            this.RaisePropertyChanging(nameof(AppMode));
         var current = content.Pop();
         content.Push(current with {
             Content = replacement,
             AppMode = appMode ?? current.AppMode
         });
-        if (appMode is not null){
-            this.RaisePropertyChanging(nameof(AppMode));
-            mainVm.AppMode = appMode;
+        if (appMode is not null)
             this.RaisePropertyChanged(nameof(AppMode));
-        }
         this.RaisePropertyChanged(nameof(Content));
         return unit;
     }

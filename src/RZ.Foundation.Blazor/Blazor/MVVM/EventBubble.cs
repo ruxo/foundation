@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
-using RZ.Foundation.Blazor.Layout;
+using RZ.Foundation.Blazor.Shells;
 
 namespace RZ.Foundation.Blazor.MVVM;
 
@@ -62,10 +62,10 @@ public static class BubbleExtensions
                                                                 ILogger logger,
                                                                Func<T,string> successHandler) {
         if ((await task).IfSuccess(out var newVersion, out var error))
-            shell.Notify((Severity.Success, successHandler(newVersion)));
+            shell.Notify((MessageSeverity.Success, successHandler(newVersion)));
         else{
             logger.LogError("Update Term & Condition failed with {@Error}!", error);
-            shell.Notify((Severity.Error, $"Error {error.Message}!"));
+            shell.Notify((MessageSeverity.Error, $"Error {error.Message}!"));
         }
         return null;
     }

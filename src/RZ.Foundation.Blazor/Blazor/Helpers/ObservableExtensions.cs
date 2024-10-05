@@ -5,7 +5,7 @@ using System.Reactive.Linq;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using RZ.Foundation.Blazor.Layout;
+using RZ.Foundation.Blazor.Shells;
 using RZ.Foundation.Types;
 using Unit = LanguageExt.Unit;
 
@@ -153,7 +153,7 @@ public static class ObservableExtensions
             else
                 logger.LogError("TrapErrors: {@Error}", e);
 
-            shell.Notify(new(Severity.Error, translator(e)));
+            shell.Notify(new(MessageSeverity.Error, translator(e)));
         });
 
     [PublicAPI]

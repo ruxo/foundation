@@ -1,0 +1,15 @@
+﻿@inherits ReactiveComponentBase<ShellViewModel>
+
+@inject NavigationManager NavManager
+
+<MudDrawer Elevation="0" @bind-Open="ViewModel!.IsDrawerOpen">
+    <MudNavMenu>
+        @foreach (var nav in ViewModel!.NavItems){
+            <NavItemView Item="nav" />
+        }
+    </MudNavMenu>
+    <MudSpacer />
+    <MudText Typo="Typo.subtitle2" Align="Align.Right" Style="border-top: 1px solid lightgray">
+        version @AppVersion.Current
+    </MudText>
+</MudDrawer>

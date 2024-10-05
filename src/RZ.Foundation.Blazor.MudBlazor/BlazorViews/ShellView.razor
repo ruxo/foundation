@@ -2,16 +2,34 @@
 
 @using Microsoft.Extensions.DependencyInjection
 @using RZ.Foundation.Blazor.Layout
-@inherits ReactiveUI.Blazor.ReactiveInjectableComponentBase<ShellViewModel>
+@using RZ.Foundation.BlazorViews.Shells
+@using Microsoft.AspNetCore.Components.Sections
+@using RZ.Foundation.Blazor
+@inherits ReactiveUI.Blazor.ReactiveInjectableComponentBase<RZ.Foundation.Blazor.Shells.ShellViewModel>
+
 @inject IServiceProvider ServiceProvider
-@if (ViewModel!.AppMode is AppMode.Page p && p.ContentWidth() is not null){
-    <MudContainer MaxWidth="p.ContentWidth()!.Value" Class="max-height">
-        <ShellViewContent ViewModel="ViewModel!" />
-    </MudContainer>
-}
-else{
-    <ShellViewContent ViewModel="ViewModel!" />
-}
+
+<MudThemeProvider Theme="Theme" @bind-IsDarkMode="ViewModel!.IsDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider BackdropClick="false" NoHeader="true" />
+<MudSnackbarProvider />
+
+<MudLayout Class="screen-height">
+    <ShellAppBar ViewModel="ViewModel" />
+    <ShellNavMenu />
+    <MudMainContent Class="max-height">
+        <SectionOutlet SectionName="content-top"/>
+
+        @if (ViewModel!.AppMode is AppMode.Page p && p.ContentWidth() is not null){
+            <MudContainer MaxWidth="p.ContentWidth()!.Value" Class="max-height">
+                <ShellViewContent ViewModel="ViewModel!"/>
+            </MudContainer>
+        }
+        else{
+            <ShellViewContent ViewModel="ViewModel!"/>
+        }
+    </MudMainContent>
+</MudLayout>
 
 @code {
 
@@ -21,9 +39,16 @@ else{
 
     [Parameter] public T? InitialViewModel { get; set; }
 
+    [Parameter] public MudTheme? Theme { get; set; }
+
     protected override void OnParametersSet() {
         var vm = InitialViewModel ?? ActivatorUtilities.GetServiceOrCreateInstance<T>(ServiceProvider);
-        ViewModel!.InitView(vm, IsDual, Optional(AppMode));
+        var options = new ShellOptions {
+            InitialView = vm,
+            InitialAppMode = AppMode,
+            IsDualMode = IsDual
+        };
+        ViewModel = ActivatorUtilities.CreateInstance<ShellViewModel>(ServiceProvider, options);
         base.OnParametersSet();
     }
 

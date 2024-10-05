@@ -1,0 +1,24 @@
+﻿.timid {
+    opacity: 0.5;
+}
+
+.screen-height {
+    height: 100vh;
+}
+
+.max-height {
+    height: 100%;
+}
+
+.fixed-button-panel{
+    z-index: 100;
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+}
+
+.text-ellipsis {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
