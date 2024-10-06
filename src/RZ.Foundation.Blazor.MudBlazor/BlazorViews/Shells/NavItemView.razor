@@ -5,14 +5,18 @@
         if (navItem.Policy is null){
             <MudNavLink Icon="@navItem.Icon" Href="@navItem.NavPath"
                         Match="@(navItem.IsPartialMatch ? NavLinkMatch.Prefix : NavLinkMatch.All)">
-                @navItem.Title
+                @if (!IconOnly){
+                    @navItem.Title
+                }
             </MudNavLink>
         }
         else{
             <AuthorizeView Policy="@navItem.Policy">
                 <MudNavLink Icon="@navItem.Icon" Href="@navItem.NavPath"
                             Match="@(navItem.IsPartialMatch ? NavLinkMatch.Prefix : NavLinkMatch.All)">
-                    @navItem.Title
+                    @if (!IconOnly){
+                        @navItem.Title
+                    }
                 </MudNavLink>
             </AuthorizeView>
         }
@@ -21,13 +25,13 @@
     case Navigation.Group group:
         <MudNavGroup Icon="@group.Icon" Title="@group.Title">
             @foreach (var item in group.Items){
-                <NavItemView Item="item" />
+                <NavItemView Item="item" IconOnly="IconOnly"/>
             }
         </MudNavGroup>
         break;
 
     case Navigation.Divider:
-        <MudDivider />
+        <MudDivider/>
         break;
 }
 
@@ -35,4 +39,5 @@
 
     [Parameter, EditorRequired] public required Navigation Item { get; set; }
 
+    [Parameter] public bool IconOnly { get; set; }
 }

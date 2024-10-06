@@ -2,4 +2,10 @@
 @using RZ.Foundation.Blazor
 @rendermode InteractiveServer
 
+<SectionContent SectionName="drawer-title">
+    <MudDrawerHeader>
+        <MudText>Example</MudText>
+    </MudDrawerHeader>
+</SectionContent>
+
 <ShellView T="ContentViewModel" AppMode="AppMode.Page.New(isDrawerOpen: false, useMiniDrawer: true)" />
