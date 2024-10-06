@@ -19,15 +19,17 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
     readonly ObservableAsPropertyHelper<int> messageCount;
     const int MaxNotifications = 20;
 
-    AppMode appMode = AppMode.Page.Instance;
     bool isDarkMode;
 
-    public ShellViewModel(ILogger<ShellViewModel> logger, TimeProvider clock) {
+    public ShellViewModel(ILogger<ShellViewModel> logger, TimeProvider clock, ShellOptions options) {
         this.logger = logger;
         this.clock = clock;
-        content.Push(new ViewState(AppMode.Page.Instance, BlankContentViewModel.Instance, ViewMode.Single.Instance));
+
+        InitView(options.InitialAppMode, options.InitialView, options.IsDualMode);
 
         messageCount = NotificationMessages.WhenAnyValue(x => x.Count).ToProperty(this, x => x.MessageCount);
+
+        NavItems = new(options.Navigation);
     }
 
     public bool IsDarkMode
@@ -38,10 +40,10 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
 
     public bool IsDrawerOpen
     {
-        get => appMode is AppMode.Page { IsDrawerOpen: true };
+        get => AppMode is AppMode.Page { IsDrawerOpen: true };
         set
         {
-            if (appMode is AppMode.Page p){
+            if (AppMode is AppMode.Page p){
                 this.RaisePropertyChanging();
                 p.IsDrawerOpen = value;
                 this.RaisePropertyChanged();
@@ -51,11 +53,25 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
         }
     }
 
+    public bool UseMiniDrawer{
+        get => AppMode is AppMode.Page { UseMiniDrawer: true };
+        set
+        {
+            if (AppMode is AppMode.Page p){
+                this.RaisePropertyChanging();
+                p.UseMiniDrawer = value;
+                this.RaisePropertyChanged();
+            }
+            else
+                logger.LogWarning("Cannot set mini drawer state when not in page mode");
+        }
+    }
+
     public AppMode AppMode => content.Peek().AppMode;
     public ViewModel Content => content.Peek().Content;
     public ViewMode ViewMode => content.Peek().ViewMode;
 
-    public ObservableCollection<Navigation> NavItems { get; } = new();
+    public ObservableCollection<Navigation> NavItems { get; }
 
     public IObservable<NotificationMessage> Notifications => notifications;
 
@@ -65,11 +81,14 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
 
     public ReactiveCommand<RUnit, RUnit> ToggleDrawer => ReactiveCommand.Create(() => { IsDrawerOpen = !IsDrawerOpen; });
 
-    public void InitView(ShellOptions options) {
+    public void InitView(AppMode? initialAppMode, ViewModel? viewModel, bool isDualMode, bool? isDrawerOpen = null) {
         content.Clear();
-        content.Push(new(options.InitialAppMode ?? AppMode.Page.Instance,
-                         options.InitialView ?? BlankContentViewModel.Instance,
-                         options.IsDualMode ? new ViewMode.Dual() : ViewMode.Single.Instance));
+        var mode = initialAppMode ?? AppMode.Page.Default;
+        if (mode is AppMode.Page p && isDrawerOpen.HasValue)
+            p.IsDrawerOpen = isDrawerOpen.Value;
+        content.Push(new(mode,
+                         viewModel ?? BlankContentViewModel.Instance,
+                         isDualMode ? new ViewMode.Dual() : ViewMode.Single.Instance));
     }
 
     #region Dual mode

@@ -5,9 +5,10 @@
 @using RZ.Foundation.BlazorViews.Shells
 @using Microsoft.AspNetCore.Components.Sections
 @using RZ.Foundation.Blazor
-@inherits ReactiveUI.Blazor.ReactiveInjectableComponentBase<RZ.Foundation.Blazor.Shells.ShellViewModel>
+@inherits ReactiveInjectableComponentBase<ShellViewModel>
 
 @inject IServiceProvider ServiceProvider
+@inject ShellViewModel Shell
 
 <MudThemeProvider Theme="Theme" @bind-IsDarkMode="ViewModel!.IsDarkMode" />
 <MudPopoverProvider />
@@ -16,17 +17,27 @@
 
 <MudLayout Class="screen-height">
     <ShellAppBar ViewModel="ViewModel" />
-    <ShellNavMenu />
+    <ShellNavMenu ViewModel="menuVm" />
     <MudMainContent Class="max-height">
         <SectionOutlet SectionName="content-top"/>
 
         @if (ViewModel!.AppMode is AppMode.Page p && p.ContentWidth() is not null){
             <MudContainer MaxWidth="p.ContentWidth()!.Value" Class="max-height">
-                <ShellViewContent ViewModel="ViewModel!"/>
+                @if (ChildContent is null){
+                    <ShellViewContent ViewModel="ViewModel!"/>
+                }
+                else{
+                    @ChildContent
+                }
             </MudContainer>
         }
         else{
-            <ShellViewContent ViewModel="ViewModel!"/>
+            if (ChildContent is null){
+                <ShellViewContent ViewModel="ViewModel!"/>
+            }
+            else{
+                @ChildContent
+            }
         }
     </MudMainContent>
 </MudLayout>
@@ -35,20 +46,24 @@
 
     [Parameter] public AppMode? AppMode { get; set; }
 
+    [Parameter] public bool? IsDrawerOpen { get; set; }
+
     [Parameter] public bool IsDual { get; set; }
 
     [Parameter] public T? InitialViewModel { get; set; }
 
     [Parameter] public MudTheme? Theme { get; set; }
 
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    ShellNavMenuViewModel menuVm = default!;
+
     protected override void OnParametersSet() {
-        var vm = InitialViewModel ?? ActivatorUtilities.GetServiceOrCreateInstance<T>(ServiceProvider);
-        var options = new ShellOptions {
-            InitialView = vm,
-            InitialAppMode = AppMode,
-            IsDualMode = IsDual
-        };
-        ViewModel = ActivatorUtilities.CreateInstance<ShellViewModel>(ServiceProvider, options);
+        menuVm = new(Shell);
+        Shell.InitView(AppMode,
+                       InitialViewModel ?? ActivatorUtilities.GetServiceOrCreateInstance<T>(ServiceProvider),
+                       IsDual,
+                       IsDrawerOpen);
         base.OnParametersSet();
     }
 

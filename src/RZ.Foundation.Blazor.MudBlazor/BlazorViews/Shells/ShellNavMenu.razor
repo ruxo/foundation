@@ -1,8 +1,10 @@
-﻿@inherits ReactiveComponentBase<ShellViewModel>
+﻿@using ReactiveUI
+@inherits ReactiveComponentBase<ShellNavMenuViewModel>
 
 @inject NavigationManager NavManager
 
-<MudDrawer Elevation="0" @bind-Open="ViewModel!.IsDrawerOpen">
+<MudDrawer Elevation="0" Variant="@ViewModel!.Variant" OpenMiniOnHover="ViewModel!.ShowOnHover"
+           @bind-Open="ViewModel!.IsDrawerOpen">
     <MudNavMenu>
         @foreach (var nav in ViewModel!.NavItems){
             <NavItemView Item="nav" />
@@ -13,3 +15,9 @@
         version @AppVersion.Current
     </MudText>
 </MudDrawer>
+
+@code {
+    public ShellNavMenu() {
+        this.WhenActivated(_ => { /* for activable view */ });
+    }
+}
