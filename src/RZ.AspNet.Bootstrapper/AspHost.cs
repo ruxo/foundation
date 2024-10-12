@@ -1,5 +1,6 @@
 ﻿namespace RZ.AspNet;
 
+[PublicAPI]
 public static class AspHost
 {
     public static async ValueTask<Unit> RunPipeline(this WebApplicationBuilder builder, params AppModule[] modules) {

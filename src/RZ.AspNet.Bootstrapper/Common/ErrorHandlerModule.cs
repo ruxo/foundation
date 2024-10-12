@@ -1,5 +1,6 @@
 ﻿namespace RZ.AspNet.Common;
 
+[PublicAPI]
 public class ErrorHandlerModule : AppModule
 {
     public static readonly ErrorHandlerModule Default = new();

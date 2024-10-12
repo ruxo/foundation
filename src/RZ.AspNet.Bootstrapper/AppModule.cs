@@ -1,5 +1,6 @@
 ﻿namespace RZ.AspNet;
 
+[PublicAPI]
 public class AppModule
 {
     public virtual ValueTask<Unit> InstallServices(IHostApplicationBuilder builder) => new(unit);

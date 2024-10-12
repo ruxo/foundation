@@ -2,6 +2,7 @@
 
 namespace RZ.AspNet.Common;
 
+[PublicAPI]
 public class HeaderForwardingModule(bool forwardAll) : AppModule
 {
     public static readonly HeaderForwardingModule Default = new(true);

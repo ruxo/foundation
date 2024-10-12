@@ -2,6 +2,7 @@
 
 namespace RZ.AspNet;
 
+[PublicAPI]
 public class ApiControllerModule : AppModule
 {
     public static readonly ApiControllerModule Default = new();

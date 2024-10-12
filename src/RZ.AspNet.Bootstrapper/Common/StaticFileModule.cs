@@ -1,5 +1,6 @@
 ﻿namespace RZ.AspNet.Common;
 
+[PublicAPI]
 public class StaticFileModule : AppModule
 {
     public static readonly StaticFileModule Default = new();
