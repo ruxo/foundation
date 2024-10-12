@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RZ.AspNet.Bootstrapper\RZ.AspNet.Bootstrapper.csproj" />
+    <ProjectReference Include="..\RZ.Foundation.MongoDb\RZ.Foundation.MongoDb.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MongoDBMigrationsRZ" Version="1.2.0" />
+  </ItemGroup>
+
+</Project>

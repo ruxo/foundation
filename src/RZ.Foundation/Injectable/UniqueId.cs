@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 
 namespace RZ.Foundation.Injectable;
 
+[PublicAPI]
 public interface IUniqueId
 {
     Guid NewGuid();

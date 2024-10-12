@@ -1,4 +1,7 @@
-﻿namespace RZ.AspNet;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.Configuration;
+
+namespace RZ.AspNet;
 
 [PublicAPI]
 public static class AspHost
@@ -13,5 +16,17 @@ public static class AspHost
 
         await app.RunAsync();
         return unit;
+    }
+    const string EnvironmentKey = "ASPNETCORE_ENVIRONMENT";
+
+    [ExcludeFromCodeCoverage]
+    public static IConfiguration CreateDefaultConfigurationSettings() {
+        var runningEnvironment = Optional(Environment.GetEnvironmentVariable(EnvironmentKey)).IfNone("Production");
+
+        return new ConfigurationBuilder()
+              .AddJsonFile("appsettings.json")
+              .AddJsonFile($"appsettings.{runningEnvironment}.json", optional: true)
+              .AddEnvironmentVariables()
+              .Build();
     }
 }

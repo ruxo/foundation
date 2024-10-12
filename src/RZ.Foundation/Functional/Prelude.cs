@@ -31,7 +31,7 @@ public static partial class Prelude
     #region Try/Catch
 
     [PublicAPI]
-    public static async ValueTask<Outcome<T>> TryCatch<T>(Func<ValueTask<Outcome<T>>> handler) {
+    public static async ValueTask<Outcome<T>> TryCatch<T>([InstantHandle] Func<ValueTask<Outcome<T>>> handler) {
         try{
             return await handler();
         }
@@ -41,7 +41,7 @@ public static partial class Prelude
     }
 
     [PublicAPI]
-    public static async ValueTask<Outcome<T>> TryCatch<T>(Func<ValueTask<T>> handler) {
+    public static async ValueTask<Outcome<T>> TryCatch<T>([InstantHandle] Func<ValueTask<T>> handler) {
         try{
             return await handler();
         }
@@ -51,7 +51,7 @@ public static partial class Prelude
     }
 
     [PublicAPI]
-    public static async ValueTask<Outcome<Unit>> TryCatch(Func<ValueTask> handler) {
+    public static async ValueTask<Outcome<Unit>> TryCatch([InstantHandle] Func<ValueTask> handler) {
         try{
             await handler();
             return unit;
@@ -62,7 +62,7 @@ public static partial class Prelude
     }
 
     [PublicAPI]
-    public static Outcome<T> TryCatch<T>(Func<Outcome<T>> handler) {
+    public static Outcome<T> TryCatch<T>([InstantHandle] Func<Outcome<T>> handler) {
         try{
             return handler();
         }
@@ -71,7 +71,7 @@ public static partial class Prelude
         }
     }
 
-    public static Outcome<T> TryCatch<T>(Func<T> handler) {
+    public static Outcome<T> TryCatch<T>([InstantHandle] Func<T> handler) {
         try{
             return handler();
         }
@@ -80,7 +80,7 @@ public static partial class Prelude
         }
     }
 
-    public static Outcome<Unit> TryCatch(Action handler) {
+    public static Outcome<Unit> TryCatch([InstantHandle] Action handler) {
         try{
             handler();
             return unit;

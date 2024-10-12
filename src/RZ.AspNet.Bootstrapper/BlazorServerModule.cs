@@ -3,7 +3,7 @@
 [PublicAPI]
 public class BlazorServerModule<TApp> : AppModule
 {
-    public static readonly BlazorServerModule<TApp> Instance = new();
+    public static readonly BlazorServerModule<TApp> Default = new();
 
     public override ValueTask<Unit> InstallServices(IHostApplicationBuilder builder) {
         builder.Services.AddRazorComponents().AddInteractiveServerComponents();
