@@ -50,19 +50,4 @@ public static class MongoHelper
             return InterpretDatabaseError(e);
         }
     }
-
-    /// Get database from the given <see cref="MongoConnectionString"/>, our explicit option (i.e. "database" option) comes first.
-    /// Otherwise, we pick authentication source as the database.<br/>
-    /// This method does not support different options in different connections. That is if the connection has multiple MongoDB nodes,
-    /// and one or more node connections gives different database / authentication source, the picked database name cannot be determined.
-    [Pure]
-    public static (MongoConnectionString Connection, string Database)? GetDatabaseNameFrom(MongoConnectionString cs) {
-        var db = cs.Options.Find(DatabaseOption).ToNullable() ?? cs.AuthDatabase ?? cs.AuthSource;
-        var fixedConnection = cs with {
-            Options = cs.Options.Remove(DatabaseOption) // remove non-standard option from connections
-        };
-        return db is null ? null : (fixedConnection, db);
-    }
-
-    static readonly CaseInsensitiveString DatabaseOption = "database";
 }

@@ -23,9 +23,10 @@ public static class AppSettings
                                                            $" {EnvFileConfig}"));
     }
 
-    public static ConnectionSettings? From(MongoConnectionString connectionString) =>
-        from c in MongoHelper.GetDatabaseNameFrom(connectionString)
-        select new ConnectionSettings(c.Connection.ToString(), c.Database);
+    public static ConnectionSettings? From(MongoConnectionString connectionString) {
+        var (connection, dbName) = connectionString;
+        return dbName.ApplyValue(databaseName => new ConnectionSettings(connection.ToString(), databaseName));
+    }
 
     static ConnectionSettings GetFromFile(string filename) =>
         JsonSerializer.Deserialize<ConnectionSettings>(File.ReadAllText(filename));

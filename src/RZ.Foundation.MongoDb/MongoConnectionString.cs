@@ -31,6 +31,11 @@ public readonly record struct MongoConnectionString(
 
     public string? AuthSource => Options.Find(AuthSourceOption).ToNullable();
 
+    public string? DatabaseName => Options.Find(DatabaseOption).ToNullable() ?? AuthDatabase ?? AuthSource;
+
+    public MongoConnectionString GetValidConnectionString()
+        => this with { Options = Options.Remove(DatabaseOption) }; // remove non-standard option from connections
+
     public override string ToString() {
         var sb = new StringBuilder(256);
         sb.Append(Scheme);
@@ -41,6 +46,18 @@ public readonly record struct MongoConnectionString(
         if (options.Length > 0) sb.Append($"?{options}");
         return sb.ToString();
     }
+
+    /// Get database from the given <see cref="MongoConnectionString"/>, our explicit option (i.e. "database" option) comes first.
+    /// Otherwise, we pick authentication source as the database.<br/>
+    /// This method does not support different options in different connections. That is if the connection has multiple MongoDB nodes,
+    /// and one or more node connections gives different database / authentication source, the picked database name cannot be determined.
+    [Pure]
+    public void Deconstruct(out MongoConnectionString connection, out string? database) {
+        connection = GetValidConnectionString();
+        database = DatabaseName;
+    }
+
+    static readonly CaseInsensitiveString DatabaseOption = "database";
 
     static Map<CaseInsensitiveString, string> ExtractOptionString(string options) =>
         options.Split('&')

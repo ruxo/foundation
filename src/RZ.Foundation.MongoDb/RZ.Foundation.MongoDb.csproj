@@ -4,6 +4,13 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Title>RZ's MongoDB Framework</Title>
+    <Authors>Ruxo Zheng</Authors>
+    <PackageTags>database mongo</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <NoWarn>1701;1702;NU5105;CS1998</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
