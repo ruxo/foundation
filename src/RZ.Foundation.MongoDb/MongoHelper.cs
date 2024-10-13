@@ -1,5 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using RZ.Foundation.Types;
 
@@ -8,6 +11,13 @@ namespace RZ.Foundation.MongoDb;
 [PublicAPI]
 public static class MongoHelper
 {
+    public static void SetupMongoStandardMappings() {
+        BsonSerializer.RegisterSerializer(new MongoDB.Bson.Serialization.Serializers.DateTimeOffsetSerializer(BsonType.DateTime));
+
+        var pack = new ConventionPack{ new EnumRepresentationConvention(BsonType.String) };
+        ConventionRegistry.Register("EnumString", pack, _ => true);
+    }
+
     [Pure]
     public static ErrorInfo? TryInterpretDatabaseError(Exception e)
         => e is MongoWriteException mongoException && mongoException.WriteError.Category == ServerErrorCategory.DuplicateKey
@@ -47,6 +57,51 @@ public static class MongoHelper
             return unit;
         }
         catch (Exception e){
+            return InterpretDatabaseError(e);
+        }
+    }
+
+    public static async ValueTask Execute(Func<ValueTask> f) {
+        try{
+            await f();
+        }
+        catch (MongoException e){
+            throw new ErrorInfoException(InterpretDatabaseError(e));
+        }
+    }
+
+    public static async ValueTask<T?> ExecuteNullable<T>(Func<ValueTask<T?>> f) {
+        try{
+            return await f();
+        }
+        catch (MongoException e){
+            throw new ErrorInfoException(InterpretDatabaseError(e));
+        }
+    }
+
+    public static async ValueTask<T> Execute<T>(Func<ValueTask<T>> f) {
+        try{
+            return await f();
+        }
+        catch (MongoException e){
+            throw new ErrorInfoException(InterpretDatabaseError(e));
+        }
+    }
+
+    public static async ValueTask<Outcome<T>> TryExecute<T>(Func<ValueTask<Outcome<T>>> f) {
+        try{
+            return await f();
+        }
+        catch (MongoException e){
+            return InterpretDatabaseError(e);
+        }
+    }
+
+    public static async ValueTask<Outcome<T>> TryExecute<T>(Func<ValueTask<T>> f) {
+        try{
+            return await f();
+        }
+        catch (MongoException e){
             return InterpretDatabaseError(e);
         }
     }

@@ -1,8 +1,11 @@
+using JetBrains.Annotations;
+
 namespace RZ.Foundation;
 
 /// <summary>
 /// Standard Error Codes
 /// </summary>
+[PublicAPI]
 public static class StandardErrorCodes
 {
     public const string AuthenticationNeeded = "authenticaton-needed";

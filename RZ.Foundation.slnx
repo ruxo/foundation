@@ -20,6 +20,8 @@
     <Project Path="src\RZ.Foundation\RZ.Foundation.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="test\RZ.Foundation.MongoDbTest\RZ.Foundation.MongoDbTest.fsproj" Type="Classic F#" />
     <Project Path="test\RZ.Foundation.Test\RZ.Foundation.Test.csproj" Type="Classic C#" />
+    <File Path="test\Directory.Build.props" />
   </Folder>
 </Solution>

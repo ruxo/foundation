@@ -41,7 +41,7 @@ public readonly record struct MongoConnectionString(
         sb.Append(Scheme);
         sb.Append("://");
         sb.Append(HostAndPort);
-        AuthDatabase.Iter(db => sb.Append($"/{db}"));
+        AuthDatabase?.Iter(db => sb.Append($"/{db}"));
         var options = Options.ToSeq().Map(kv => $"{kv.Key}={kv.Value}").Join('&');
         if (options.Length > 0) sb.Append($"?{options}");
         return sb.ToString();

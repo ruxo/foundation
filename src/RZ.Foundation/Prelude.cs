@@ -73,11 +73,11 @@ public static partial class Prelude {
         a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx,cx))));
 
     public static Result<(A, B)> With<A, B>(Result<A> a, Result<B> b) => a.Bind(ax => b.Map(bx => (ax, bx)));
-    public static Result<(A, B, C)> With<A, B, C>(Result<A> a, Result<B> b, Result<C> c) =>
-        a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx,cx))));
+    public static Result<(A, B, C)> With<A, B, C>(Result<A> a, Result<B> b, Result<C> c)
+        => a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx,cx))));
 
-    public static T ThrowIfError<T>(Outcome<T> value)
-        => value.Match(identity, e => throw new ErrorInfoException(e));
+    public static async ValueTask<T> ThrowIfError<T>(ValueTask<Outcome<T>> value)
+        => (await value).Unwrap();
 
     public static T ThrowIfNotFound<T>(this Option<T> optionValue, string message)
         => optionValue.GetOrThrow(() => new ErrorInfoException("not-found", message));

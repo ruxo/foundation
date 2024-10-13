@@ -1,19 +1,21 @@
-﻿using MongoDB.Driver;
+﻿using JetBrains.Annotations;
 
 namespace RZ.Foundation.MongoDb;
 
-public interface IHaveKey<out T>
+[PublicAPI]
+public interface IHaveKey<T>
 {
-    T? Id { get; }
+    T Id { get; set; }
 }
 
+[PublicAPI]
 public interface IHaveVersion {
-    DateTimeOffset LastUpdate { get; }
-    ulong Version { get; }
+    DateTimeOffset Updated { get; }
+    uint Version { get; }
 }
 
-public interface IPersistentModel<out T,TKey> : IHaveKey<TKey>, IHaveVersion
+[PublicAPI]
+public interface ICanUpdateVersion<out T> : IHaveVersion
 {
-    static abstract T WithKey(TKey id);
-    static abstract T WithVersion(DateTimeOffset lastUpdate);
+    T WithVersion(DateTimeOffset updated, uint next);
 }

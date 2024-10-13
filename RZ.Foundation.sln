@@ -27,12 +27,17 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RZ.Foundation", "src\RZ.Foundation\RZ.Foundation.csproj", "{1BB3DE74-FAD3-0D10-EC13-9C191B5BD509}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D03FD104-6FAA-9701-CF2C-999019A607C3}"
+	ProjectSection(SolutionItems) = preProject
+		test\Directory.Build.props = test\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RZ.Foundation.Test", "test\RZ.Foundation.Test\RZ.Foundation.Test.csproj", "{4F6F1BC2-CA1E-3BA2-9141-B1EF3B33F234}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RZ.Foundation.MongoDb", "src\RZ.Foundation.MongoDb\RZ.Foundation.MongoDb.csproj", "{BB36F8D8-FBBA-0402-7CF0-311107297B61}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RZ.Foundation.MongoDb.Migration", "src\RZ.Foundation.MongoDb.Migration\RZ.Foundation.MongoDb.Migration.csproj", "{2F9CBF07-3335-4DFE-8159-AE2055A53B12}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "RZ.Foundation.MongoDbTest", "test\RZ.Foundation.MongoDbTest\RZ.Foundation.MongoDbTest.fsproj", "{EC989F35-F866-F2D6-B877-C728FC6086A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,6 +81,10 @@ Global
 		{2F9CBF07-3335-4DFE-8159-AE2055A53B12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F9CBF07-3335-4DFE-8159-AE2055A53B12}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F9CBF07-3335-4DFE-8159-AE2055A53B12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC989F35-F866-F2D6-B877-C728FC6086A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC989F35-F866-F2D6-B877-C728FC6086A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC989F35-F866-F2D6-B877-C728FC6086A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC989F35-F866-F2D6-B877-C728FC6086A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D230F039-6601-4E84-4A6C-073BFD01FB18} = {04BF01EB-A0C9-A7E8-1C45-816513DF424F}
@@ -86,6 +95,7 @@ Global
 		{BB36F8D8-FBBA-0402-7CF0-311107297B61} = {E2ED7FF2-0B22-32CD-6AEE-3E86DDFD4EBD}
 		{C6BED755-477C-ED6F-A8E4-3CA754110FDB} = {E2ED7FF2-0B22-32CD-6AEE-3E86DDFD4EBD}
 		{1BB3DE74-FAD3-0D10-EC13-9C191B5BD509} = {E2ED7FF2-0B22-32CD-6AEE-3E86DDFD4EBD}
+		{EC989F35-F866-F2D6-B877-C728FC6086A0} = {D03FD104-6FAA-9701-CF2C-999019A607C3}
 		{4F6F1BC2-CA1E-3BA2-9141-B1EF3B33F234} = {D03FD104-6FAA-9701-CF2C-999019A607C3}
 	EndGlobalSection
 EndGlobal
