@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using RZ.Foundation.Blazor.Shells;
+using RZ.Foundation.Types;
 
 namespace RZ.Foundation.Blazor.MVVM;
 
@@ -57,11 +58,9 @@ public class EventBubbleSubscription : IEventBubbleSubscription
 [PublicAPI]
 public static class BubbleExtensions
 {
-    public static async ValueTask<EventBubble?> HandleEvent<T>(this ValueTask<Outcome<T>> task,
-                                                               ShellViewModel shell,
-                                                                ILogger logger,
-                                                               Func<T,string> successHandler) {
-        if ((await task).IfSuccess(out var newVersion, out var error))
+    public static EventBubble? HandleEvent<T>(this Outcome<T> outcome, ShellViewModel shell, ILogger logger,
+                                              [InstantHandle] Func<T, string> successHandler) {
+        if (outcome.IfSuccess(out var newVersion, out var error))
             shell.Notify((MessageSeverity.Success, successHandler(newVersion)));
         else{
             logger.LogError("Update Term & Condition failed with {@Error}!", error);
@@ -70,9 +69,16 @@ public static class BubbleExtensions
         return null;
     }
 
-    public static ValueTask<EventBubble?> HandleEvent<T>(this ValueTask<T> task,
-                                                         ShellViewModel shell,
-                                                         ILogger logger,
-                                                         Func<T, string> successHandler)
-        => TryCatch(async () => await task).HandleEvent(shell, logger, successHandler);
+    public static async ValueTask<EventBubble?> HandleEvent<T>(this ValueTask<T> task,
+                                                               ShellViewModel shell,
+                                                               ILogger logger,
+                                                               [InstantHandle] Func<T, string> successHandler) {
+        try{
+            var value = task.IsCompletedSuccessfully ? task.Result : await task;
+            return SuccessOutcome(value).HandleEvent(shell, logger, successHandler);
+        }
+        catch (Exception e){
+            return FailedOutcome<T>(ErrorFrom.Exception(e)).HandleEvent(shell, logger, successHandler);
+        }
+    }
 }

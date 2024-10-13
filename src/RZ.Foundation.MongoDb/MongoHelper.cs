@@ -41,7 +41,7 @@ public static class MongoHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async ValueTask<Outcome<T>> TryAsync<T>(Func<ValueTask<T>> f) {
+    public static async Task<Outcome<T>> TryAsync<T>(Func<Task<T>> f) {
         try{
             return await f();
         }
@@ -51,7 +51,7 @@ public static class MongoHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async ValueTask<Outcome<Unit>> TryAsync(Func<ValueTask> f) {
+    public static async Task<Outcome<Unit>> TryAsync(Func<Task> f) {
         try{
             await f();
             return unit;
@@ -61,7 +61,7 @@ public static class MongoHelper
         }
     }
 
-    public static async ValueTask Execute(Func<ValueTask> f) {
+    public static async Task Execute(Func<Task> f) {
         try{
             await f();
         }
@@ -70,7 +70,7 @@ public static class MongoHelper
         }
     }
 
-    public static async ValueTask<T?> ExecuteNullable<T>(Func<ValueTask<T?>> f) {
+    public static async Task<T?> ExecuteNullable<T>(Func<Task<T?>> f) {
         try{
             return await f();
         }
@@ -79,7 +79,7 @@ public static class MongoHelper
         }
     }
 
-    public static async ValueTask<T> Execute<T>(Func<ValueTask<T>> f) {
+    public static async Task<T> Execute<T>(Func<Task<T>> f) {
         try{
             return await f();
         }
@@ -88,7 +88,7 @@ public static class MongoHelper
         }
     }
 
-    public static async ValueTask<Outcome<T>> TryExecute<T>(Func<ValueTask<Outcome<T>>> f) {
+    public static async Task<Outcome<T>> TryExecute<T>(Func<Task<Outcome<T>>> f) {
         try{
             return await f();
         }
@@ -97,7 +97,7 @@ public static class MongoHelper
         }
     }
 
-    public static async ValueTask<Outcome<T>> TryExecute<T>(Func<ValueTask<T>> f) {
+    public static async Task<Outcome<T>> TryExecute<T>(Func<Task<T>> f) {
         try{
             return await f();
         }

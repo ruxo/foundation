@@ -31,7 +31,7 @@ public static partial class Prelude
     #region Try/Catch
 
     [PublicAPI]
-    public static async ValueTask<Outcome<T>> TryCatch<T>([InstantHandle] Func<ValueTask<Outcome<T>>> handler) {
+    public static async Task<Outcome<T>> TryCatch<T>([InstantHandle] Func<Task<Outcome<T>>> handler) {
         try{
             return await handler();
         }
@@ -41,7 +41,7 @@ public static partial class Prelude
     }
 
     [PublicAPI]
-    public static async ValueTask<Outcome<T>> TryCatch<T>([InstantHandle] Func<ValueTask<T>> handler) {
+    public static async Task<Outcome<T>> TryCatch<T>([InstantHandle] Func<Task<T>> handler) {
         try{
             return await handler();
         }
@@ -51,7 +51,7 @@ public static partial class Prelude
     }
 
     [PublicAPI]
-    public static async ValueTask<Outcome<Unit>> TryCatch([InstantHandle] Func<ValueTask> handler) {
+    public static async Task<Outcome<Unit>> TryCatch([InstantHandle] Func<Task> handler) {
         try{
             await handler();
             return unit;

@@ -49,11 +49,11 @@ public static class ObservableFrom
         });
 
     [PublicAPI]
-    public static IObservable<T> Outcome<T>(Func<CancellationToken, ValueTask<Outcome<T>>> func)
+    public static IObservable<T> Outcome<T>(Func<CancellationToken, Task<Outcome<T>>> func)
         => Observable.Create<T>(async (observer, token) => observer.Consume(await func(token)));
 
     [PublicAPI]
-    public static IObservable<T> Outcome<T>(Func<CancellationToken, ValueTask<Outcome<IAsyncEnumerable<T>>>> func)
+    public static IObservable<T> Outcome<T>(Func<CancellationToken, Task<Outcome<IAsyncEnumerable<T>>>> func)
         => Observable.Create<T>(async (observer, token) => {
             var result = await func(token);
             if (result.IfSuccess(out var enumerable, out var e))

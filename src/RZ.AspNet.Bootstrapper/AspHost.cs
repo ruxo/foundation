@@ -6,7 +6,7 @@ namespace RZ.AspNet;
 [PublicAPI]
 public static class AspHost
 {
-    public static async ValueTask<Unit> RunPipeline(this WebApplicationBuilder builder, params AppModule[] modules) {
+    public static async Task<Unit> RunPipeline(this WebApplicationBuilder builder, params AppModule[] modules) {
         foreach(var module in modules)
             await module.InstallServices(builder);
 

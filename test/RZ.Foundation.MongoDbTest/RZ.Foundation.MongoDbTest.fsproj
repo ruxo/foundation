@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="MockDb.fs" />
     <Compile Include="MongoCRUD.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
@@ -22,6 +23,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\RZ.Foundation.MongoDb.Migration\RZ.Foundation.MongoDb.Migration.csproj" />
     <ProjectReference Include="..\..\src\RZ.Foundation.MongoDb\RZ.Foundation.MongoDb.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="customer.jsonrow">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
