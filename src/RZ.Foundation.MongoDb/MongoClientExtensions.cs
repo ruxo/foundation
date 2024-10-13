@@ -33,6 +33,13 @@ public static class MongoClientExtensions
         });
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Task<TResult> Retrieve<T, TResult>(this IAsyncCursor<T> cursor, Func<IAsyncCursor<T>, Task<TResult>> chain)
+        => Execute(async () => {
+            using var c = cursor;
+            return await chain(c);
+        });
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TResult> Retrieve<T, TResult>(this Task<IAsyncCursor<T>> cursor, Func<IAsyncCursor<T>, Task<TResult>> chain)
         => Execute(async () => {
             using var c = await cursor;

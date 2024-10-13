@@ -1,35 +1,23 @@
 ﻿module RZ.Foundation.MongoDbTest.MockDb
 
 open System
-open System.Threading
 open Mongo2Go
+open RZ.Foundation.MongoDb
 
-let mutable private locker = SpinLock()
-let mutable private mock_db = lazy MongoDbRunner.Start()
-let mutable private db_ref_count = 0
+MongoHelper.SetupMongoStandardMappings()
 
-type ITracker =
-    inherit IDisposable
-    abstract ConnectionString: string
+type TestDbContext(connection, db_name) =
+    inherit RzMongoDbContext(connection, db_name)
 
-let private release() =
-    let got_lock = ref false
-    try
-        db_ref_count <- db_ref_count - 1
-        if db_ref_count = 0 then
-            mock_db.Value.Dispose()
-            mock_db <- lazy MongoDbRunner.Start()
-    finally
-        if got_lock.Value then locker.Exit()
+type MockedDatabase = {
+    Server: MongoDbRunner
+    Db: TestDbContext
+}
+with
+    interface IDisposable with
+        member this.Dispose() = this.Server.Dispose()
 
-let get() =
-    let got_lock = ref false
-    try
-        locker.Enter(got_lock)
-        db_ref_count <- db_ref_count + 1
-        { new ITracker with
-            member this.ConnectionString = mock_db.Value.ConnectionString
-            override this.Dispose() = release()
-        }
-    finally
-        if got_lock.Value then locker.Exit()
+let startDb db_name
+    = let server = MongoDbRunner.Start()
+      let db = TestDbContext(MongoConnectionString.From(server.ConnectionString).Value, db_name)
+      { Server = server; Db = db }

@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
+using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using RZ.Foundation.Types;
 
@@ -11,8 +12,10 @@ namespace RZ.Foundation.MongoDb;
 [PublicAPI]
 public static class MongoHelper
 {
-    public static void SetupMongoStandardMappings() {
-        BsonSerializer.RegisterSerializer(new MongoDB.Bson.Serialization.Serializers.DateTimeOffsetSerializer(BsonType.DateTime));
+    public static void SetupMongoStandardMappings(bool useLegacyGuid = false) {
+        BsonSerializer.RegisterSerializer(new DateTimeOffsetSerializer(BsonType.DateTime));
+        if (!useLegacyGuid)
+            BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
 
         var pack = new ConventionPack{ new EnumRepresentationConvention(BsonType.String) };
         ConventionRegistry.Register("EnumString", pack, _ => true);

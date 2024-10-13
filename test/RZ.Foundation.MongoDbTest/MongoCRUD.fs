@@ -1,59 +1,23 @@
 module MongoCRUD
 
 open System
-open System.Runtime.CompilerServices
 open System.Threading.Tasks
 open FluentAssertions
-open Mongo2Go
 open MongoDB.Driver
 open Moq
 open RZ.Foundation
 open RZ.Foundation.MongoDb
+open RZ.Foundation.MongoDbTest
 open RZ.Foundation.Types
 open Xunit
+open MockDb
+open TestSample
 
-MongoHelper.SetupMongoStandardMappings()
-
-type TestDbContext(connection, db_name) =
-    inherit RzMongoDbContext(connection, db_name)
-
-type MockedDatabase = {
-    Server: MongoDbRunner
-    Db: TestDbContext
-}
-with
-    interface IDisposable with
-        member this.Dispose() = this.Server.Dispose()
-
-let startDb db_name
-    = let server = MongoDbRunner.Start()
-      let db = TestDbContext(MongoConnectionString.From(server.ConnectionString).Value, db_name)
-      { Server = server; Db = db }
-
-[<Struct; IsReadOnly>]
-type Address = { Country: string; Zip: string }
-
-[<CLIMutable>]
-type Customer = {
-    mutable Id: Guid
-    Name: string
-    Address: Address
-    Updated: DateTimeOffset
-    Version: uint
-}
-with
-    interface IHaveKey<Guid> with
-        member this.Id with get() = this.Id and set v = this.Id <- v
-    interface IHaveVersion with
-        member this.Updated = this.Updated
-        member this.Version = this.Version
-    interface ICanUpdateVersion<Customer> with
-        member this.WithVersion(updated, next) = { this with Updated = updated; Version = next }
-
+(************************* TEST STARTS HERE *****************************)
 [<Fact>]
 let ``Add single row and query`` () = task {
     let person = {
-        Id=Guid.NewGuid()
+        Id=JohnDoe.Id
         Name="John Doe"
         Address = { Country = "TH"; Zip="10000" }
         Updated = DateTimeOffset.MinValue
@@ -79,7 +43,7 @@ let ``Add single row and query`` () = task {
 [<Fact>]
 let ``Repeatedly add the same single row will throw`` () = task {
     let person = {
-        Id=Guid.NewGuid()
+        Id=JohnDoe.Id
         Name="John Doe"
         Address = { Country = "TH"; Zip="10000" }
         Updated = DateTimeOffset.MinValue
@@ -104,11 +68,33 @@ let ``Repeatedly add the same single row will throw`` () = task {
 }
 
 [<Fact>]
-let ``Get the first customer who has Zip code = 11111`` () = task {
-    use mdb = startDb "test3"
-    mdb.Server.Import("test3", "Customer", "customer.jsonrow", drop=true)
+let ``Capture duplicated add error with TryAdd`` () = task {
+    use mdb = startDb "test5"
 
     let coll = mdb.Db.GetCollection<Customer>()
+    coll.ImportSamples()
+
+    // when
+    let! result = coll.TryAdd({
+        Id = Guid("711CA94D-239C-4E67-81C9-1F2F155B3F43")
+        Name = "Example Name"
+        Address = { Country = "TH"; Zip = "10000" }
+        Updated = DateTimeOffset(2020, 1, 1, 17, 0, 0, TimeSpan.Zero)
+        Version = 0u
+    })
+
+    // then
+    let is_failed, error, _ = result.IfFail()
+    is_failed.Should().BeTrue() |> ignore
+    error.Code.Should().Be(StandardErrorCodes.Duplication) |> ignore
+}
+
+[<Fact>]
+let ``Get the first customer who has Zip code = 11111`` () = task {
+    use mdb = startDb "test3"
+
+    let coll = mdb.Db.GetCollection<Customer>()
+    coll.ImportSamples()
 
     // when
     let! result = coll.Get(fun x -> x.Address.Zip = "11111")
