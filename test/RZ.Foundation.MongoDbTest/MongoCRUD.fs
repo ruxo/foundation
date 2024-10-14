@@ -26,7 +26,7 @@ module Add =
         }
 
         // when
-        use mdb = startDb "test1"
+        use mdb = startDb()
         let coll = mdb.Db.GetCollection<Customer>()
         let! _ = coll.Add(person)
 
@@ -46,7 +46,7 @@ module Add =
         }
 
         // when
-        use mdb = startDb "test2"
+        use mdb = startDb()
         let coll = mdb.Db.GetCollection<Customer>()
         let! _ = coll.Add(person)
 
@@ -102,7 +102,7 @@ module Add =
 module Retrieval =
     [<Fact>]
     let ``Get the first customer who has Zip code = 11111`` () = task {
-        use mdb = startDb "test3"
+        use mdb = startDb()
 
         let coll = mdb.Db.GetCollection<Customer>().ImportSamples()
 
@@ -121,7 +121,7 @@ module Retrieval =
 
     [<Fact>]
     let ``Get all customers who has country = 'TH'`` () = task {
-        use mdb = startDb "test4"
+        use mdb = startDb()
 
         let coll = mdb.Db.GetCollection<Customer>().ImportSamples()
 

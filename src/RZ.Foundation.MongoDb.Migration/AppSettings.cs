@@ -1,7 +1,7 @@
 using System.Text.Json;
-using RZ.Foundation.MongoDb;
+using RZ.Foundation.Types;
 
-namespace TCRB.Database.Mongo;
+namespace RZ.Foundation.MongoDb.Migration;
 
 public record struct ConnectionSettings(string ConnectionString, string DatabaseName);
 
@@ -11,7 +11,7 @@ public static class AppSettings
     const string EnvDatabaseName = "CS_DATABASE";
     const string EnvFileConfig = "CS_CONFIGFILE";
 
-    public static ConnectionSettings GetConnectionSettings() {
+    public static ConnectionSettings FromEnvironment() {
         var connection = GetEnv(EnvConnectionString);
         var dbName = GetEnv(EnvDatabaseName);
         var settings = from c in connection
@@ -19,8 +19,9 @@ public static class AppSettings
                        select new ConnectionSettings(c, db);
         var final = settings.OrElse(() => GetEnv(EnvFileConfig).Map(GetFromFile));
         return final
-           .GetOrThrow(() => new InvalidOperationException($"No connection settings in {EnvConnectionString}, {EnvDatabaseName}, or" +
-                                                           $" {EnvFileConfig}"));
+           .GetOrThrow(() => new ErrorInfoException(StandardErrorCodes.MissingConfiguration,
+                                                    $"No connection settings in {EnvConnectionString}, {EnvDatabaseName}, or" +
+                                                    $" {EnvFileConfig}"));
     }
 
     public static ConnectionSettings? From(MongoConnectionString connectionString) {

@@ -16,5 +16,8 @@ build .\RZ.Foundation
 build .\RZ.AspNet.Bootstrapper
 build .\RZ.Foundation.Blazor
 build .\RZ.Foundation.Blazor.MudBlazor
+build .\RZ.Foundation.MongoDb
+build .\RZ.Foundation.MongoDb.Migration
+build .\RZ.Foundation.Testing
 
 Pop-Location

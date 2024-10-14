@@ -18,17 +18,17 @@ with
     interface IDisposable with
         member this.Dispose() = this.Server.Dispose()
 
-let startTransactDb db_name
+let startTransactDb()
     = let server = MongoDbRunner.Start(singleNodeReplSet = true)
-      let db = TestDbContext(MongoConnectionString.From(server.ConnectionString).Value, db_name)
+      let db = TestDbContext(MongoConnectionString.From(server.ConnectionString).Value, "test")
       { Server = server; Db = db }
 
-let startDb db_name
+let startDb()
     = let server = MongoDbRunner.Start()
-      let db = TestDbContext(MongoConnectionString.From(server.ConnectionString).Value, db_name)
+      let db = TestDbContext(MongoConnectionString.From(server.ConnectionString).Value, "test")
       { Server = server; Db = db }
 
 let inline startWithSample() =
-    let x = startDb "test"
+    let x = startDb()
     x.Db.GetCollection<Customer>().ImportSamples() |> ignore
     x

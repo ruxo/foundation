@@ -1,43 +1,31 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using JetBrains.Annotations;
 using LanguageExt.UnitsOfMeasure;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using MongoDBMigrations;
 using RZ.AspNet;
-using TCRB.Database.Mongo;
 using Version = MongoDBMigrations.Version;
 
 namespace RZ.Foundation.MongoDb.Migration;
 
-[PublicAPI]
+[PublicAPI, ExcludeFromCodeCoverage]
 public static class MongoMigration
 {
     const string DelayExitEnv = "DelayExit";
     const string UpgradeVersionEnv = "UpgradeVersion";
 
-    public static void Start(IEnumerable<string> args) => Start(Seq(args));
-    public static void Start(Seq<string> args) => Start(args, "MongoDb");
+    public static void Start(string connection, Version? version = null) {
+        var mcs = MongoConnectionString.From(connection) ?? throw new ArgumentException("Invalid Mongo connection string", connection);
+        Start(mcs, version);
+    }
 
-    public static void Start(Seq<string> args, string? connectionName) {
-        var config = AspHost.CreateDefaultConfigurationSettings();
-        var version = args.HeadOrNone().OrElse(() => Optional(config[UpgradeVersionEnv])).Map(ParseVersion);
-
-        var verbose = args.Contains("-v");
-
-        var connectionSettings =
-            (from cn in Optional(connectionName)
-             from cs in Optional(config.GetConnectionString(cn))
-             let mcs = MongoConnectionString.From(cs) ?? throw new ArgumentException("Invalid connection string", cn)
-             from settings in Optional(AppSettings.From(mcs))
-             select settings
-            ).IfNone(AppSettings.GetConnectionSettings);
-
-        if (verbose)
-            Console.WriteLine("Connection: {0}", connectionSettings.ConnectionString);
+    public static void Start(MongoConnectionString mcs, Version? version = null) {
+        var connectionSettings = AppSettings.From(mcs) ?? AppSettings.FromEnvironment();
 
         Console.WriteLine("Database  : {0}", connectionSettings.DatabaseName);
-        Console.WriteLine("Migrating to version: {0}", version.Map(v => v.ToString()).IfNone("latest"));
+        Console.WriteLine("Migrating to version: {0}", version?.ToString() ?? "latest");
 
         var client = new MongoClient(connectionSettings.ConnectionString);
 
@@ -46,7 +34,18 @@ public static class MongoMigration
                        .UseAssembly(Assembly.GetEntryAssembly()!)
                        .UseSchemeValidation(false);
 
-        version.Then(v => migration.Run(v), () => migration.Run());
+        if (version is null)
+            migration.Run();
+        else
+            migration.Run(version);
+    }
+
+    public static void Start(IEnumerable<string> args, string connectionName = "MongoDb") {
+        var config = AspHost.CreateDefaultConfigurationSettings();
+        var version = (args.FirstOrDefault() ?? config[UpgradeVersionEnv])?.Apply(ParseVersion);
+
+        var cs = config.GetConnectionString(connectionName) ?? throw new ArgumentException("Invalid connection string name", connectionName);
+        Start(cs, version);
 
         var delay = Optional(config[DelayExitEnv]).Bind(s => int.TryParse(s, out var v) ? Some(v) : None);
         delay.Iter(d => {

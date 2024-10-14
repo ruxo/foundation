@@ -10,7 +10,7 @@ open RZ.Foundation.MongoDb
 
 [<Fact>]
 let ``Add people with transaction`` () = task {
-    use mdb = startTransactDb "test"
+    use mdb = startTransactDb()
 
     let addCustomer() = task {
         use transaction = mdb.Db.CreateTransaction()
@@ -32,7 +32,7 @@ let ``Add people with transaction`` () = task {
 
 [<Fact>]
 let ``Auto rollback if no explicit commit`` () = task {
-    use mdb = startTransactDb "test"
+    use mdb = startTransactDb()
 
     let addCustomer() = task {
         use transaction = mdb.Db.CreateTransaction()
