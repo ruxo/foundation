@@ -25,6 +25,12 @@ with
     interface ICanUpdateVersion<Customer> with
         member this.WithVersion(updated, next) = { this with Updated = updated; Version = next }
 
+(****************************** DATA ******************************)
+let UnusedGuid1 = Guid "503461E9-969B-4847-8CC7-F920370C39AB"
+let UnusedGuid2 = Guid "1F9E1596-3484-44C2-B0C3-B55CF69CAAD1"
+
+let NewYear2024 = DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero)
+
 let JohnDoe = {
      Id= Guid "0B8D9631-720A-46B7-8C95-F55B4EC520A4"
      Name= "John Doe"
@@ -49,7 +55,14 @@ let HelloWorld = {
     Version = 1u
 }
 
+
 type TestSampleHelpers =
     [<Extension>]
     static member ImportSamples(collection: IMongoCollection<Customer>) =
         collection.InsertMany([ JohnDoe; JaneDoe; HelloWorld ])
+        collection
+
+    [<Extension>]
+    static member ImportSamples(database: IMongoDatabase) =
+        database.GetCollection<Customer>(nameof Customer).ImportSamples() |> ignore
+        database

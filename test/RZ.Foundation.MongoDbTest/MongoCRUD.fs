@@ -20,24 +20,18 @@ let ``Add single row and query`` () = task {
         Id=JohnDoe.Id
         Name="John Doe"
         Address = { Country = "TH"; Zip="10000" }
-        Updated = DateTimeOffset.MinValue
+        Updated = DateTimeOffset(2024, 1, 31, 17, 0, 0, TimeSpan.Zero)
         Version = 0u
     }
-
-    let mocked_now = DateTimeOffset(2024, 1, 31, 17, 0, 0, TimeSpan.Zero)
-    let time_provider = Mock<TimeProvider>()
-    time_provider.Setup(_.GetUtcNow()).Returns(mocked_now) |> ignore
-
-    let expected = { person with Updated = mocked_now; Version = 1u }
 
     // when
     use mdb = startDb "test1"
     let coll = mdb.Db.GetCollection<Customer>()
-    let! _ = coll.Add(person, time_provider.Object)
+    let! _ = coll.Add(person)
 
     let! result = coll.GetById person.Id
 
-    result.Should().BeEquivalentTo(expected) |> ignore
+    result.Should().BeEquivalentTo(person) |> ignore
 }
 
 [<Fact>]
@@ -46,21 +40,17 @@ let ``Repeatedly add the same single row will throw`` () = task {
         Id=JohnDoe.Id
         Name="John Doe"
         Address = { Country = "TH"; Zip="10000" }
-        Updated = DateTimeOffset.MinValue
+        Updated = DateTimeOffset(2024, 1, 31, 17, 0, 0, TimeSpan.Zero)
         Version = 0u
     }
-
-    let mocked_now = DateTimeOffset(2024, 1, 31, 17, 0, 0, TimeSpan.Zero)
-    let time_provider = Mock<TimeProvider>()
-    time_provider.Setup(_.GetUtcNow()).Returns(mocked_now) |> ignore
 
     // when
     use mdb = startDb "test2"
     let coll = mdb.Db.GetCollection<Customer>()
-    let! _ = coll.Add(person, time_provider.Object)
+    let! _ = coll.Add(person)
 
     // then when inserting the same record the second time
-    let result = Func<Task>(fun() -> coll.Add(person, time_provider.Object) :> Task)
+    let result = Func<Task>(fun() -> coll.Add(person) :> Task)
 
     let! ``exception`` = result.Should().ThrowAsync<ErrorInfoException>()
 
@@ -69,10 +59,9 @@ let ``Repeatedly add the same single row will throw`` () = task {
 
 [<Fact>]
 let ``Capture duplicated add error with TryAdd`` () = task {
-    use mdb = startDb "test5"
+    use mdb = startWithSample()
 
     let coll = mdb.Db.GetCollection<Customer>()
-    coll.ImportSamples()
 
     // when
     let! result = coll.TryAdd({
@@ -90,11 +79,30 @@ let ``Capture duplicated add error with TryAdd`` () = task {
 }
 
 [<Fact>]
+let ``Simple add with TryAdd`` () = task {
+    use mdb = startWithSample()
+
+    let coll = mdb.Db.GetCollection<Customer>()
+
+    // when
+    let! result = coll.TryAdd({
+        Id = UnusedGuid1
+        Name = "Testla Namera"
+        Address = { Country = "XY"; Zip = "10000" }
+        Updated = DateTimeOffset(2020, 1, 1, 17, 0, 0, TimeSpan.Zero)
+        Version = 0u
+    })
+
+    // then
+    let is_success, _, _ = result.IfSuccess()
+    is_success.Should().BeTrue() |> ignore
+}
+
+[<Fact>]
 let ``Get the first customer who has Zip code = 11111`` () = task {
     use mdb = startDb "test3"
 
-    let coll = mdb.Db.GetCollection<Customer>()
-    coll.ImportSamples()
+    let coll = mdb.Db.GetCollection<Customer>().ImportSamples()
 
     // when
     let! result = coll.Get(fun x -> x.Address.Zip = "11111")
@@ -112,9 +120,8 @@ let ``Get the first customer who has Zip code = 11111`` () = task {
 [<Fact>]
 let ``Get all customers who has country = 'TH'`` () = task {
     use mdb = startDb "test4"
-    mdb.Server.Import("test4", "Customer", "customer.jsonrow", drop=true)
 
-    let coll = mdb.Db.GetCollection<Customer>()
+    let coll = mdb.Db.GetCollection<Customer>().ImportSamples()
 
     // when
     let! result = coll.FindAsync(fun x -> x.Address.Country = "TH").Retrieve(_.ToListAsync())
@@ -124,4 +131,21 @@ let ``Get all customers who has country = 'TH'`` () = task {
 
     let names = result |> Seq.map _.Name
     names.Should().BeEquivalentTo(["John Doe"; "Jane Doe"]) |> ignore
+}
+
+[<Fact>]
+let ``Update the first customer who has lives in "TH"`` () = task {
+    use mdb = startWithSample()
+    let customer = mdb.Db.GetCollection<Customer>()
+
+    let time = Mock<TimeProvider>()
+    time.Setup(fun x -> x.GetUtcNow()).Returns(NewYear2024) |> ignore
+
+    let! jane = customer.GetById JaneDoe.Id
+    let updated_jane = { jane with Customer.Address.Zip = "22222" }
+    let! _ = customer.Update(updated_jane, clock = time.Object)
+
+    let expected = { updated_jane with Updated = NewYear2024; Version = 3u }
+    let! jane = customer.GetById JaneDoe.Id
+    jane.Should().BeEquivalentTo(expected) |> ignore
 }

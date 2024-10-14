@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿global using VersionType = uint;
+using JetBrains.Annotations;
 
 namespace RZ.Foundation.MongoDb;
 
@@ -11,7 +12,7 @@ public interface IHaveKey<T>
 [PublicAPI]
 public interface IHaveVersion {
     DateTimeOffset Updated { get; }
-    uint Version { get; }
+    VersionType Version { get; }
 }
 
 [PublicAPI]

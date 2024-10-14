@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="MockDb.fs" />
     <Compile Include="TestSample.fs" />
+    <Compile Include="MockDb.fs" />
     <Compile Include="MongoCRUD.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
