@@ -31,10 +31,12 @@ let UnusedGuid2 = Guid "1F9E1596-3484-44C2-B0C3-B55CF69CAAD1"
 
 let NewYear2024 = DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero)
 
+let UniqueZip = "11111"
+
 let JohnDoe = {
      Id= Guid "0B8D9631-720A-46B7-8C95-F55B4EC520A4"
      Name= "John Doe"
-     Address= { Country= "TH"; Zip= "11111" }
+     Address= { Country= "TH"; Zip=UniqueZip }   // His Zip must be unique, test cases assume it!
      Updated= DateTimeOffset(2020, 1, 1, 17, 0, 0, TimeSpan.Zero)
      Version= 1u
 }
@@ -55,6 +57,14 @@ let HelloWorld = {
     Version = 1u
 }
 
+/// New kid on the block, never be in the database before
+let NewKid = {
+    Id = Guid "BADA86E1-5EAD-4FAE-BDA6-D2C108A7BD9B"
+    Name = "New Kid"
+    Address = { Country = "US"; Zip = "10000" }
+    Updated = DateTimeOffset(2020, 2, 13, 17, 0, 0, TimeSpan.Zero)
+    Version = 1u
+}
 
 type TestSampleHelpers =
     [<Extension>]

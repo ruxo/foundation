@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -12,6 +12,7 @@ namespace RZ.Foundation.MongoDb;
 [PublicAPI]
 public static class MongoHelper
 {
+    [ExcludeFromCodeCoverage]
     public static void SetupMongoStandardMappings(bool useLegacyGuid = false) {
         BsonSerializer.RegisterSerializer(new DateTimeOffsetSerializer(BsonType.DateTime));
         if (!useLegacyGuid)
@@ -32,37 +33,6 @@ public static class MongoHelper
     [Pure]
     public static ErrorInfo InterpretDatabaseError(Exception e)
         => TryInterpretDatabaseError(e) ?? ErrorFrom.Exception(e);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Outcome<T> Try<T>(Func<T> f) {
-        try{
-            return f();
-        }
-        catch (Exception e){
-            return InterpretDatabaseError(e);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async Task<Outcome<T>> TryAsync<T>(Func<Task<T>> f) {
-        try{
-            return await f();
-        }
-        catch (Exception e){
-            return InterpretDatabaseError(e);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async Task<Outcome<Unit>> TryAsync(Func<Task> f) {
-        try{
-            await f();
-            return unit;
-        }
-        catch (Exception e){
-            return InterpretDatabaseError(e);
-        }
-    }
 
     public static async Task Execute(Func<Task> f) {
         try{

@@ -69,7 +69,7 @@ public static class MongoClientExtensions
     static readonly ReplaceOptions ReplaceUpsertOption = new() { IsUpsert = true };
 
     static async Task<Outcome<T>> PureUpdate<T>(this IMongoCollection<T> collection, T data, FilterDefinition<T> predicate,
-                                                bool upsert, TimeProvider? clock, CancellationToken cancel) {
+                                                bool upsert, CancellationToken cancel) {
         var option = upsert ? ReplaceUpsertOption : null;
         var result = await collection.ReplaceOneAsync(predicate, data, option, cancel);
         return InterpretUpdateResult(data, result);
@@ -84,15 +84,14 @@ public static class MongoClientExtensions
                                                 T data,
                                                 Expression<Func<T, bool>> predicate,
                                                 bool upsert = false,
-                                                TimeProvider? clock = null,
                                                 CancellationToken cancel = default)
-        => TryExecute(() => collection.PureUpdate(data, predicate, upsert, clock, cancel));
+        => TryExecute(() => collection.PureUpdate(data, predicate, upsert, cancel));
 
     public static Task<Outcome<T>> TryUpdate<T, TKey>(this IMongoCollection<T> collection, TKey key, T data, VersionType? current = null,
-                                                      bool upsert = false, TimeProvider? clock = null, CancellationToken cancel = default)
+                                                      bool upsert = false, CancellationToken cancel = default)
         => TryExecute(() => collection.PureUpdate(data,
                                                   current is null? Build<T>.Predicate(key) : Build<T>.Predicate(key, current.Value),
-                                                  upsert, clock, cancel));
+                                                  upsert, cancel));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<Outcome<T>> TryUpdate<T, TKey>(this IMongoCollection<T> collection, T data,
@@ -102,28 +101,26 @@ public static class MongoClientExtensions
         where T : IHaveKey<TKey>
         => TryExecute(() => {
             var (final, predicate) = GetUpdateCondition<T, TKey>(data, clock);
-            return collection.PureUpdate(final, predicate, upsert, clock, cancel);
+            return collection.PureUpdate(final, predicate, upsert, cancel);
         });
 
     public static Task<T> Update<T>(this IMongoCollection<T> collection,
                                     T data,
                                     Expression<Func<T, bool>> predicate,
                                     bool upsert = false,
-                                    TimeProvider? clock = null,
                                     CancellationToken cancel = default)
         => Execute(async () => {
-            var result = await collection.PureUpdate(data, predicate, upsert, clock, cancel);
+            var result = await collection.PureUpdate(data, predicate, upsert, cancel);
             return result.IfSuccess(out var v, out var e) ? v : throw new ErrorInfoException(e);
         });
 
     public static Task<T> Update<T, TKey>(this IMongoCollection<T> collection, TKey key, T data, VersionType? current = null,
                                           bool upsert = false,
-                                          TimeProvider? clock = null,
                                           CancellationToken cancel = default)
         => Execute(async () => {
             var result = await collection.PureUpdate(data,
                                                      current is null ? Build<T>.Predicate(key) : Build<T>.Predicate(key, current.Value),
-                                                     upsert, clock, cancel);
+                                                     upsert, cancel);
             return result.IfSuccess(out var v, out var e) ? v : throw new ErrorInfoException(e);
         });
 
@@ -135,7 +132,7 @@ public static class MongoClientExtensions
         where T : IHaveKey<TKey>
         => Execute(async () => {
             var (final, predicate) = GetUpdateCondition<T, TKey>(data, clock);
-            var result = await collection.PureUpdate(final, predicate, upsert, clock, cancel);
+            var result = await collection.PureUpdate(final, predicate, upsert, cancel);
             return result.IfSuccess(out var v, out var e) ? v : throw new ErrorInfoException(e);
         });
 
@@ -149,9 +146,8 @@ public static class MongoClientExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<Outcome<T>> TryUpsert<T, TKey>(this IMongoCollection<T> collection, TKey key, T data, VersionType? current = null,
-                                                      TimeProvider? clock = null,
                                                       CancellationToken cancel = default)
-        => collection.TryUpdate(key, data, current, upsert: true, clock, cancel);
+        => collection.TryUpdate(key, data, current, upsert: true, cancel: cancel);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<Outcome<T>> TryUpsert<T, TKey>(this IMongoCollection<T> collection, T data,
@@ -166,9 +162,8 @@ public static class MongoClientExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<T> Upsert<T, TKey>(this IMongoCollection<T> collection, TKey key, T data, VersionType? current = null,
-                                          TimeProvider? clock = null,
                                           CancellationToken cancel = default)
-        => collection.Update(key, data, current, upsert: true, clock, cancel);
+        => collection.Update(key, data, current, upsert: true, cancel: cancel);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<T> Upsert<T, TKey>(this IMongoCollection<T> collection, T data,
@@ -204,10 +199,10 @@ public static class MongoClientExtensions
         => collection.TryDelete(data.Id, (data as IHaveVersion)?.Version, cancel);
 
     public static Task DeleteAll<T>(this IMongoCollection<T> collection, Expression<Func<T, bool>> predicate, CancellationToken cancel = default)
-        => Execute(async () => { await collection.DeleteManyAsync(predicate, cancel); });
+        => Execute(() => collection.DeleteManyAsync(predicate, cancel));
 
     public static Task Delete<T>(this IMongoCollection<T> collection, Expression<Func<T, bool>> predicate, CancellationToken cancel = default)
-        => Execute(async () => { await collection.DeleteOneAsync(predicate, cancel); });
+        => Execute(() => collection.DeleteOneAsync(predicate, cancel));
 
     public static Task Delete<T, TKey>(this IMongoCollection<T> collection, TKey key, VersionType? current = null, CancellationToken cancel = default)
         => Execute(async () => {
