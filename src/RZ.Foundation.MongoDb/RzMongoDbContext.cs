@@ -6,9 +6,14 @@ using RZ.Foundation.Types;
 namespace RZ.Foundation.MongoDb;
 
 [PublicAPI]
-public interface IRzMongoDbContext
+public interface IRzMongoDatabase
 {
     IMongoCollection<T> GetCollection<T>();
+}
+
+[PublicAPI]
+public interface IRzMongoDbContext : IRzMongoDatabase
+{
     IRzMongoTransaction CreateTransaction();
 }
 

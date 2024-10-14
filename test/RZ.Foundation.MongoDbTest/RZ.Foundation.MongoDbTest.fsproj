@@ -12,6 +12,7 @@
   <ItemGroup>
     <Compile Include="TestSample.fs" />
     <Compile Include="MockDb.fs" />
+    <Compile Include="MongoTransactionTest.fs" />
     <Compile Include="MongoCRUD.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -8,9 +9,14 @@ using MongoDB.Driver.Search;
 namespace RZ.Foundation.MongoDb;
 
 [PublicAPI]
-public interface IRzMongoTransaction : IRzMongoDbContext, IAsyncDisposable
+public interface IRzMongoTransaction : IRzMongoDatabase, IAsyncDisposable
 {
     Guid Id { get; }
+
+    /// <summary>
+    /// I hope you know what you are doing :)
+    /// </summary>
+    IClientSessionHandle Session { get; }
 
     Task Commit();
     Task Rollback();
@@ -21,7 +27,11 @@ public class RzMongoTransaction(Guid id,IMongoDatabase db, IClientSessionHandle 
 {
     bool? commit;
 
+    [ExcludeFromCodeCoverage]
     public Guid Id => id;
+
+    [ExcludeFromCodeCoverage]
+    public IClientSessionHandle Session => session;
 
     public async Task Commit() {
         await session.CommitTransactionAsync();
@@ -37,12 +47,6 @@ public class RzMongoTransaction(Guid id,IMongoDatabase db, IClientSessionHandle 
 
     public IMongoCollection<T> GetCollection<T>()
     => new Wrapper<T>(db.GetCollection<T>(typeof(T).Name), session);
-
-    public IRzMongoTransaction CreateTransaction() {
-        var forked = session.Fork();
-        forked.StartTransaction();
-        return new RzMongoTransaction(Guid.NewGuid(), db, forked);
-    }
 
     public async ValueTask DisposeAsync() {
         try{
@@ -60,6 +64,7 @@ public class RzMongoTransaction(Guid id,IMongoDatabase db, IClientSessionHandle 
 
     #region Collection with session
 
+    [ExcludeFromCodeCoverage]
     sealed class Wrapper<T>(IMongoCollection<T> collection, IClientSessionHandle current) : IMongoCollection<T>
     {
         public IAsyncCursor<TResult> Aggregate<TResult>(PipelineDefinition<T, TResult> pipeline, AggregateOptions? options = null, CancellationToken cancellationToken = new())

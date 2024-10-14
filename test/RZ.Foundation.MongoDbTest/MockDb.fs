@@ -18,6 +18,11 @@ with
     interface IDisposable with
         member this.Dispose() = this.Server.Dispose()
 
+let startTransactDb db_name
+    = let server = MongoDbRunner.Start(singleNodeReplSet = true)
+      let db = TestDbContext(MongoConnectionString.From(server.ConnectionString).Value, db_name)
+      { Server = server; Db = db }
+
 let startDb db_name
     = let server = MongoDbRunner.Start()
       let db = TestDbContext(MongoConnectionString.From(server.ConnectionString).Value, db_name)
