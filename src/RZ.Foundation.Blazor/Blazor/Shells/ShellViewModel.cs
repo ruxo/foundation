@@ -70,6 +70,7 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
     public AppMode AppMode => content.Peek().AppMode;
     public ViewModel Content => content.Peek().Content;
     public ViewMode ViewMode => content.Peek().ViewMode;
+    public int StackCount => content.Count;
 
     public ObservableCollection<Navigation> NavItems { get; }
 
@@ -111,50 +112,28 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
 
     #endregion
 
-    public Unit CloseCurrentView() {
-        this.RaisePropertyChanging(nameof(Content));
-        this.RaisePropertyChanging(nameof(ViewMode));
-        this.RaisePropertyChanging(nameof(AppMode));
-        content.Pop();
-        this.RaisePropertyChanged(nameof(AppMode));
-        this.RaisePropertyChanged(nameof(ViewMode));
-        this.RaisePropertyChanged(nameof(Content));
-        return unit;
-    }
+    public Unit CloseCurrentView()
+        => ChangingStack(() => content.Pop());
 
     public NotificationMessage Notify(NotificationMessage message) {
         NotificationMessages.Add(new(clock.GetLocalNow(), message.Severity, message.Message));
         return message;
     }
 
-    public Unit CloneState(Func<ViewState, ViewState> stateBuilder) {
-        this.RaisePropertyChanging(nameof(Content));
-        this.RaisePropertyChanging(nameof(ViewMode));
-        this.RaisePropertyChanging(nameof(AppMode));
+    public Unit CloneState(Func<ViewState, ViewState> stateBuilder) => ChangingStack(() => {
         var newState = stateBuilder(content.Peek());
         content.Push(newState);
-        this.RaisePropertyChanged(nameof(AppMode));
-        this.RaisePropertyChanged(nameof(ViewMode));
-        this.RaisePropertyChanged(nameof(Content));
-        return unit;
-    }
+    });
 
-    public Unit PushModal(ViewModel? viewModel, Func<AppMode, AppMode> appModeGetter) {
-        this.RaisePropertyChanging(nameof(Content));
-        this.RaisePropertyChanging(nameof(ViewMode));
+    public Unit PushModal(ViewModel? viewModel, Func<AppMode, AppMode> appModeGetter) => ChangingStack(() => {
         var current = content.Peek();
         var appMode = appModeGetter(current.AppMode);
 
-        this.RaisePropertyChanging(nameof(AppMode));
         content.Push(current with {
             AppMode = appMode,
             Content = viewModel ?? current.Content
         });
-        this.RaisePropertyChanged(nameof(AppMode));
-        this.RaisePropertyChanged(nameof(ViewMode));
-        this.RaisePropertyChanged(nameof(Content));
-        return unit;
-    }
+    });
 
     public Unit Push(ViewModel viewModel)
         => CloneState(current => current with { Content = viewModel });
@@ -182,6 +161,23 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
     }
 
     public IEnumerator<ViewState> GetEnumerator() => content.GetEnumerator();
+
+    Unit ChangingStack(Action action) {
+        this.RaisePropertyChanging(nameof(Content));
+        this.RaisePropertyChanging(nameof(ViewMode));
+        this.RaisePropertyChanging(nameof(AppMode));
+        this.RaisePropertyChanging(nameof(StackCount));
+        this.RaisePropertyChanging(nameof(IsDrawerOpen));
+        this.RaisePropertyChanging(nameof(UseMiniDrawer));
+        action();
+        this.RaisePropertyChanged(nameof(UseMiniDrawer));
+        this.RaisePropertyChanged(nameof(IsDrawerOpen));
+        this.RaisePropertyChanged(nameof(StackCount));
+        this.RaisePropertyChanged(nameof(AppMode));
+        this.RaisePropertyChanged(nameof(ViewMode));
+        this.RaisePropertyChanged(nameof(Content));
+        return unit;
+    }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
