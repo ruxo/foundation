@@ -2,7 +2,4 @@
 
 namespace RZ.Blazor.Server.Example.Components.ShellExample;
 
-public sealed class ContentViewModel : ViewModel
-{
-
-}
+public sealed class ContentViewModel : ViewModel;

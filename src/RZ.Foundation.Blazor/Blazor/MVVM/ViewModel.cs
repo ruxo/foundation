@@ -5,7 +5,11 @@ using ReactiveUI;
 namespace RZ.Foundation.Blazor.MVVM;
 
 [PublicAPI]
-public abstract class ViewModel : ReactiveObject;
+public abstract class ViewModel : ReactiveObject
+{
+    public virtual void ViewOnScreen() {}
+    public virtual void ViewOffScreen() {}
+}
 
 [PublicAPI]
 public abstract class ActivatableViewModel : ViewModel, IActivatableViewModel

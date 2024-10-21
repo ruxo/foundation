@@ -15,7 +15,7 @@ public static class BlazorSettings
           .AddSingleton(TimeProvider.System)
           .AddSingleton<IViewFinder, ViewFinder>()
           .AddScoped<IScheduler>(_ => new SynchronizationContextScheduler(SynchronizationContext.Current!))
-          .AddSingleton<IViewModelFactory, ViewModelFactory>()
+          .AddScoped<IViewModelFactory, ViewModelFactory>()
           .AddScoped<IEventBubbleSubscription, EventBubbleSubscription>()
           .AddScoped<ShellViewModel>(
                sp => ActivatorUtilities.CreateInstance<ShellViewModel>(sp, options?.Invoke(sp) ?? new ShellOptions()));

@@ -3,18 +3,19 @@ using RZ.Foundation.Blazor.MVVM;
 
 namespace RZ.Foundation.Blazor.Shells;
 
+public delegate ViewModel ViewMaker(IViewModelFactory factory);
+
 public sealed record ShellOptions
 {
-    public ViewModel? InitialView { get; init; }
-    public AppMode? InitialAppMode { get; init; }
-    public bool IsDualMode { get; init; }
     public IEnumerable<Navigation> Navigation { get; init; } = [];
 }
 
 [PublicAPI]
 public abstract record Navigation
 {
-    public sealed record Item(string Title, string NavPath, string? Icon = null, bool IsPartialMatch = false, string? Policy = null)
+    public sealed record Item(string Title, ViewMaker View, string NavPath, bool IsPartialMatch = false,
+                              string? Icon = null, NavBarType? NavBar = null, ViewModeType? ViewMode = null,
+                              string? Policy = null)
         : Navigation;
 
     public sealed record Divider : Navigation

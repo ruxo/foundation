@@ -16,19 +16,10 @@ public abstract record AppMode
         return this;
     }
 
-    [PublicAPI]
     public sealed record Page : AppMode
     {
         public static readonly Page Default = new();
-        public static readonly Page DefaultDrawerOff = new() { IsDrawerOpen = false };
-
-        public static Page New(bool isDrawerOpen = true, bool useMiniDrawer = false)
-            => new() { IsDrawerOpen = isDrawerOpen, UseMiniDrawer = useMiniDrawer };
-
-        public bool IsDrawerOpen { get; set; } = true;
-        public bool UseMiniDrawer { get; set; }
     }
 
-    [PublicAPI]
     public sealed record Modal(ReactiveCommand<RUnit, RUnit> OnClose) : AppMode;
 }

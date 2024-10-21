@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
@@ -14,18 +15,34 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
 {
     readonly ILogger<ShellViewModel> logger;
     readonly TimeProvider clock;
+    readonly IViewModelFactory viewFactory;
+    readonly ShellOptions options;
     readonly Stack<ViewState> content = [];
     readonly Subject<NotificationMessage> notifications = new();
     readonly ObservableAsPropertyHelper<int> messageCount;
+    readonly ObservableAsPropertyHelper<bool> isDrawerVisible;
+    readonly ObservableAsPropertyHelper<bool> useMiniDrawer;
     const int MaxNotifications = 20;
 
+    NavBarMode navBarMode = NavBarMode.New(NavBarType.Full);
     bool isDarkMode;
 
-    public ShellViewModel(ILogger<ShellViewModel> logger, TimeProvider clock, ShellOptions options) {
+    public ShellViewModel(ILogger<ShellViewModel> logger, TimeProvider clock,
+                          IViewModelFactory viewFactory, ShellOptions options) {
         this.logger = logger;
         this.clock = clock;
+        this.viewFactory = viewFactory;
+        this.options = options;
 
-        InitView(options.InitialAppMode, options.InitialView, options.IsDualMode);
+        isDrawerVisible = this.WhenAnyValue(x => x.NavBarMode,
+                                            x => x.AppMode,
+                                            x => x.StackCount,
+                                            (navBar, app, stackCount) => app is AppMode.Page
+                                                                      && stackCount == 1
+                                                                      && navBar.Type is NavBarType.Full or NavBarType.Mini
+                                                                      && navBar.Visible)
+                              .ToProperty(this, x => x.IsDrawerVisible);
+        useMiniDrawer = this.WhenAnyValue(x => x.NavBarMode).Select(m => m.Type == NavBarType.Mini).ToProperty(this, x => x.UseMiniDrawer);
 
         messageCount = NotificationMessages.WhenAnyValue(x => x.Count).ToProperty(this, x => x.MessageCount);
 
@@ -38,38 +55,36 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
         set => this.RaiseAndSetIfChanged(ref isDarkMode, value);
     }
 
+    #region Nav Bar
+
+    public NavBarMode NavBarMode
+    {
+        get => navBarMode;
+        set => this.RaiseAndSetIfChanged(ref navBarMode, value);
+    }
+
     public bool IsDrawerOpen
     {
-        get => AppMode is AppMode.Page { IsDrawerOpen: true };
+        get => navBarMode.Expanded;
         set
         {
-            if (AppMode is AppMode.Page p){
-                this.RaisePropertyChanging();
-                p.IsDrawerOpen = value;
-                this.RaisePropertyChanged();
-            }
-            else
-                logger.LogWarning("Cannot set drawer open state when not in page mode");
+            if (NavBarMode.Expanded == value)
+                return;
+            this.RaisePropertyChanging();
+            NavBarMode = NavBarMode with { Expanded = value };
+            this.RaisePropertyChanged();
         }
     }
 
-    public bool UseMiniDrawer{
-        get => AppMode is AppMode.Page { UseMiniDrawer: true };
-        set
-        {
-            if (AppMode is AppMode.Page p){
-                this.RaisePropertyChanging();
-                p.UseMiniDrawer = value;
-                this.RaisePropertyChanged();
-            }
-            else
-                logger.LogWarning("Cannot set mini drawer state when not in page mode");
-        }
-    }
+    public bool IsDrawerVisible => isDrawerVisible.Value;
 
-    public AppMode AppMode => content.Peek().AppMode;
-    public ViewModel Content => content.Peek().Content;
-    public ViewMode ViewMode => content.Peek().ViewMode;
+    public bool UseMiniDrawer => useMiniDrawer.Value;
+
+    #endregion
+
+    public AppMode AppMode => content.TryPeek(out var v)? v.AppMode : AppMode.Page.Default;
+    public ViewModel Content => content.TryPeek(out var v)? v.Content : BlankContentViewModel.Instance;
+    public ViewMode ViewMode => content.TryPeek(out var v)? v.ViewMode : ViewMode.Single.Instance;
     public int StackCount => content.Count;
 
     public ObservableCollection<Navigation> NavItems { get; }
@@ -81,16 +96,6 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
     public int MessageCount => messageCount.Value;
 
     public ReactiveCommand<RUnit, RUnit> ToggleDrawer => ReactiveCommand.Create(() => { IsDrawerOpen = !IsDrawerOpen; });
-
-    public void InitView(AppMode? initialAppMode, ViewModel? viewModel, bool isDualMode, bool? isDrawerOpen = null) {
-        content.Clear();
-        var mode = initialAppMode ?? AppMode.Page.Default;
-        if (mode is AppMode.Page p && isDrawerOpen.HasValue)
-            p.IsDrawerOpen = isDrawerOpen.Value;
-        content.Push(new(mode,
-                         viewModel ?? BlankContentViewModel.Instance,
-                         isDualMode ? new ViewMode.Dual() : ViewMode.Single.Instance));
-    }
 
     #region Dual mode
 
@@ -163,23 +168,48 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
     public IEnumerator<ViewState> GetEnumerator() => content.GetEnumerator();
 
     Unit ChangingStack(Action action) {
+        if (content.Count > 0)
+            content.Peek().Content.ViewOffScreen();
+
         this.RaisePropertyChanging(nameof(Content));
         this.RaisePropertyChanging(nameof(ViewMode));
         this.RaisePropertyChanging(nameof(AppMode));
         this.RaisePropertyChanging(nameof(StackCount));
-        this.RaisePropertyChanging(nameof(IsDrawerOpen));
-        this.RaisePropertyChanging(nameof(UseMiniDrawer));
+        this.RaisePropertyChanging(nameof(IsDrawerVisible));
         action();
-        this.RaisePropertyChanged(nameof(UseMiniDrawer));
-        this.RaisePropertyChanged(nameof(IsDrawerOpen));
+        this.RaisePropertyChanged(nameof(IsDrawerVisible));
         this.RaisePropertyChanged(nameof(StackCount));
         this.RaisePropertyChanged(nameof(AppMode));
         this.RaisePropertyChanged(nameof(ViewMode));
         this.RaisePropertyChanged(nameof(Content));
+
+        content.Peek().Content.ViewOnScreen();
         return unit;
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public bool NavigateTo(string urlPath) {
+        var current = content.FirstOrDefault();
+        var navItem = options.Navigation.OfType<Navigation.Item>().FirstOrDefault(x => x.NavPath == urlPath);
+        if (navItem is null){
+            logger.LogWarning("No navigation item found for path {Path}", urlPath);
+            return false;
+        }
+
+        ChangingStack(() => {
+            content.Clear();
+            var view = navItem.View.Invoke(viewFactory);
+            var vm = navItem.ViewMode switch {
+                ViewModeType.Single => ViewMode.Single.Instance,
+                ViewModeType.Dual   => ViewMode.Dual.Default,
+                _                   => current?.ViewMode ?? ViewMode.Single.Instance
+            };
+            content.Push(new(AppMode.Page.Default, view, vm));
+        });
+        NavBarMode = NavBarMode with { Type = navItem.NavBar ?? NavBarMode.Type };
+        return true;
+    }
 }
 
 public sealed record ViewState(AppMode AppMode, ViewModel Content, ViewMode ViewMode);
@@ -193,6 +223,7 @@ public abstract record ViewMode
 
     public sealed record Dual : ViewMode
     {
+        public static readonly ViewMode Default = new Dual();
         public ViewModel? DetailPanel { get; init; }
     }
 }

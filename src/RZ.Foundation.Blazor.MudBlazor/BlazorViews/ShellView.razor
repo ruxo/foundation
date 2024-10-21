@@ -1,13 +1,9 @@
-﻿@typeparam T where T: RZ.Foundation.Blazor.MVVM.ViewModel
-
-@using Microsoft.Extensions.DependencyInjection
-@using RZ.Foundation.Blazor.Layout
-@using RZ.Foundation.BlazorViews.Shells
+﻿@using RZ.Foundation.BlazorViews.Shells
 @using Microsoft.AspNetCore.Components.Sections
-@using RZ.Foundation.Blazor
 @inherits ReactiveInjectableComponentBase<ShellViewModel>
 
 @inject IServiceProvider ServiceProvider
+@inject NavigationManager NavManager
 @inject ShellViewModel Shell
 
 <MudThemeProvider Theme="Theme" @bind-IsDarkMode="ViewModel!.IsDarkMode" />
@@ -21,50 +17,23 @@
     <MudMainContent Class="max-height">
         <SectionOutlet SectionName="content-top"/>
 
-        @if (ViewModel!.AppMode is AppMode.Page p && p.ContentWidth() is not null){
-            <MudContainer MaxWidth="p.ContentWidth()!.Value" Class="max-height">
-                @if (ChildContent is null){
-                    <ShellViewContent ViewModel="ViewModel!"/>
-                }
-                else{
-                    @ChildContent
-                }
-            </MudContainer>
-        }
-        else{
-            if (ChildContent is null){
-                <ShellViewContent ViewModel="ViewModel!"/>
-            }
-            else{
-                @ChildContent
-            }
-        }
+        <MudContainer MaxWidth="@(MaxWidth ?? MudBlazor.MaxWidth.False)" Class="max-height">
+            <ShellViewContent ViewModel="ViewModel!"/>
+        </MudContainer>
     </MudMainContent>
 </MudLayout>
 
 @code {
 
-    [Parameter] public AppMode? AppMode { get; set; }
-
-    [Parameter] public bool? IsDrawerOpen { get; set; }
-
-    [Parameter] public bool IsDual { get; set; }
-
-    [Parameter] public T? InitialViewModel { get; set; }
-
     [Parameter] public MudTheme? Theme { get; set; }
-
-    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public MaxWidth? MaxWidth { get; set; }
 
     ShellNavMenuViewModel menuVm = default!;
 
     protected override void OnParametersSet() {
         menuVm = new(Shell);
-        Shell.InitView(AppMode,
-                       InitialViewModel ?? ActivatorUtilities.GetServiceOrCreateInstance<T>(ServiceProvider),
-                       IsDual,
-                       IsDrawerOpen);
+        var pathLength = NavManager.Uri.Length - NavManager.BaseUri.Length;
+        Shell.NavigateTo(NavManager.Uri.Substring(NavManager.BaseUri.Length -1, pathLength + 1));
         base.OnParametersSet();
     }
-
 }

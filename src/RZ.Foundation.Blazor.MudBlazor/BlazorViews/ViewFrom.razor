@@ -7,7 +7,7 @@
         break;
 
     case ViewResolution.InvalidModel:
-        <MudText Typo="Typo.body2">Model @ViewModel.GetType().Name does not have a correct naming convention.</MudText>
+        <MudText Typo="Typo.body2">Model @Model.GetType().Name does not have a correct naming convention.</MudText>
         break;
 
     case ViewResolution.ViewTypeNotFound s:
@@ -25,12 +25,12 @@
 
 @code {
     [Parameter, EditorRequired]
-    public required ViewModel ViewModel { get; set; }
+    public required ViewModel Model { get; set; }
 
     ViewResolution state = ViewResolution.Empty.Instance;
 
     protected override void OnParametersSet() {
-        state = ViewFinder.Locate(ViewModel);
+        state = ViewFinder.Locate(Model);
         base.OnParametersSet();
     }
 }
