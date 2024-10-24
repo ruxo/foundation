@@ -1,4 +1,5 @@
-﻿@inherits ReactiveComponentBase<ContentViewModel>
+﻿@using RZ.Foundation.Blazor.Helpers
+@inherits ReactiveComponentBase<ContentViewModel>
 
 <PageTitle>Content View</PageTitle>
 
@@ -6,9 +7,11 @@
     <MudText Typo="Typo.h6">Shell Content</MudText>
 </SectionContent>
 
+<SectionContent SectionName="drawer-title">
+    <MudDrawerHeader>
+        <MudText>Example</MudText>
+    </MudDrawerHeader>
+</SectionContent>
 
-<h3>ContentView</h3>
-
-@code {
-
-}
+<MudText Typo="Typo.h3">Content View</MudText>
+<MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@ViewModel!.OpenPopup.OnExecute()">Show popup</MudButton>

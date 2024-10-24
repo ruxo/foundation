@@ -12,8 +12,12 @@ public class ShellNavMenuViewModel(ShellViewModel shell) : ActivatableViewModel
     ObservableAsPropertyHelper<DrawerVariant> variant = default!;
     ObservableAsPropertyHelper<bool> showOnHover = default!;
     ObservableAsPropertyHelper<bool> iconOnly = default!;
+    ObservableAsPropertyHelper<bool> isDrawerVisible = default!;
 
     protected override void OnActivated(CompositeDisposable disposables) {
+        isDrawerVisible = shell.WhenAnyValue(x => x.IsDrawerVisible)
+                              .ToProperty(this, x => x.IsDrawerVisible)
+                              .DisposeWith(disposables);
         variant = shell.WhenAnyValue(x => x.UseMiniDrawer)
                        .Select(x => x ? DrawerVariant.Mini : DrawerVariant.Persistent)
                        .ToProperty(this, x => x.Variant)
@@ -42,5 +46,8 @@ public class ShellNavMenuViewModel(ShellViewModel shell) : ActivatableViewModel
             this.RaisePropertyChanged();
         }
     }
+
+    public bool IsDrawerVisible => isDrawerVisible.Value;
+
     public IEnumerable<Navigation> NavItems => shell.NavItems;
 }

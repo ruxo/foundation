@@ -4,23 +4,25 @@
 
 @inject NavigationManager NavManager
 
-<MudDrawer Elevation="0" Variant="@ViewModel!.Variant" OpenMiniOnHover="ViewModel!.ShowOnHover"
-           @bind-Open="ViewModel!.IsDrawerOpen">
-    @if (ViewModel!.IsDrawerOpen) {
-        <SectionOutlet SectionName="drawer-title"/>
-    }
-    <MudNavMenu>
-        @foreach (var nav in ViewModel!.NavItems){
-            <NavItemView Item="nav" IconOnly="ViewModel!.IconOnly" />
+@if (ViewModel!.IsDrawerVisible){
+    <MudDrawer Elevation="0" Variant="@ViewModel!.Variant" OpenMiniOnHover="ViewModel!.ShowOnHover"
+               @bind-Open="ViewModel!.IsDrawerOpen">
+        @if (ViewModel!.IsDrawerOpen){
+            <SectionOutlet SectionName="drawer-title"/>
         }
-    </MudNavMenu>
-    @if (ViewModel!.IsDrawerOpen){
-        <MudSpacer/>
-        <MudText Typo="Typo.subtitle2" Align="Align.Right" Style="border-top: 1px solid lightgray">
-            version @AppVersion.Current
-        </MudText>
-    }
-</MudDrawer>
+        <MudNavMenu>
+            @foreach (var nav in ViewModel!.NavItems){
+                <NavItemView Item="nav" IconOnly="ViewModel!.IconOnly"/>
+            }
+        </MudNavMenu>
+        @if (ViewModel!.IsDrawerOpen){
+            <MudSpacer/>
+            <MudText Typo="Typo.subtitle2" Align="Align.Right" Style="border-top: 1px solid lightgray">
+                version @AppVersion.Current
+            </MudText>
+        }
+    </MudDrawer>
+}
 
 @code {
     public ShellNavMenu() {
