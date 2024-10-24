@@ -5,7 +5,6 @@ using RZ.Blazor.Server.Example.Components;
 using RZ.Blazor.Server.Example.Components.Home;
 using RZ.Blazor.Server.Example.Components.ShellExample;
 using RZ.Foundation;
-using RZ.Foundation.Blazor;
 using RZ.Foundation.Blazor.Shells;
 using RZ.Foundation.Blazor.Views;
 
@@ -15,9 +14,10 @@ builder.Services
        .AddMudServices()
        .AddRzBlazorSettings(_ => new ShellOptions {
             Navigation = [
-                new Navigation.Item("Home", View.Model<WelcomeViewModel>(), "/", Icon: Icons.Material.Filled.Home, NavBar: NavBarType.Full),
-                new Navigation.Item("Shell", View.Model<ContentViewModel>(), "/shell", Icon: Icons.Material.Filled.ShieldMoon, NavBar: NavBarType.Mini),
-                new Navigation.Item("Blank", View.Model<BlankContentViewModel>(), "/blank", Icon: Icons.Material.Filled.Foundation),
+                new Navigation.Item("Home", View.Model<WelcomeViewModel>(), "/", Icons.Material.Filled.Home),
+                new Navigation.Item("Shell", View.Model<ContentViewModel>(), "/shell", Icons.Material.Filled.ShieldMoon),
+                new Navigation.Item("Blank", View.Model<BlankContentViewModel>(), "/blank", Icons.Material.Filled.Foundation),
+                new Navigation.DirectRoute("Direct", "/direct-route", Icons.Material.Filled.Directions)
             ]
         })
        .AddRazorComponents()

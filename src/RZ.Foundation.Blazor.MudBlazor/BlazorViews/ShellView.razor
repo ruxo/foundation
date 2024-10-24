@@ -1,5 +1,7 @@
 ﻿@using RZ.Foundation.BlazorViews.Shells
 @using Microsoft.AspNetCore.Components.Sections
+@using RZ.Foundation.Blazor
+@using RZ.Foundation.Blazor.Helpers
 @inherits ReactiveInjectableComponentBase<ShellViewModel>
 
 @inject IServiceProvider ServiceProvider
@@ -32,8 +34,7 @@
 
     protected override void OnParametersSet() {
         menuVm = new(Shell);
-        var pathLength = NavManager.Uri.Length - NavManager.BaseUri.Length;
-        Shell.NavigateTo(NavManager.Uri.Substring(NavManager.BaseUri.Length -1, pathLength + 1));
+        Shell.NavigateTo(NavManager.Path());
         base.OnParametersSet();
     }
 }

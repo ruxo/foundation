@@ -26,6 +26,27 @@
         }
         break;
 
+    case Navigation.DirectRoute navItem:
+        if (navItem.Policy is null){
+            <MudNavLink Icon="@navItem.Icon" Href="@navItem.NavPath"
+                        Match="@(navItem.IsPartialMatch ? NavLinkMatch.Prefix : NavLinkMatch.All)">
+                @if (!IconOnly){
+                    @navItem.Title
+                }
+            </MudNavLink>
+        }
+        else{
+            <AuthorizeView Policy="@navItem.Policy">
+                <MudNavLink Icon="@navItem.Icon" Href="@navItem.NavPath"
+                            Match="@(navItem.IsPartialMatch ? NavLinkMatch.Prefix : NavLinkMatch.All)">
+                    @if (!IconOnly){
+                        @navItem.Title
+                    }
+                </MudNavLink>
+            </AuthorizeView>
+        }
+        break;
+
     case Navigation.Group group:
         <MudNavGroup Icon="@group.Icon" Title="@group.Title">
             @foreach (var item in group.Items){

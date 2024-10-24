@@ -24,7 +24,7 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
     readonly ObservableAsPropertyHelper<bool> useMiniDrawer;
     const int MaxNotifications = 20;
 
-    NavBarMode navBarMode = NavBarMode.New(NavBarType.Full);
+    NavBarMode navBarMode;
     bool isDarkMode;
 
     public ShellViewModel(ILogger<ShellViewModel> logger, TimeProvider clock,
@@ -34,6 +34,7 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
         this.viewFactory = viewFactory;
         this.options = options;
 
+        navBarMode = options.InitialNavBar;
         isDrawerVisible = this.WhenAnyValue(x => x.NavBarMode,
                                             x => x.AppMode,
                                             x => x.StackCount,
@@ -207,7 +208,6 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
             };
             content.Push(new(AppMode.Page.Default, view, vm));
         });
-        NavBarMode = NavBarMode with { Type = navItem.NavBar ?? NavBarMode.Type };
         return true;
     }
 }
