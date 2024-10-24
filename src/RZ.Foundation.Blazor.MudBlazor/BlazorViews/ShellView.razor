@@ -1,6 +1,5 @@
 ﻿@using RZ.Foundation.BlazorViews.Shells
 @using Microsoft.AspNetCore.Components.Sections
-@using RZ.Foundation.Blazor
 @using RZ.Foundation.Blazor.Helpers
 @inherits ReactiveInjectableComponentBase<ShellViewModel>
 
@@ -10,7 +9,7 @@
 
 <MudThemeProvider Theme="Theme" @bind-IsDarkMode="ViewModel!.IsDarkMode" />
 <MudPopoverProvider />
-<MudDialogProvider BackdropClick="false" NoHeader="true" />
+<MudDialogProvider BackdropClick="false" />
 <MudSnackbarProvider />
 
 <MudLayout Class="screen-height">

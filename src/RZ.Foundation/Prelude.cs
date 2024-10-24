@@ -97,7 +97,7 @@ public static partial class Prelude {
         => new(code ?? ei.Code, ei.Message, (debug ?? Optional(ei.DebugInfo)).ToNullable(), ei.Data,
                (inner ?? ei.InnerError).ToNullable(),
                subErrors is null ? ei.SubErrors : subErrors.Value.ToNullable(),
-               stack ?? ei.Stack, ei.TraceId);
+               (stack ?? ei.Stack).Value, ei.TraceId);
 
     public static ErrorInfo ToErrorInfo(this Exception ex) {
         if (ex is ErrorInfoException ei) return ei.ToErrorInfo();
@@ -121,8 +121,7 @@ public static partial class Prelude {
                              data: default,
                              e.Inner.Map(ToErrorInfo).ToNullable(),
                              subErrors.IsEmpty ? null : subErrors,
-                             stack: e.Exception.Bind(ex => Optional(ex.StackTrace))
-            );
+                             stack: e.Exception.ToNullable()?.StackTrace);
     }
 
     public static B? Apply<A,B>(this A? a, Func<A,B> f)

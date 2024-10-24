@@ -5,16 +5,16 @@ using System.Text.Json.Serialization;
 
 namespace RZ.Foundation.Json;
 
-public sealed class SetJsonConverter : JsonConverterFactory
+public class SetJsonConverter : JsonConverterFactory
 {
     public static readonly SetJsonConverter Default = new();
-    
+
     static readonly Type SetType = typeof(Set<>);
-    public override bool CanConvert(Type typeToConvert) => 
+    public override bool CanConvert(Type typeToConvert) =>
         JsonConverterHelper.CanConvert(SetType, typeToConvert);
 
     static readonly Type SetSerializerType = typeof(SetSerializer<>);
-    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) => 
+    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) =>
         JsonConverterHelper.CreateConverter(SetSerializerType, typeToConvert);
 
     sealed class SetSerializer<T> : JsonConverter<Set<T>>

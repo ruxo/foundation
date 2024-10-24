@@ -1,36 +1,25 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 
 namespace RZ.Foundation.Json;
 
-static class JsonConverterHelper
-{
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool CanConvert(Type functor, Type typeToConvert) =>
-        typeToConvert.IsGenericType && typeToConvert.GetGenericTypeDefinition() == functor;
-
-    public static JsonConverter CreateConverter(Type functor, Type typeToConvert) {
-        var t = functor.MakeGenericType(typeToConvert.GetGenericArguments());
-        return (JsonConverter)Activator.CreateInstance(t)!;
-    }
-}
-
-public sealed class OptionJsonConverter : JsonConverterFactory
+[PublicAPI]
+public class OptionJsonConverter : JsonConverterFactory
 {
     public static readonly OptionJsonConverter Default = new();
-    
+
     static readonly Type OptionType = typeof(Option<>);
 
     public override bool CanConvert(Type typeToConvert) =>
         JsonConverterHelper.CanConvert(OptionType, typeToConvert);
 
     static readonly Type OptionSerializerType = typeof(OptionSerializer<>);
-    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) => 
+    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) =>
         JsonConverterHelper.CreateConverter(OptionSerializerType, typeToConvert);
 
-    sealed class OptionSerializer<T> : JsonConverter<Option<T>>
+    public class OptionSerializer<T> : JsonConverter<Option<T>>
     {
         public override Option<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
             reader.TokenType == JsonTokenType.Null

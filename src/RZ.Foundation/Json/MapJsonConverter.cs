@@ -7,7 +7,7 @@ using Map = LanguageExt.Map;
 
 namespace RZ.Foundation.Json;
 
-public sealed class MapJsonConverter : JsonConverterFactory
+public class MapJsonConverter : JsonConverterFactory
 {
     public static readonly MapJsonConverter Default = new();
 
@@ -25,12 +25,12 @@ public sealed class MapJsonConverter : JsonConverterFactory
     sealed class MapSerializer<T> : JsonConverter<Map<string,T>>
     {
         public override Map<string,T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-            Debug.Assert(reader.TokenType == JsonTokenType.StartObject);
+            Trace.Assert(reader.TokenType == JsonTokenType.StartObject);
 
             var map = Map.empty<string, T>();
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 var key = reader.GetString()!;
-                Debug.Assert(reader.Read());
+                Trace.Assert(reader.Read());
                 var value = JsonSerializer.Deserialize<T>(ref reader, options)!;
                 map = map.Add(key, value);
             }

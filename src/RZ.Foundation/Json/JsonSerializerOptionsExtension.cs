@@ -12,6 +12,7 @@ public static class JsonSerializerOptionsExtension
         opts.Converters.Add(new SeqJsonConverter());
         opts.Converters.Add(new SetJsonConverter());
         opts.Converters.Add(new MapJsonConverter());
+        opts.Converters.Add(new OutcomeConverter());
         return opts;
     }
 

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Text.Json;
 using FluentAssertions;
 using LanguageExt;
 using LanguageExt.Common;
 using RZ.Foundation.Extensions;
+using RZ.Foundation.Json;
 using RZ.Foundation.Types;
 using Xunit;
 using static LanguageExt.Prelude;
@@ -471,6 +473,58 @@ public sealed class OutcomeTest
         _ = UnitOutcome | @failDo(_ => called = true);
 
         called.Should().BeFalse();
+    }
+
+    #endregion
+
+    #region Serializable!
+
+    sealed record TestRecord(string Name, int Age);
+
+    [Fact]
+    public void SerializeSuccessOutcomeToJson() {
+        Outcome<TestRecord> outcome = new TestRecord("John", 42);
+
+        // when
+        var json = JsonSerializer.Serialize(outcome, new JsonSerializerOptions().UseRzConverters());
+
+        // then
+        json.Should().Be("{\"Data\":{\"Name\":\"John\",\"Age\":42}}");
+    }
+
+    [Fact]
+    public void SerializeFailureOutcomeToJson() {
+        Outcome<TestRecord> outcome = new ErrorInfo(StandardErrorCodes.Unhandled);
+
+        // when
+        var json = JsonSerializer.Serialize(outcome, new JsonSerializerOptions().UseRzConverters());
+
+        // then
+        json.Should().Be("{\"Error\":{\"Code\":\"unhandled\",\"Message\":\"unhandled\",\"TraceId\":null,\"DebugInfo\":null,\"Data\":null}}");
+    }
+
+    [Fact]
+    public void DeserializeSuccessOutcomeToJson() {
+        var json = "{\"Data\":{\"Name\":\"John\",\"Age\":42}}";
+        Outcome<TestRecord> expected = new TestRecord("John", 42);
+
+        // when
+        var outcome = JsonSerializer.Deserialize<Outcome<TestRecord>>(json, new JsonSerializerOptions().UseRzConverters());
+
+        // then
+        outcome.Should().Be(expected);
+    }
+
+    [Fact]
+    public void DeserializeFailureOutcomeToJson() {
+        var json = "{\"Error\":{\"Code\":\"unhandled\",\"Message\":\"unhandled\",\"TraceId\":null,\"DebugInfo\":null,\"Data\":null}}";
+        Outcome<TestRecord> expected = new ErrorInfo(StandardErrorCodes.Unhandled);
+
+        // when
+        var outcome = JsonSerializer.Deserialize<Outcome<TestRecord>>(json, new JsonSerializerOptions().UseRzConverters());
+
+        // then
+        outcome.Should().Be(expected);
     }
 
     #endregion

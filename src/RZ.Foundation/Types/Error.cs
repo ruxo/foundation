@@ -27,9 +27,9 @@ public sealed record ErrorInfo
     }
 
     public ErrorInfo(string code, string? message = default, object? debugInfo = null, object? data = null,
-              ErrorInfo? inner = default, IEnumerable<ErrorInfo>? subErrors = default, StackInfo stack = default, string? traceId = default) =>
+              ErrorInfo? innerError = default, IEnumerable<ErrorInfo>? subErrors = default, string? stack = default, string? traceId = default) =>
         (Code, Message, TraceId, DebugInfo, Data, InnerError, SubErrors, Stack) =
-        (code, message ?? code, traceId ?? Activity.Current?.Id, debugInfo, data, inner, subErrors, stack.Value);
+        (code, message ?? code, traceId ?? Activity.Current?.Id, debugInfo, data, innerError, subErrors, stack);
 
     /// <summary>
     /// Error code
@@ -99,8 +99,8 @@ public sealed record ErrorInfo
 
 public sealed class ErrorInfoException : ApplicationException
 {
-    public ErrorInfoException(string code, string message, object? debugInfo = null, object? data = null, Exception? innerException = null,
-                              IEnumerable<ErrorInfo>? subErrors = default) : base(message, innerException)
+    public ErrorInfoException(string code, string? message, object? debugInfo = null, object? data = null, Exception? innerException = null,
+                              IEnumerable<ErrorInfo>? subErrors = default) : base(message ?? code, innerException)
         => (Code, DebugInfo, AdditionalData, SubErrors) = (code, debugInfo, data, subErrors);
 
     public ErrorInfoException(Exception e) : this(ErrorFrom.Exception(e)) {
@@ -162,7 +162,7 @@ public static class ErrorFrom
             data: default,
             e.Inner.Map(Exception).ToNullable(),
             subErrors.IsEmpty ? null : subErrors,
-            stack: e.Exception.Bind(ex => Optional(ex.StackTrace))
+            stack: e.Exception.ToNullable()?.StackTrace
             );
     }
 }
