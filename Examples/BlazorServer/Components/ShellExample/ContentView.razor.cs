@@ -10,10 +10,21 @@ public sealed class ContentViewModel : ViewModel
     public ContentViewModel(ShellViewModel shell) {
         shell.NavBarMode = NavBarMode.New(NavBarType.Mini);
 
-        OpenPopup = ReactiveCommand.Create(() => {
+        OpenModal = ReactiveCommand.Create(() => {
             shell.PushModal(new PopupViewModel());
+        });
+
+        var n = 0;
+        PopupSuccess = ReactiveCommand.Create(() => {
+            shell.Notify(new(MessageSeverity.Info, $"Popup Success {++n}"));
+        });
+
+        PopupFailure = ReactiveCommand.Create(() => {
+            shell.Notify(new(MessageSeverity.Error, $"Popup Failure {++n}"));
         });
     }
 
-    public ReactiveCommand<RUnit, RUnit> OpenPopup { get; }
+    public ReactiveCommand<RUnit, RUnit> OpenModal { get; }
+    public ReactiveCommand<RUnit, RUnit> PopupSuccess { get; }
+    public ReactiveCommand<RUnit, RUnit> PopupFailure { get; }
 }

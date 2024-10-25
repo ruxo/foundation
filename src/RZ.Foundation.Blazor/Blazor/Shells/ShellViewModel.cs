@@ -18,8 +18,7 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
     readonly IViewModelFactory viewFactory;
     readonly ShellOptions options;
     readonly Stack<ViewState> content = [];
-    readonly Subject<NotificationMessage> notifications = new();
-    readonly ObservableAsPropertyHelper<int> messageCount;
+    readonly Subject<NotificationEvent> notifications = new();
     readonly ObservableAsPropertyHelper<bool> isDrawerVisible;
     readonly ObservableAsPropertyHelper<bool> useMiniDrawer;
     const int MaxNotifications = 20;
@@ -44,8 +43,6 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
                                                                       && navBar.Visible)
                               .ToProperty(this, x => x.IsDrawerVisible);
         useMiniDrawer = this.WhenAnyValue(x => x.NavBarMode).Select(m => m.Type == NavBarType.Mini).ToProperty(this, x => x.UseMiniDrawer);
-
-        messageCount = NotificationMessages.WhenAnyValue(x => x.Count).ToProperty(this, x => x.MessageCount);
 
         NavItems = new(options.Navigation);
     }
@@ -90,11 +87,7 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
 
     public ObservableCollection<Navigation> NavItems { get; }
 
-    public IObservable<NotificationMessage> Notifications => notifications;
-
-    public ObservableCollection<NotificationEvent> NotificationMessages { get; } = new();
-
-    public int MessageCount => messageCount.Value;
+    public IObservable<NotificationEvent> Notifications => notifications;
 
     public ReactiveCommand<RUnit, RUnit> ToggleDrawer => ReactiveCommand.Create(() => { IsDrawerOpen = !IsDrawerOpen; });
 
@@ -122,7 +115,7 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
         => ChangingStack(() => content.Pop());
 
     public NotificationMessage Notify(NotificationMessage message) {
-        NotificationMessages.Add(new(clock.GetLocalNow(), message.Severity, message.Message));
+        notifications.OnNext(new(clock.GetLocalNow(), message.Severity, message.Message));
         return message;
     }
 

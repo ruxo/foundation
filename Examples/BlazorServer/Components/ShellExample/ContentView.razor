@@ -14,4 +14,6 @@
 </SectionContent>
 
 <MudText Typo="Typo.h3">Content View</MudText>
-<MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@ViewModel!.OpenPopup.OnExecute()">Show popup</MudButton>
+<MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="@ViewModel!.OpenModal.OnExecute()">Show modal</MudButton>
+<MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="@ViewModel!.PopupSuccess.OnExecute()">Show success popup</MudButton>
+<MudButton Color="Color.Error" Variant="Variant.Outlined" OnClick="@ViewModel!.PopupFailure.OnExecute()">Show failure popup</MudButton>

@@ -1,11 +1,14 @@
-﻿@using RZ.Foundation.BlazorViews.Shells
+﻿@using System.Reactive.Disposables
+@using RZ.Foundation.BlazorViews.Shells
 @using Microsoft.AspNetCore.Components.Sections
+@using ReactiveUI
 @using RZ.Foundation.Blazor.Helpers
 @inherits ReactiveInjectableComponentBase<ShellViewModel>
 
 @inject IServiceProvider ServiceProvider
 @inject NavigationManager NavManager
 @inject ShellViewModel Shell
+@inject ISnackbar Snackbar
 
 <MudThemeProvider Theme="Theme" @bind-IsDarkMode="ViewModel!.IsDarkMode" />
 <MudPopoverProvider />
@@ -31,9 +34,13 @@
 
     ShellNavMenuViewModel menuVm = default!;
 
-    protected override void OnParametersSet() {
-        menuVm = new(Shell);
-        Shell.NavigateTo(NavManager.Path());
-        base.OnParametersSet();
+    public ShellView() {
+        this.WhenActivated(disposables => {
+            Shell.Notifications
+                 .Subscribe(m => Snackbar.Add(m.Message, m.Severity.ToMudSeverity()))
+                 .DisposeWith(disposables);
+            menuVm = new(Shell);
+            Shell.NavigateTo(NavManager.Path());
+        });
     }
 }
