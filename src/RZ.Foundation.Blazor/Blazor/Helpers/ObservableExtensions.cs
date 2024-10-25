@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using RZ.Foundation.Blazor.MVVM;
 using RZ.Foundation.Blazor.Shells;
 using RZ.Foundation.Types;
 using Unit = LanguageExt.Unit;
@@ -70,9 +71,9 @@ public static class ObservableFrom
         });
 }
 
+[PublicAPI]
 public static class ObservableExtensions
 {
-    [PublicAPI]
     public static IDisposable Consume<T>(this IObserver<T> observer, Outcome<T> value) {
         if (value.IfSuccess(out var v, out var e)){
             observer.OnNext(v);
@@ -83,11 +84,9 @@ public static class ObservableExtensions
         return Disposable.Empty;
     }
 
-    [PublicAPI]
     public static IObservable<Outcome<T>> CatchToOutcome<T>(this IObservable<Outcome<T>> source)
         => source.Catch((Exception e) => Observable.Return(FailedOutcome<T>(e.ToErrorInfo())));
 
-    [PublicAPI]
     public static IObservable<Outcome<T>> CatchToOutcome<T>(this IObservable<T> source, Action<ErrorInfo>? handler = default) {
         var stream = source.Select(SuccessOutcome).CatchToOutcome();
         return handler is null
@@ -109,7 +108,6 @@ public static class ObservableExtensions
         where r.Kind == NotificationKind.OnError
         select From(r);
 
-    [PublicAPI]
     public static IObservable<ErrorInfo> GetErrorStream<T>(this IObservable<Outcome<T>> stream) =>
         from r in stream.Materialize()
         let e = r.Kind switch {
@@ -120,26 +118,24 @@ public static class ObservableExtensions
         where e is not null
         select e;
 
-    [PublicAPI]
+    public static IObservable<Outcome<T>> SetViewStatus<T>(this IObservable<Outcome<T>> source, Action<ViewStatus> assign)
+        => source.Do(result => assign(result.IfSuccess(out _, out var e) ? ViewStatus.Ready.Instance : new ViewStatus.Failed(e)));
+
     public static IObservable<Unit> Ignore<_>(this IObservable<_> stream)
         => stream.Select(_ => unit);
 
     /// <summary>
     /// Get the execution handler for a reactive command
     /// </summary>
-    [PublicAPI]
     public static Func<Task<T>> OnExecute<T>(this ReactiveCommand<Unit, T> command)
         => async () => await command.Execute();
 
-    [PublicAPI]
     public static Func<Task<T>> OnExecute<T>(this ReactiveCommand<System.Reactive.Unit, T> command)
         => async () => await command.Execute();
 
-    [PublicAPI]
     public static Func<Task<TOut>> OnExecute<TIn,TOut>(this ReactiveCommand<TIn, TOut> command, Func<TIn> value)
         => async () => await command.Execute(value());
 
-    [PublicAPI]
     public static IObservable<T> Shared<T>(this IObservable<T> coldObservable)
         => coldObservable.Publish().RefCount();
 
@@ -156,12 +152,10 @@ public static class ObservableExtensions
             shell.Notify(new(MessageSeverity.Error, translator(e)));
         });
 
-    [PublicAPI]
     public static IDisposable TrapErrors<T>(this IObservable<Outcome<T>> source, ShellViewModel shell,
                                             Func<ErrorInfo, string>? translator = default, ILogger? logger = default)
         => source.GetErrorStream().TrapErrors(shell, translator ?? DefaultTranslator, logger);
 
-    [PublicAPI]
     public static IDisposable TrapErrors<T>(this IObservable<T> source, ShellViewModel shell,
                                             Func<ErrorInfo, string>? translator = default, ILogger? logger = default)
         => source.GetErrorStream().TrapErrors(shell, translator ?? DefaultTranslator, logger);

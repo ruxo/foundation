@@ -8,8 +8,13 @@
 <MudAppBar Elevation="1">
     @switch (ViewModel!.AppMode){
         case AppMode.Page:
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
-                           OnClick="@ViewModel.ToggleDrawer.OnExecute()"/>
+            if (ViewModel.StackCount > 1){
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start"
+                               OnClick="@(() => ViewModel!.CloseCurrentView())"/>
+            }
+            else{
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ViewModel.ToggleDrawer.OnExecute()"/>
+            }
             break;
 
         case AppMode.Modal m:

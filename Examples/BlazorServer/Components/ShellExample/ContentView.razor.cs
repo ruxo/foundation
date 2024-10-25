@@ -14,6 +14,10 @@ public sealed class ContentViewModel : ViewModel
             shell.PushModal(new PopupViewModel());
         });
 
+        ShowNewPage = ReactiveCommand.Create(() => {
+            shell.Push(new PopupViewModel());
+        });
+
         var n = 0;
         PopupSuccess = ReactiveCommand.Create(() => {
             shell.Notify(new(MessageSeverity.Info, $"Popup Success {++n}"));
@@ -25,6 +29,7 @@ public sealed class ContentViewModel : ViewModel
     }
 
     public ReactiveCommand<RUnit, RUnit> OpenModal { get; }
+    public ReactiveCommand<RUnit, RUnit> ShowNewPage { get; }
     public ReactiveCommand<RUnit, RUnit> PopupSuccess { get; }
     public ReactiveCommand<RUnit, RUnit> PopupFailure { get; }
 }
