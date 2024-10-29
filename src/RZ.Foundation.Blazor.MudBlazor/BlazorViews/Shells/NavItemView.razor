@@ -66,7 +66,8 @@
 
     [Parameter] public bool IconOnly { get; set; }
 
-    async Task NavigateTo(string path) {
+    async Task NavigateTo(string? path) {
+        if (path is null) return;
         Shell.NavigateTo(path);
 
         await JS.InvokeVoidAsync("window.history.replaceState", null, null, path);
