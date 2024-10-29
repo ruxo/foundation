@@ -5,7 +5,7 @@ namespace RZ.Foundation.Blazor.Shells;
 [PublicAPI]
 public abstract record Navigation
 {
-    public sealed record Item(string Title, ViewMaker View, string? NavPath, string? Icon = null, bool IsPartialMatch = false, string? Policy = null,
+    public sealed record Item(string Title, ViewMaker View, string NavPath, string? Icon = null, bool IsPartialMatch = false, string? Policy = null,
                               ViewModeType? ViewMode = null) : Navigation;
 
     public sealed record Divider : Navigation
