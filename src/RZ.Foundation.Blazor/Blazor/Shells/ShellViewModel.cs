@@ -184,21 +184,31 @@ public class ShellViewModel : ViewModel, IEnumerable<ViewState>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public bool NavigateTo(string urlPath) {
-        var current = content.FirstOrDefault();
+        var current = content.TryPeek(out var v) ? v : null;
+
+        if (current is null)
+            logger.LogDebug("Shell has no view");
+        else
+            logger.LogDebug("Shell content is {@Content}", current.Content);
+
         var navItem = options.Navigation.OfType<Navigation.Item>().FirstOrDefault(x => x.NavPath == urlPath);
         if (navItem is null){
             logger.LogWarning("No navigation item found for path {Path}", urlPath);
             return false;
         }
+        logger.LogDebug("Navigating to {Path} for menu [{Title}]", urlPath, navItem.Title);
 
         ChangingStack(() => {
             content.Clear();
             var view = navItem.View.Invoke(viewFactory);
+
             var vm = navItem.ViewMode switch {
                 ViewModeType.Single => ViewMode.Single.Instance,
                 ViewModeType.Dual   => ViewMode.Dual.Default,
                 _                   => current?.ViewMode ?? ViewMode.Single.Instance
             };
+
+            logger.LogDebug("Push view for {Path}", urlPath);
             content.Push(new(AppMode.Page.Default, view, vm));
         });
         return true;

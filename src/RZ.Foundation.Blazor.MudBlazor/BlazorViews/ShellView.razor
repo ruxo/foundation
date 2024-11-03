@@ -1,14 +1,15 @@
 ﻿@using System.Reactive.Disposables
 @using RZ.Foundation.BlazorViews.Shells
 @using Microsoft.AspNetCore.Components.Sections
+@using Microsoft.Extensions.Logging
 @using ReactiveUI
 @using RZ.Foundation.Blazor.Helpers
 @inherits ReactiveInjectableComponentBase<ShellViewModel>
 
-@inject IServiceProvider ServiceProvider
 @inject NavigationManager NavManager
 @inject ShellViewModel Shell
 @inject ISnackbar Snackbar
+@inject ILogger<ShellView> Logger
 
 <MudThemeProvider Theme="Theme" @bind-IsDarkMode="ViewModel!.IsDarkMode" />
 <MudPopoverProvider />
@@ -40,7 +41,11 @@
                  .Subscribe(m => Snackbar.Add(m.Message, m.Severity.ToMudSeverity()))
                  .DisposeWith(disposables);
             menuVm = new(Shell);
-            Shell.NavigateTo(NavManager.Path());
+            var toPath = NavManager.Path();
+
+            Logger.LogDebug("Navigating to {ToPath}", toPath);
+            Shell.NavigateTo(toPath);
         });
     }
+
 }
