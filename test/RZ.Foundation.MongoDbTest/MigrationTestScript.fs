@@ -12,7 +12,8 @@ type TestMigration() =
         member this.Up db =
             let name = FSharp.ToExpression<Customer, obj>(_.Name)
             db.Build<Customer>()
-              .WithSchema(Migration.Validation.Requires<Customer>())
+              // cannot compiled with F# in .NET 9 https://github.com/dotnet/fsharp/issues/17950
+              // .WithSchema(Migration.Validation.Requires<Customer>())
               .Index("Name", fun b -> b.Ascending(name))
               .Run()
         member this.Down db =
