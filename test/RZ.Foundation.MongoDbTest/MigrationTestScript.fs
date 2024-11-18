@@ -12,9 +12,8 @@ type TestMigration() =
         member this.Up db =
             let name = FSharp.ToExpression<Customer, obj>(_.Name)
             db.Build<Customer>()
-              // cannot compiled with F# in .NET 9 https://github.com/dotnet/fsharp/issues/17950
-              // .WithSchema(Migration.Validation.Requires<Customer>())
-              .Index("Name", fun b -> b.Ascending(name))
+              .WithSchema(Migration.Validation.Requires<Customer>())
+              .Index("Name", _.Ascending(name))
               .Run()
         member this.Down db =
             db.DropCollection(nameof Customer)
@@ -26,4 +25,4 @@ type MigrationStep2() =
         member _.Up db =
             db.Collection<Customer>().DropIndex("Name") |> ignore
         member _.Down db =
-            db.Collection<Customer>().CreateUniqueIndex("name", fun b -> b.Ascending(FSharp.ToExpression<Customer, obj>(_.Name))) |> ignore
+            db.Collection<Customer>().CreateUniqueIndex("name", _.Ascending(FSharp.ToExpression<Customer, obj>(_.Name))) |> ignore

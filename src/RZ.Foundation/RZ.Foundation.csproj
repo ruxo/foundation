@@ -13,7 +13,7 @@
     <Nullable>enable</Nullable>
     <RepositoryUrl>https://github.com/ruxo/foundation</RepositoryUrl>
     <RepositoryType>public</RepositoryType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="" />

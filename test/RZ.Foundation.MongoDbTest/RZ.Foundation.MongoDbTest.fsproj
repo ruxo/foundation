@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
     <IsTestProject>true</IsTestProject>
     <LangVersion>preview</LangVersion>
+    <NoWarn>760</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +28,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Update="xunit" Version="2.9.2" />
+    <PackageReference Update="FluentAssertions" Version="6.12.2" />
   </ItemGroup>
 
   <ItemGroup>

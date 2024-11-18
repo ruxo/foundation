@@ -287,7 +287,7 @@ module Upsert =
         let customer = mdb.Db.GetCollection<Customer>()
 
         let time = Mock<TimeProvider>()
-        time.Setup(fun x -> x.GetUtcNow()).Returns(NewYear2024) |> ignore
+        time.Setup(_.GetUtcNow()).Returns(NewYear2024) |> ignore
 
         // when
         let! result = customer.Upsert(NewKid, clock = time.Object)
