@@ -1,4 +1,4 @@
-module MongoCRUD
+namespace MongoDbTest.MongoCRUD
 
 open System
 open System.Threading.Tasks
@@ -12,9 +12,10 @@ open RZ.Foundation.Types
 open Xunit
 open MockDb
 open TestSample
+open Xunit.Abstractions
 
 (************************* TEST STARTS HERE *****************************)
-module Add =
+type Add(output) =
     [<Fact>]
     let ``Add single row and query`` () = task {
         let person = {
@@ -26,7 +27,7 @@ module Add =
         }
 
         // when
-        use mdb = startDb()
+        use mdb = startDb output
         let coll = mdb.Db.GetCollection<Customer>()
         let! _ = coll.Add(person)
 
@@ -46,7 +47,7 @@ module Add =
         }
 
         // when
-        use mdb = startDb()
+        use mdb = startDb output
         let coll = mdb.Db.GetCollection<Customer>()
         let! _ = coll.Add(person)
 
@@ -60,7 +61,7 @@ module Add =
 
     [<Fact>]
     let ``Capture duplicated add error with TryAdd`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
 
         let coll = mdb.Db.GetCollection<Customer>()
 
@@ -81,7 +82,7 @@ module Add =
 
     [<Fact>]
     let ``Simple add with TryAdd`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
 
         let coll = mdb.Db.GetCollection<Customer>()
 
@@ -99,10 +100,10 @@ module Add =
         is_success.Should().BeTrue() |> ignore
     }
 
-module Retrieval =
+type Retrieval(output: ITestOutputHelper) =
     [<Fact>]
     let ``Get the first customer who has Zip code = 11111`` () = task {
-        use mdb = startDb()
+        use mdb = startDb output
 
         let coll = mdb.Db.GetCollection<Customer>().ImportSamples()
 
@@ -121,7 +122,7 @@ module Retrieval =
 
     [<Fact>]
     let ``Get all customers who has country = 'TH'`` () = task {
-        use mdb = startDb()
+        use mdb = startDb output
 
         let coll = mdb.Db.GetCollection<Customer>().ImportSamples()
 
@@ -135,10 +136,10 @@ module Retrieval =
         names.Should().BeEquivalentTo([JohnDoe.Name; JaneDoe.Name]) |> ignore
     }
 
-module Update =
+type Update(output) =
     [<Fact>]
     let ``Update Jane Zip code`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         let time = Mock<TimeProvider>()
@@ -157,7 +158,7 @@ module Update =
 
     [<Fact>]
     let ``Try updating Jane Zip code must succeed`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         let time = Mock<TimeProvider>()
@@ -178,7 +179,7 @@ module Update =
 
     [<Fact>]
     let ``Update Jane Zip code with explicit version number`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -192,7 +193,7 @@ module Update =
 
     [<Fact>]
     let ``Update Jane Zip code with outdated explicit version number, results in race condition`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -207,7 +208,7 @@ module Update =
 
     [<Fact>]
     let ``Try updating Jane Zip code with outdated explicit version number, results in race condition`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         let updated_jane = { JaneDoe with Customer.Address.Zip = "22222" }
@@ -220,7 +221,7 @@ module Update =
 
     [<Fact>]
     let ``Update Jane Zip code with the explicit (new) key and data's key mismatch, results in race condition error`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         let updated_jane = { JaneDoe with Customer.Address.Zip = "22222" }
@@ -233,7 +234,7 @@ module Update =
 
     [<Fact>]
     let ``Update Jane Zip code with the explicit (valid) key and data's key mismatch, results in database transaction error`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         let updated_jane = { JaneDoe with Customer.Address.Zip = "22222" }
@@ -246,7 +247,7 @@ module Update =
 
     [<Fact>]
     let ``Update John zip code with his *unique* zip`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         let updated_john = { JohnDoe with Customer.Address.Zip = "22222" }
@@ -258,7 +259,7 @@ module Update =
 
     [<Fact>]
     let ``Update with multiple matches will result in ID overwritten which will fail`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         let action = Func<Task>(fun _ -> customer.Update(NewKid, fun x -> x.Address.Country = "TH"))
@@ -270,7 +271,7 @@ module Update =
 
     [<Fact>]
     let ``Try updating with multiple matches will result in ID overwritten which will fail`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         let! result = customer.TryUpdate(NewKid, fun x -> x.Address.Country = "TH")
@@ -280,10 +281,10 @@ module Update =
         error.Code.Should().Be(StandardErrorCodes.DatabaseTransactionError, "someone's ID was overwritten") |> ignore
     }
 
-module Upsert =
+type Upsert(output) =
     [<Fact>]
     let ``Upsert New Kid`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         let time = Mock<TimeProvider>()
@@ -305,7 +306,7 @@ module Upsert =
 
     [<Fact>]
     let ``Try upsert the existing Jane won't have any change and no error`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -321,7 +322,7 @@ module Upsert =
 
     [<Fact>]
     let ``Upsert Jane Zip code`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -336,7 +337,7 @@ module Upsert =
 
     [<Fact>]
     let ``Upsert Jane Zip code with outdated explicit version number, results in **duplication**`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -351,7 +352,7 @@ module Upsert =
 
     [<Fact>]
     let ``Try upsert Jane Zip code with outdated explicit version number, results in **duplication**`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -366,7 +367,7 @@ module Upsert =
 
     [<Fact>]
     let ``Upsert John zip code with his *unique* zip must succeed`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -380,7 +381,7 @@ module Upsert =
 
     [<Fact>]
     let ``Try upsert John zip code with his invalid zip will fail from inserting a duplicated record`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -393,10 +394,10 @@ module Upsert =
         error.Code.Should().Be(StandardErrorCodes.Duplication) |> ignore
     }
 
-module Deletion =
+type Deletion (output) =
     [<Fact>]
     let ``Delete all customers!`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -409,7 +410,7 @@ module Deletion =
 
     [<Fact>]
     let ``Delete Jane`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -422,7 +423,7 @@ module Deletion =
 
     [<Fact>]
     let ``Delete with unique zip condition`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -435,7 +436,7 @@ module Deletion =
 
     [<Fact>]
     let ``Delete with a specific key`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -448,7 +449,7 @@ module Deletion =
 
     [<Fact>]
     let ``Delete with a key and an invalid version, should have no effect`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
         let customer_count = customer.CountDocuments(fun _ -> true)
 
@@ -462,7 +463,7 @@ module Deletion =
 
     [<Fact>]
     let ``Try deleting all customers!`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -477,7 +478,7 @@ module Deletion =
 
     [<Fact>]
     let ``Try deleting Jane`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -492,7 +493,7 @@ module Deletion =
 
     [<Fact>]
     let ``Try deleting with multiple matches, only (random) one is removed`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -507,7 +508,7 @@ module Deletion =
 
     [<Fact>]
     let ``Try deleting with a specific key`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
 
         // when
@@ -521,7 +522,7 @@ module Deletion =
 
     [<Fact>]
     let ``Try deleting with a key and an invalid version, should have no effect`` () = task {
-        use mdb = startWithSample()
+        use mdb = startWithSample output
         let customer = mdb.Db.GetCollection<Customer>()
         let customer_count = customer.CountDocuments(fun _ -> true)
 

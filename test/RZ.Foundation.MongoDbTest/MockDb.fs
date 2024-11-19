@@ -1,34 +1,45 @@
 ﻿module RZ.Foundation.MongoDbTest.MockDb
 
 open System
-open Mongo2Go
+open System.Diagnostics
+open System.Threading
+open MongoSandbox
 open RZ.Foundation.MongoDb
 open TestSample
+open Xunit.Abstractions
 
 MongoHelper.SetupMongoStandardMappings()
+
+let private mongo_options = MongoRunnerOptions(
+    UseSingleNodeReplicaSet = true,
+    StandardOuputLogger = (sprintf "| %s" >> Trace.WriteLine),
+    StandardErrorLogger = (sprintf "ERR: %s" >> Trace.WriteLine),
+    KillMongoProcessesWhenCurrentProcessExits = true
+)
+let private server = MongoRunner.Run mongo_options
 
 type TestDbContext(connection, db_name) =
     inherit RzMongoDbContext(connection, db_name)
 
 type MockedDatabase = {
-    Server: MongoDbRunner
+    ConnectionString: string
     Db: TestDbContext
 }
 with
     interface IDisposable with
-        member this.Dispose() = this.Server.Dispose()
+        member this.Dispose() = ()
 
-let startTransactDb()
-    = let server = MongoDbRunner.Start(singleNodeReplSet = true)
-      let db = TestDbContext(MongoConnectionString.From(server.ConnectionString).Value, "test")
-      { Server = server; Db = db }
+let mutable db_count = 0
 
-let startDb()
-    = let server = MongoDbRunner.Start()
-      let db = TestDbContext(MongoConnectionString.From(server.ConnectionString).Value, "test")
-      { Server = server; Db = db }
+let startDb (_: ITestOutputHelper) =
+    let id = Interlocked.Increment(&db_count)
+    let db = TestDbContext(MongoConnectionString.From(server.ConnectionString).Value, $"test{id}")
+    { ConnectionString=server.ConnectionString; Db = db }
 
-let inline startWithSample() =
-    let x = startDb()
+let inline startTransactDb output =
+    startDb output
+
+let inline startWithSample output =
+    let x = startDb output
     x.Db.GetCollection<Customer>().ImportSamples() |> ignore
     x
