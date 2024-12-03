@@ -41,7 +41,7 @@ public abstract class RzMongoDbContext : IRzMongoDbContext
     }
 
     public IMongoCollection<T> GetCollection<T>()
-        => db.Value.GetCollection<T>(typeof(T).Name);
+        => db.Value.GetCollection<T>(MongoHelper.GetCollectionName<T>());
 
     public IRzMongoTransaction CreateTransaction() {
         var session = client.Value.StartSession();

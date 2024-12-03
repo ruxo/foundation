@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using JetBrains.Annotations;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -12,6 +14,11 @@ namespace RZ.Foundation.MongoDb;
 [PublicAPI]
 public static class MongoHelper
 {
+    static readonly ConcurrentDictionary<Type, string> CollectionNameCache = new();
+
+    public static string GetCollectionName<T>()
+        => CollectionNameCache.GetOrAdd(typeof(T), t => t.GetCustomAttribute<CollectionNameAttribute>()?.Name ?? t.Name);
+
     [ExcludeFromCodeCoverage]
     public static void SetupMongoStandardMappings(bool useLegacyGuid = false) {
         BsonSerializer.RegisterSerializer(new DateTimeOffsetSerializer(BsonType.DateTime));

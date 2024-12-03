@@ -46,7 +46,7 @@ public class RzMongoTransaction(Guid id,IMongoDatabase db, IClientSessionHandle 
     }
 
     public IMongoCollection<T> GetCollection<T>()
-    => new Wrapper<T>(db.GetCollection<T>(typeof(T).Name), session);
+    => new Wrapper<T>(db.GetCollection<T>(MongoHelper.GetCollectionName<T>()), session);
 
     public async ValueTask DisposeAsync() {
         try{

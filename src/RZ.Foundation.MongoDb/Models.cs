@@ -3,6 +3,12 @@ using JetBrains.Annotations;
 
 namespace RZ.Foundation.MongoDb;
 
+[AttributeUsage(AttributeTargets.Class), PublicAPI]
+public class CollectionNameAttribute(string name) : Attribute
+{
+    public string Name { get; } = name;
+}
+
 [PublicAPI]
 public interface IHaveKey<T>
 {

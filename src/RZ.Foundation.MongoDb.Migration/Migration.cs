@@ -5,7 +5,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using JetBrains.Annotations;
 using MongoDB.Driver;
-using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.MongoDb.Migration;
 
@@ -38,9 +37,8 @@ public static class Migration
             };
     }
 
-    public static void CreateCollection<T>(this IMongoDatabase db, IClientSessionHandle session, object specs)
-        => db.CreateCollection(session,
-                               typeof(T).Name,
+    public static void CreateCollection<T>(this IMongoDatabase db, IClientSessionHandle session, object specs, string? dbName = null)
+        => db.CreateCollection(session, dbName ?? MongoHelper.GetCollectionName<T>(),
                                new CreateCollectionOptions<T> {
                                    ValidationAction = DocumentValidationAction.Error,
                                    ValidationLevel = DocumentValidationLevel.Strict,
@@ -51,7 +49,7 @@ public static class Migration
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IMongoCollection<T> Collection<T>(this IMongoDatabase db)
-        => db.GetCollection<T>(typeof(T).Name);
+        => db.GetCollection<T>(MongoHelper.GetCollectionName<T>());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IMongoCollection<T> CreateUniqueIndex<T>(this IMongoCollection<T> collection,
@@ -80,10 +78,11 @@ public static class Migration
     public sealed class MigrationMongoBuilder<T>(IMongoDatabase database)
     {
         readonly List<CreateIndexModel<T>> indexModels = new();
-        Option<object> validation;
+        object? validation;
+        readonly string dbName = MongoHelper.GetCollectionName<T>();
 
         public MigrationMongoBuilder<T> WithSchema(object specs) {
-            Debug.Assert(validation.IsNone);
+            Debug.Assert(validation is null);
             validation = specs;
             return this;
         }
@@ -97,8 +96,9 @@ public static class Migration
         }
 
         public void Run(IClientSessionHandle session) {
-            validation.IfSome(specs => database.CreateCollection<T>(session, specs));
-            if (indexModels.Any())
+            if (validation is not null)
+                database.CreateCollection<T>(session, validation, dbName);
+            if (indexModels.Count != 0)
                 database.Collection<T>().Indexes.CreateMany(session, indexModels);
         }
 
