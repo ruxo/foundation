@@ -1,7 +1,4 @@
 ﻿<Solution>
-  <Folder Name="/Examples/">
-    <Project Path="Examples\BlazorServer\RZ.Blazor.Server.Example.csproj" Type="Classic C#" />
-  </Folder>
   <Folder Name="/Misc/">
     <File Path="README.md" />
     <File Path="CHANGES.md" />
@@ -11,17 +8,10 @@
     <File Path=".gitignore" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src\RZ.AspNet.Bootstrapper\RZ.AspNet.Bootstrapper.csproj" Type="Classic C#" />
-    <Project Path="src\RZ.Foundation.Blazor.MudBlazor\RZ.Foundation.Blazor.MudBlazor.csproj" Type="Classic C#" />
-    <Project Path="src\RZ.Foundation.Blazor\RZ.Foundation.Blazor.csproj" Type="Classic C#" />
-    <Project Path="src\RZ.Foundation.MongoDb.Migration\RZ.Foundation.MongoDb.Migration.csproj" Type="Classic C#" />
-    <Project Path="src\RZ.Foundation.MongoDb\RZ.Foundation.MongoDb.csproj" Type="Classic C#" />
     <Project Path="src\RZ.Foundation.Testing\RZ.Foundation.Testing.csproj" Type="Classic C#" />
     <Project Path="src\RZ.Foundation\RZ.Foundation.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="test\RZ.Foundation.MongoDbTest\RZ.Foundation.MongoDbTest.fsproj" Type="Classic F#" />
     <Project Path="test\RZ.Foundation.Test\RZ.Foundation.Test.csproj" Type="Classic C#" />
-    <File Path="test\Directory.Build.props" />
   </Folder>
 </Solution>
