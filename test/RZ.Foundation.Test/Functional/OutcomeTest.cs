@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.Json;
 using FluentAssertions;
+using JetBrains.Annotations;
 using LanguageExt;
 using LanguageExt.Common;
 using RZ.Foundation.Extensions;
@@ -479,7 +480,31 @@ public sealed class OutcomeTest
 
     #region Serializable!
 
+    [PublicAPI]
     sealed record TestRecord(string Name, int Age);
+
+    [Fact]
+    public void NativeSerializeSuccessOutcome() {
+        Outcome<TestRecord> outcome = new TestRecord("John", 42);
+
+        // when
+        var json = JsonSerializer.Serialize(outcome);
+
+        // then
+        json.Should().Be("""{"Error":null,"Data":{"Name":"John","Age":42},"State":"success"}""");
+    }
+
+    [Fact]
+    public void NativeDeserializeSuccessOutcome() {
+        const string json = """{"Error":null,"Data":{"Name":"John","Age":42},"State":"success"}""";
+        var expected = SuccessOutcome(new TestRecord("John", 42));
+
+        // when
+        var outcome = JsonSerializer.Deserialize<Outcome<TestRecord>>(json);
+
+        // then
+        outcome.Should().Be(expected);
+    }
 
     [Fact]
     public void SerializeSuccessOutcomeToJson() {
@@ -500,7 +525,7 @@ public sealed class OutcomeTest
         var json = JsonSerializer.Serialize(outcome, new JsonSerializerOptions().UseRzConverters());
 
         // then
-        json.Should().Be("{\"Error\":{\"Code\":\"unhandled\",\"Message\":\"unhandled\",\"TraceId\":null,\"DebugInfo\":null,\"Data\":null}}");
+        json.Should().Be("""{"Error":{"Code":"unhandled","Message":"unhandled"}}""");
     }
 
     [Fact]

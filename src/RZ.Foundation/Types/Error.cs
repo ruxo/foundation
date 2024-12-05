@@ -44,16 +44,19 @@ public sealed record ErrorInfo
     /// <summary>
     /// Distributed trace ID
     /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? TraceId { get; init; } = Activity.Current?.Id;
 
     /// <summary>
     /// **JSON SERIALIZABLE** Information for debug. This should not be shown in Release mode.
     /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public object? DebugInfo { get; init;  }
 
     /// <summary>
     /// **JSON SERIALIZABLE** Serialized associated data
     /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public object? Data { get; }
 
     /// <summary>

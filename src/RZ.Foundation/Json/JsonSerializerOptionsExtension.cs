@@ -16,6 +16,11 @@ public static class JsonSerializerOptionsExtension
         return opts;
     }
 
+    /// <summary>
+    /// Recommendation for JSON serialization settings.
+    /// </summary>
+    /// <param name="opts">a JSON option to be set</param>
+    /// <returns>The same, modified, JSON object</returns>
     public static JsonSerializerOptions UseRzRecommendedSettings(this JsonSerializerOptions opts) {
         opts.WriteIndented = false;
         opts.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
