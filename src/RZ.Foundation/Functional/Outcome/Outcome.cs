@@ -163,19 +163,25 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
             return false;
         }
     }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public V Match<V>(Func<T, V> success, Func<ErrorInfo, V> fail) =>
-        status == EitherStatus.IsRight ? success(Data!) : fail(Error!);
+    public V Match<V>(Func<T, V> success, Func<ErrorInfo, V> fail)
+        => status == EitherStatus.IsRight ? success(Data!) : fail(Error!);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T Unwrap() =>
-        status == EitherStatus.IsRight ? Data! : JustThrow(Error!);
+    public T Unwrap()
+        => status == EitherStatus.IsRight ? Data! : JustThrow(Error!);
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public T? UnwrapOrDefault(T? defaultValue = default)
+        => Data;
 
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     static T JustThrow(ErrorInfo e) => e.Throw<T>();
 
     public ErrorInfo UnwrapError() =>
         status == EitherStatus.IsRight ? throw new InvalidOperationException("Outcome state is success") : Error!;
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ErrorInfo? UnwrapErrorOrDefault(ErrorInfo? defaultValue = null)
+        => Error;
 
     [Pure, ExcludeFromCodeCoverage]
     public override string ToString() =>
