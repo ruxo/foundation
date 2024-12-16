@@ -155,4 +155,8 @@ public static partial class Prelude {
     public static B? BindValue<A,B>(this A? a, Func<A,B?> f)
         where A: struct where B: struct
         => a is null ? null : f(a.Value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandler<T> Try<T>(Task<T> task)
+        => new(task);
 }

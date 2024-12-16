@@ -102,8 +102,8 @@ public sealed record ErrorInfo
 
 public sealed class ErrorInfoException : ApplicationException
 {
-    public ErrorInfoException(string code, string? message, object? debugInfo = null, object? data = null, Exception? innerException = null,
-                              IEnumerable<ErrorInfo>? subErrors = default) : base(message ?? code, innerException)
+    public ErrorInfoException(string code, string? message = null, object? debugInfo = null, object? data = null, Exception? innerException = null,
+                              IEnumerable<ErrorInfo>? subErrors = null) : base(message ?? code, innerException)
         => (Code, DebugInfo, AdditionalData, SubErrors) = (code, debugInfo, data, subErrors);
 
     public ErrorInfoException(Exception e) : this(ErrorFrom.Exception(e)) {
