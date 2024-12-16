@@ -193,12 +193,28 @@ public static partial class Prelude {
         => new(task);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandlerSyncX<TX> On<TX>(TX x, Action<TX> task)
+        => new(x, task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OnHandlerSync<T> On<T>(Func<T> task)
         => new(task);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandlerSync<TX,T> On<TX,T>(TX x, Func<TX,T> task)
+        => new(x, task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OnHandler On(Task task)
         => new(task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandlerX<TX> On<TX>(TX x, Func<TX,Task> task)
+        => new(x, task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandler<TX,T> On<TX,T>(TX x, Func<TX,Task<T>> task)
+        => new(x, task);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OnHandler<T> On<T>(Task<T> task)
