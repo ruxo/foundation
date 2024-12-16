@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using LanguageExt.Common;
 using RZ.Foundation.Types;
 
 namespace RZ.Foundation.Extensions;
@@ -48,6 +46,15 @@ public readonly struct OnHandlerSync(Action task)
             throw;
         }
     }
+
+    public void ErrorThrow(string code, string? message = null) {
+        try{
+            task();
+        }
+        catch (Exception e){
+            throw new ErrorInfoException(code, message, innerException: e);
+        }
+    }
 }
 
 [PublicAPI]
@@ -78,6 +85,15 @@ public readonly struct OnHandlerSync<T>(Func<T> task)
         catch (Exception e){
             effect(e);
             throw;
+        }
+    }
+
+    public T ErrorThrow(string code, string? message = null) {
+        try{
+            return task();
+        }
+        catch (Exception e){
+            throw new ErrorInfoException(code, message, innerException: e);
         }
     }
 }
@@ -112,6 +128,15 @@ public readonly struct OnHandler(Task task)
             throw;
         }
     }
+
+    public async Task ErrorThrow(string code, string? message = null) {
+        try{
+            await task;
+        }
+        catch (Exception e){
+            throw new ErrorInfoException(code, message, innerException: e);
+        }
+    }
 }
 
 [PublicAPI]
@@ -142,6 +167,15 @@ public readonly struct OnHandler<T>(Task<T> task)
         catch (Exception e){
             effect(e);
             throw;
+        }
+    }
+
+    public async Task<T> ErrorThrow(string code, string? message = null) {
+        try{
+            return await task;
+        }
+        catch (Exception e){
+            throw new ErrorInfoException(code, message, innerException: e);
         }
     }
 }
