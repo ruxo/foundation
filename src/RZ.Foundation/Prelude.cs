@@ -241,6 +241,18 @@ public static partial class Prelude {
         }
     }
 
+    public static async Task<(Exception? Error, Unit Value)> Try(Task task)
+    {
+        try
+        {
+            await task;
+            return (null, unit);
+        }
+        catch (Exception e){
+            return (e, unit);
+        }
+    }
+
     public static async Task<(Exception? Error, Unit Value)> Try(Func<Task> f)
     {
         try
