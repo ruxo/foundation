@@ -25,12 +25,6 @@ public static class OptionHelper
     public static bool IfNone<T>(this Option<T> o, out T data) => !o.IfSome(out data);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Option<T> ToOption<T>(this T data) => data;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Option<T> ToOption<T>(this T? data) where T : struct => data.HasValue? Some(data.Value) : Option<T>.None;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Option<ImmutableHashSet<T>> ToNotEmptyOption<T>(this ImmutableHashSet<T> data) =>
         data.IsEmpty ? LanguageExt.Prelude.None : data;
 

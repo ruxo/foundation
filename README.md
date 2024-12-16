@@ -111,3 +111,23 @@ int? x = 123;
 string MyToString(int a) => a.ToString();
 string? y = x.Apply(MyToString);    // "123"
 ```
+
+## On(x)
+
+### Catch
+
+```c#
+var x = Task.FromResult(123);
+var y = await On(x).Catch(_ => -1);
+y.Should().Be(123);
+```
+
+### BeforeThrow
+
+```c#
+var x = Task.FromException<int>(new Exception("Test"));
+bool effect = false;
+Func<Task> action = () => On(x).BeforeThrow(_ => effect = true);
+await action.Should().ThrowAsync<Exception>();
+effect.Should().BeTrue();
+```

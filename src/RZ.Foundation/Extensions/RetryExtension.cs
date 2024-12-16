@@ -29,8 +29,8 @@ namespace RZ.Foundation.Extensions
         public static async Task<Result<T>> RetryUntil<T>(Func<Task<T>> task, Func<Exception,bool>? onFailure = null) {
             Result<T> result;
             var cont = true;
-            do {
-                result = await TryAsync(task).Try();
+            do{
+                result = await On(task()).CatchResult();
                 if (result.IsFaulted) cont = onFailure?.Invoke(result.GetFail()) ?? true;
             } while (result.IsFaulted && cont);
 
@@ -40,8 +40,8 @@ namespace RZ.Foundation.Extensions
         public static Result<T> RetryUntil<T>(Func<T> task, Func<Exception,bool>? onFailure = null) {
             Result<T> result;
             var cont = true;
-            do {
-                result = Try(task).Try();
+            do{
+                result = On(task).CatchResult();
                 if (result.IsFaulted) cont = onFailure?.Invoke(result.GetFail()) ?? true;
             } while (result.IsFaulted && cont);
 

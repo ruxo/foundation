@@ -157,6 +157,18 @@ public static partial class Prelude {
         => a is null ? null : f(a.Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static OnHandler<T> Try<T>(Task<T> task)
+    public static OnHandlerSync On(Action task)
+        => new(task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandlerSync<T> On<T>(Func<T> task)
+        => new(task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandler On(Task task)
+        => new(task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandler<T> On<T>(Task<T> task)
         => new(task);
 }

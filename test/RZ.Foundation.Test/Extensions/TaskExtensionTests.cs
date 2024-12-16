@@ -1,5 +1,8 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
+using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.Testing;
 
@@ -9,9 +12,7 @@ public sealed class TaskExtensionTests
     public async Task OnError_WithSuccess() {
         var x = Task.FromResult(123);
 
-        var z = Try(x).Catch(_ => -1);
-
-        var y = await new OnHandler<int>(x).Catch(_ => -1);
+        var y = await On(x).Catch(_ => -1);
 
         y.Should().Be(123);
     }
@@ -20,7 +21,7 @@ public sealed class TaskExtensionTests
     public async Task OnError_WithException() {
         var x = Task.FromException<int>(new Exception("Test"));
 
-        var y = await new OnHandler<int>(x).Catch(_ => -1);
+        var y = await On(x).Catch(_ => -1);
 
         y.Should().Be(-1);
     }
@@ -31,7 +32,7 @@ public sealed class TaskExtensionTests
 
         bool effect = false;
 
-        Func<Task> action = () => Try(x).BeforeThrow(_ => effect = true);
+        Func<Task> action = () => On(x).BeforeThrow(_ => effect = true);
 
         await action.Should().ThrowAsync<Exception>();
         effect.Should().BeTrue();
