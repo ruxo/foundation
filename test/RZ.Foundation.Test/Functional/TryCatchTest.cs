@@ -2,8 +2,6 @@
 using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
-using static LanguageExt.Prelude;
-using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.Functional;
 

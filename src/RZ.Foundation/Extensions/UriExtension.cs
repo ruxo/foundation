@@ -31,7 +31,7 @@ namespace RZ.Foundation.Extensions
 
         static Option<int> FindChar(char c, string s) {
             var i = s.IndexOf(c);
-            return i == -1 ? None : Some(i);
+            return i == -1 ? None : i;
         }
     }
 }

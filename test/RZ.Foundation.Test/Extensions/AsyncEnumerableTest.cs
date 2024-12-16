@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using LanguageExt;
 using Xunit;
-using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Extensions
 {

@@ -70,11 +70,11 @@ namespace RZ.Foundation.Types
                 return new TimeRange();
 
             var timeParts = s.Split('-').Select(part => part.Trim()).ToArray();
-            return timeParts.Length == 2 ? Some(Create(ParsePart(timeParts[0]), ParsePart(timeParts[1]))) : None;
+            return timeParts.Length == 2 ? Create(ParsePart(timeParts[0]), ParsePart(timeParts[1])) : None;
         }
 
         static TimeSpan? ParsePart(string p) =>
-            p == "*" ? (TimeSpan?) null
+            p == "*" ? null
                      : TimeSpan.TryParse(p, out var v)
                      ? v : throw new InvalidOperationException($"Invalid time part: {p}").AddMetaData("invalid_request", nameof(TimeRange), p);
 

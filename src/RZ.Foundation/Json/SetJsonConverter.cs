@@ -21,7 +21,7 @@ public class SetJsonConverter : JsonConverterFactory
     {
         public override Set<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
             var v = JsonSerializer.Deserialize<T[]>(ref reader, options);
-            return toSet(v);
+            return LanguageExt.Prelude.toSet(v);
         }
 
         public override void Write(Utf8JsonWriter writer, Set<T> value, JsonSerializerOptions options) {

@@ -8,8 +8,6 @@ using RZ.Foundation.Extensions;
 using RZ.Foundation.Json;
 using RZ.Foundation.Types;
 using Xunit;
-using static LanguageExt.Prelude;
-using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.Functional;
 

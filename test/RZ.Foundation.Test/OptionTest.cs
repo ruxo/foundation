@@ -1,7 +1,6 @@
 using FluentAssertions;
 using LanguageExt;
 using Xunit;
-using static LanguageExt.Prelude;
 // ReSharper disable EqualExpressionComparison
 
 namespace RZ.Foundation

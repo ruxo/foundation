@@ -30,7 +30,7 @@ namespace RZ.Foundation.Extensions
             Result<T> result;
             var cont = true;
             do{
-                result = await On(task()).CatchResult();
+                result = await Try(task).ToResult();
                 if (result.IsFaulted) cont = onFailure?.Invoke(result.GetFail()) ?? true;
             } while (result.IsFaulted && cont);
 
@@ -41,7 +41,7 @@ namespace RZ.Foundation.Extensions
             Result<T> result;
             var cont = true;
             do{
-                result = On(task).CatchResult();
+                result = Try(task).ToResult();
                 if (result.IsFaulted) cont = onFailure?.Invoke(result.GetFail()) ?? true;
             } while (result.IsFaulted && cont);
 

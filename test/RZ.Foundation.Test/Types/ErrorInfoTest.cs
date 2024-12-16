@@ -1,11 +1,10 @@
 ﻿using System.Text.Json;
 using FluentAssertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace RZ.Foundation.Types;
 
-public class ErrorInfoTest(ITestOutputHelper output)
+public class ErrorInfoTest
 {
     [Fact]
     public void SerializeErrorInfo() {

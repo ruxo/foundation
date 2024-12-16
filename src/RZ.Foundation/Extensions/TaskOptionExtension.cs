@@ -56,8 +56,8 @@ public static class TaskOptionExtension
 
     #region Map
 
-    public static async Task<Option<B>> MapT<A, B>(this Option<A> option, Func<A, Task<B>> map) => option.IsSome ? Some(await map(option.Get())) : None;
-    public static async ValueTask<Option<B>> MapTV<A, B>(this Option<A> option, Func<A, ValueTask<B>> map) => option.IsSome ? Some(await map(option.Get())) : None;
+    public static async Task<Option<B>>      MapT<A, B>(this Option<A> option, Func<A, Task<B>> map)       => option.IsSome ? await map(option.Get()) : None;
+    public static async ValueTask<Option<B>> MapTV<A, B>(this Option<A> option, Func<A, ValueTask<B>> map) => option.IsSome ? await map(option.Get()) : None;
 
     public static async Task<Option<B>> MapT<A, B>(this Task<Option<A>> option, Func<A, Task<B>> map) => await (await option).MapT(map);
     public static async ValueTask<Option<B>> MapT<A, B>(this ValueTask<Option<A>> option, Func<A, ValueTask<B>> map) => await (await option).MapTV(map);
