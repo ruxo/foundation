@@ -131,3 +131,9 @@ Func<Task> action = () => On(x).BeforeThrow(_ => effect = true);
 await action.Should().ThrowAsync<Exception>();
 effect.Should().BeTrue();
 ```
+
+## Utilities
+
+### ToReadOnlyCollection
+
+Convert `ICollection` to `IReadOnlyCollection` with `ToReadOnlyCollection()`.

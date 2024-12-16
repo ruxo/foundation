@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
+using PureAttribute = System.Diagnostics.Contracts.PureAttribute;
 
 namespace RZ.Foundation.Extensions;
 
+[PublicAPI]
 public static class CollectionExtension{
     /// <summary>
     /// Clear concurrent queue content
@@ -209,6 +212,17 @@ public static class CollectionExtension{
         for (var i = 0; i < size && itor.MoveNext(); ++i)
             yield return itor.Current;
     }
+
+    public class ForwardReadOnlyCollection<T>(ICollection<T> collection) : IReadOnlyCollection<T>
+    {
+        public IEnumerator<T>   GetEnumerator() => collection.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => collection.GetEnumerator();
+        public int Count => collection.Count;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IReadOnlyCollection<T> ToReadOnlyCollection<T>(this ICollection<T> collection)
+        => new ForwardReadOnlyCollection<T>(collection);
 
     public static int GetCombinationHashCode<T>(this IEnumerable<T> seq) => seq.Aggregate(0, (hash, v) => hash ^ GetHashCode(v));
     public static int GetCollectionHashCode<T>(this IEnumerable<T> seq) => seq.Aggregate(0, (hash, v) => HashAndShift(hash, GetHashCode(v)));
