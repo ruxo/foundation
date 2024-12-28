@@ -137,3 +137,13 @@ effect.Should().BeTrue();
 ### ToReadOnlyCollection
 
 Convert `ICollection` to `IReadOnlyCollection` with `ToReadOnlyCollection()`.
+
+### Encryption
+
+```c#
+var nonce = Encryption.NonceFromASCII("Hello test");
+var key = Encryption.CreateAesKey();
+var aes = Encryption.CreateAes(key, nonce);
+var encrypted = aes.Encrypt("Hello world");
+var decrypted = aes.Decrypt(encrypted);
+```
