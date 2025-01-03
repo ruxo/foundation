@@ -12,5 +12,5 @@ public interface IUniqueId
 [PublicAPI]
 public class UniqueId : IUniqueId
 {
-    public Guid NewGuid() => Guid.NewGuid();
+    public Guid NewGuid() => Guid.CreateVersion7();
 }
