@@ -5,6 +5,9 @@ namespace RZ.Foundation.Types;
 
 public static class TimeRangeCollection
 {
+    public static TimeRange? FindContainer(this IEnumerable<TimeRange> self, TimeRange other)
+        => self.Find(x => x.Contains(other)).ToNullable();
+
     public static TimeRange? FindOverlapped(this IEnumerable<TimeRange> self, TimeRange other)
         => self.Find(x => x.IsOverlapped(other)).ToNullable();
 

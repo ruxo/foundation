@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
 using JetBrains.Annotations;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace RZ.Foundation.Testing;
 
@@ -13,8 +13,8 @@ public static class DebugTo
     /// </summary>
     /// <param name="output"></param>
     /// <returns></returns>
-    public static IDisposable XUnit(ITestOutputHelper output) {
-        var listener = new SimpleTrace(output.WriteLine);
+    public static IDisposable XUnit() {
+        var listener = new SimpleTrace(TestContext.Current.TestOutputHelper!.WriteLine);
         Trace.Listeners.Add(listener);
         return new Disposable<SimpleTrace>(listener, l => Trace.Listeners.Remove(l));
     }

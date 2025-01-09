@@ -18,6 +18,8 @@ public readonly struct TimeRange : IEquatable<TimeRange>
     /// </summary>
     public TimeSpan? End { get; }
 
+    public TimeSpan Duration => NullAsMax(End) - NullAsMin(Begin);
+
     public static readonly TimeRange Empty = new(TimeSpan.MinValue, TimeSpan.MinValue);
 
     public TimeRange(TimeSpan? begin = null, TimeSpan? end = null)

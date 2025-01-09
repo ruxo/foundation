@@ -27,7 +27,7 @@ public sealed class TimeRangeTest
 
     static readonly TimeRange WorkHours = T(8, 17);
     static readonly TimeRange LunchTime = T(12, 13);
-    static readonly TimeRange InfiniteDays;
+    static readonly TimeRange InfiniteDays = new();
     static readonly TimeRange Before6 = new(null, 18.Hours());
     static readonly TimeRange Hours24 = new(TimeSpan.Zero, 24.Hours());
 

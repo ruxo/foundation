@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace RZ.Foundation.Testing;
 
