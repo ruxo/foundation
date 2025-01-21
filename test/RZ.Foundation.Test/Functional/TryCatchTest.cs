@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
 using FluentAssertions;
+using JetBrains.Annotations;
+using RZ.Foundation.Types;
 using Xunit;
 
 namespace RZ.Foundation.Functional;
 
+[UsedImplicitly(ImplicitUseTargetFlags.Members)]
 public sealed class TryCatchTest
 {
     [Fact]
@@ -88,6 +91,20 @@ public sealed class TryCatchTest
         async Task Test() {
             await Task.Yield();
             throw new Exception("test");
+        }
+    }
+
+    [Fact(DisplayName = "Forward ErrorInfoException correctly")]
+    public void Try_catch_errorinfoexception() {
+        var result = TryCatch(Test);
+
+        result.IsFail.Should().BeTrue();
+        result.UnwrapError().Is("test").Should().BeTrue();
+        result.UnwrapError().Message.Should().Be("message");
+        return;
+
+        void Test() {
+            throw new ErrorInfoException("test", "message");
         }
     }
 }

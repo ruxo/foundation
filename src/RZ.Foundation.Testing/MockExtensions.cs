@@ -11,10 +11,10 @@ namespace RZ.Foundation.Testing;
 [PublicAPI]
 public static class MockExtensions
 {
-    public static ServiceCollection BuildFor<T>(this ServiceCollection services) where T : class =>
+    public static IServiceCollection BuildFor<T>(this IServiceCollection services) where T : class =>
         services.BuildFor(typeof(T));
 
-    public static ServiceCollection BuildFor(this ServiceCollection services, Type type) {
+    public static IServiceCollection BuildFor(this IServiceCollection services, Type type) {
         var subscriptions = services.ToSeq().Map(i => i.ServiceType).ToHashSet();
         var ctorParams = type.GetConstructors(BindingFlags.Public | BindingFlags.Instance).Single().GetParameters();
         var missingParams = from p in ctorParams
@@ -33,7 +33,7 @@ public static class MockExtensions
         return services;
     }
 
-    public static ServiceCollection UseLogger(this ServiceCollection services, ITestOutputHelper output) {
+    public static IServiceCollection UseLogger(this IServiceCollection services, ITestOutputHelper output) {
         services.AddSingleton(output);
         services.AddSingleton(typeof(ILogger<>), typeof(TestLogger<>));
         return services;
@@ -42,7 +42,7 @@ public static class MockExtensions
     public static T Create<T>(this IServiceProvider sp, params object[] parameters) =>
         ActivatorUtilities.CreateInstance<T>(sp, parameters);
 
-    public static T BuildAndCreate<T>(this ServiceCollection services) where T : class =>
+    public static T BuildAndCreate<T>(this IServiceCollection services) where T : class =>
         services.BuildFor<T>().BuildServiceProvider().Create<T>();
 
     public static Mock CreateMockByType(Type type) {

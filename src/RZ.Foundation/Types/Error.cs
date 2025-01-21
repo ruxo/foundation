@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 using LanguageExt.Common;
 using RZ.Foundation.Json;
 using Seq = LanguageExt.Seq;
+using PureAttribute = System.Diagnostics.Contracts.PureAttribute;
 
 namespace RZ.Foundation.Types;
 
@@ -100,14 +101,14 @@ public sealed record ErrorInfo
     public T Throw<T>() => throw new ErrorInfoException(this);
 }
 
+[PublicAPI]
 public sealed class ErrorInfoException : ApplicationException
 {
     public ErrorInfoException(string code, string? message = null, object? debugInfo = null, object? data = null, Exception? innerException = null,
                               IEnumerable<ErrorInfo>? subErrors = null) : base(message ?? code, innerException)
         => (Code, DebugInfo, AdditionalData, SubErrors) = (code, debugInfo, data, subErrors);
 
-    public ErrorInfoException(Exception e) : this(ErrorFrom.Exception(e)) {
-    }
+    public ErrorInfoException(Exception e) : this(ErrorFrom.Exception(e)) { }
 
     public ErrorInfoException(ErrorInfo ei) : base(ei.Message,
         Optional(ei.InnerError).Map(inner => new ErrorInfoException(inner)).ToNullable()) =>
@@ -142,17 +143,31 @@ public sealed class ErrorInfoException : ApplicationException
 /// <summary>
 /// Decorate any exception class to allow conversion to <see cref="ErrorInfo"/>
 /// </summary>
-[AttributeUsage(AttributeTargets.Class)]
+[AttributeUsage(AttributeTargets.Class), PublicAPI]
 public sealed class ErrorInfoAttribute(string code) : Attribute
 {
     public string Code { get; } = code;
 }
 
+[PublicAPI]
 public static class ErrorFrom
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ErrorInfo Program(string message, [CallerMemberName] string? caller = null) =>
         new(StandardErrorCodes.InvalidRequest, $"{caller}: {message}");
+
+    public static ErrorInfo Exception(Exception e) {
+        if (e is ErrorInfoException ei) return ei.ToErrorInfo();
+
+        var errorInfoAttr = e.GetType().GetCustomAttribute<ErrorInfoAttribute>()?.Code;
+        return new ErrorInfo(errorInfoAttr ?? StandardErrorCodes.Unhandled,
+                             e.Message,
+                             debugInfo: e.ToString(),
+                             data: null,
+                             innerError: e.InnerException?.Apply(Exception),
+                             subErrors: e.InnerException is AggregateException ae ? ae.InnerExceptions.Map(Exception) : null,
+                             stack: e.StackTrace);
+    }
 
     public static ErrorInfo Exception(Error e) {
         var errorInfoAttr = from ex in e.Exception
@@ -160,12 +175,11 @@ public static class ErrorFrom
                             select attr.Code;
         var subErrors = e is ManyErrors me ? me.Errors.Map(Exception) : Seq.empty<ErrorInfo>();
         return new ErrorInfo(errorInfoAttr.IfNone(StandardErrorCodes.Unhandled),
-            e.Message,
-            e.ToString(),
-            data: default,
-            e.Inner.Map(Exception).ToNullable(),
-            subErrors.IsEmpty ? null : subErrors,
-            stack: e.Exception.ToNullable()?.StackTrace
-            );
+                             e.Message,
+                             e.ToString(),
+                             data: default,
+                             e.Inner.Map(Exception).ToNullable(),
+                             subErrors.IsEmpty ? null : subErrors,
+                             stack: e.Exception.ToNullable()?.StackTrace);
     }
 }
