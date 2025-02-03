@@ -150,7 +150,8 @@ var decrypted = aes.Decrypt(encrypted);
 
 ## JSON deserialization of derived classes
 
-Introduce a `JsonDerivedType` attribute to support JSON deserialization of derived classes.
+Introduce a `RzJsonDerivedType` attribute to support JSON deserialization of derived classes. This is an alternative 
+solution to .NET 7 `JsonDerivedType` solution.
 
 ```c#
 enum PersonType
@@ -161,10 +162,10 @@ enum PersonType
 
 abstract record Person(PersonType Type);
 
-[JsonDerivedType(PersonType.Student)]
+[RzJsonDerivedType(PersonType.Student)]
 sealed record Student(string Id) : Person(PersonType.Student);
 
-[JsonDerivedType(PersonType.Teacher)]
+[RzJsonDerivedType(PersonType.Teacher)]
 sealed record Teacher(string Subject) : Person(PersonType.Teacher);
 
 static readonly JsonSerializerOptions Options = new JsonSerializerOptions {

@@ -18,10 +18,10 @@ public sealed class TypedClassConverterTest
 
     abstract record Person(PersonType Type);
 
-    [JsonDerivedType(PersonType.Student)]
+    [RzJsonDerivedType(PersonType.Student)]
     sealed record Student(string Id) : Person(PersonType.Student);
 
-    [JsonDerivedType(PersonType.Teacher)]
+    [RzJsonDerivedType(PersonType.Teacher)]
     record Teacher(PersonType Type, string Subject) : Person(Type)
     {
         [JsonConstructor]
@@ -45,7 +45,7 @@ public sealed class TypedClassConverterTest
 
     [Fact]
     public void DeserializeTeacher() {
-        var json = "{\"type\":\"teacher\",\"subject\":\"Math\"}";
+        var json = """{"type":"teacher","subject":"Math"}""";
         var teacher = JsonSerializer.Deserialize<Person>(json, Options);
 
         teacher.Should().BeOfType<Teacher>();
@@ -68,10 +68,10 @@ public sealed class TypedClassConverterTest
         [JsonStringEnumMemberName("home")] Home
     }
 
-    [JsonDerivedType(PlaceType.Home)]
+    [RzJsonDerivedType(PlaceType.Home)]
     record Place(PlaceType Type);
 
-    [JsonDerivedType(PlaceType.School)]
+    [RzJsonDerivedType(PlaceType.School)]
     record School(string Name, Person[] People) : Place(PlaceType.School);
 
     #region Base class cases
@@ -108,7 +108,7 @@ public sealed class TypedClassConverterTest
 
     abstract record Officer(PersonType Type) : Person(Type);
 
-    [JsonDerivedType(PersonType.Accountant)]
+    [RzJsonDerivedType(PersonType.Accountant)]
     sealed record Accountant(string Grade) : Officer(PersonType.Accountant);
 
     [Fact(DisplayName = "Deserialize Accountant to Person")]

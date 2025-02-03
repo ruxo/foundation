@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 namespace RZ.Foundation.Json;
 
 [AttributeUsage(AttributeTargets.Class)]
-public class JsonDerivedTypeAttribute(object value, string? propertyName = null) : Attribute
+public class RzJsonDerivedTypeAttribute(object value, string? propertyName = null) : Attribute
 {
     public object Value => value;
     public string PropertyName => propertyName ?? "Type";
@@ -26,7 +26,7 @@ public class TypedClassConverter : JsonConverterFactory
     public TypedClassConverter(IEnumerable<Assembly>? assemblies = null) {
         var allTypes = (assemblies ?? [Assembly.GetEntryAssembly()!]).SelectMany(a => a.GetTypes());
         derivedTypes = (from t in allTypes
-                        let attr = t.GetCustomAttribute<JsonDerivedTypeAttribute>()
+                        let attr = t.GetCustomAttribute<RzJsonDerivedTypeAttribute>()
                         where attr is not null
 
                         from @base in GetBaseTypes(t)
