@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -28,7 +29,8 @@ public class TypedClassConverter : JsonConverterFactory
                         let attr = t.GetCustomAttribute<JsonDerivedTypeAttribute>()
                         where attr is not null
 
-                        let @base = t.BaseType == typeof(object) ? t : t.BaseType
+                        from @base in GetBaseTypes(t)
+
                         group new PropInfo(attr.PropertyName, attr.Value, GetConverter(attr.Value.GetType()), t) by @base into g
                         select g
                        ).ToFrozenDictionary(k => k.Key, v => v.ToArray());
@@ -40,6 +42,19 @@ public class TypedClassConverter : JsonConverterFactory
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) {
         var dt = derivedTypes[typeToConvert];
         return (JsonConverter)Activator.CreateInstance(typeof(JsonDerivedTypeConverter<>).MakeGenericType(typeToConvert), dt)!;
+    }
+
+    static IEnumerable<Type> GetBaseTypes(Type type) {
+        var baseType = type.BaseType;
+        if (baseType == typeof(object))
+            yield return type;
+        else
+            do{
+                Debug.Assert(baseType is not null);
+
+                yield return baseType;
+                baseType = baseType.BaseType;
+            } while (baseType != typeof(object));
     }
 
     static Func<object?,object?> GetConverter(Type type) {

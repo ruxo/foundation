@@ -12,7 +12,8 @@ public sealed class TypedClassConverterTest
     enum PersonType
     {
         [JsonStringEnumMemberName("student")] Student,
-        [JsonStringEnumMemberName("teacher")] Teacher
+        [JsonStringEnumMemberName("teacher")] Teacher,
+        [JsonStringEnumMemberName("accountant")] Accountant
     }
 
     abstract record Person(PersonType Type);
@@ -21,11 +22,17 @@ public sealed class TypedClassConverterTest
     sealed record Student(string Id) : Person(PersonType.Student);
 
     [JsonDerivedType(PersonType.Teacher)]
-    sealed record Teacher(string Subject) : Person(PersonType.Teacher);
+    record Teacher(PersonType Type, string Subject) : Person(Type)
+    {
+        [JsonConstructor]
+        public Teacher(string subject) : this(PersonType.Teacher, subject) { }
+    }
 
     static readonly JsonSerializerOptions Options = new JsonSerializerOptions {
         Converters = { new TypedClassConverter([typeof(Person).Assembly]) }
     }.UseRzRecommendedSettings();
+
+    #region Basic cases
 
     [Fact]
     public void DeserializeStudent() {
@@ -53,6 +60,8 @@ public sealed class TypedClassConverterTest
         json.Should().Be("""{"id":"42","type":"student"}""");
     }
 
+    #endregion
+
     enum PlaceType
     {
         [JsonStringEnumMemberName("school")] School,
@@ -64,6 +73,8 @@ public sealed class TypedClassConverterTest
 
     [JsonDerivedType(PlaceType.School)]
     record School(string Name, Person[] People) : Place(PlaceType.School);
+
+    #region Base class cases
 
     [Fact]
     public void DeserializeSchool() {
@@ -90,4 +101,33 @@ public sealed class TypedClassConverterTest
 
         action.Should().Throw<JsonException>().WithMessage("Deserializing a base class is not supported!");
     }
+
+    #endregion
+
+    #region Multiple parents
+
+    abstract record Officer(PersonType Type) : Person(Type);
+
+    [JsonDerivedType(PersonType.Accountant)]
+    sealed record Accountant(string Grade) : Officer(PersonType.Accountant);
+
+    [Fact(DisplayName = "Deserialize Accountant to Person")]
+    public void DeserializeAccountantToPerson() {
+        var json = """{"type":"accountant","grade":"A"}""";
+        var accountant = JsonSerializer.Deserialize<Person>(json, Options);
+
+        accountant.Should().BeOfType<Accountant>();
+        accountant.As<Accountant>().Grade.Should().Be("A");
+    }
+
+    [Fact(DisplayName = "Deserialize Accountant to Officer")]
+    public void DeserializeAccountantToOfficer() {
+        var json = """{"type":"accountant","grade":"A"}""";
+        var accountant = JsonSerializer.Deserialize<Officer>(json, Options);
+
+        accountant.Should().BeOfType<Accountant>();
+        accountant.As<Accountant>().Grade.Should().Be("A");
+    }
+
+    #endregion
 }
