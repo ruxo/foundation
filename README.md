@@ -147,3 +147,36 @@ var aes = Encryption.CreateAes(key, nonce);
 var encrypted = aes.Encrypt("Hello world");
 var decrypted = aes.Decrypt(encrypted);
 ```
+
+## JSON deserialization of derived classes
+
+Introduce a `JsonDerivedType` attribute to support JSON deserialization of derived classes.
+
+```c#
+enum PersonType
+{
+    [JsonStringEnumMemberName("student")] Student,
+    [JsonStringEnumMemberName("teacher")] Teacher
+}
+
+abstract record Person(PersonType Type);
+
+[JsonDerivedType(PersonType.Student)]
+sealed record Student(string Id) : Person(PersonType.Student);
+
+[JsonDerivedType(PersonType.Teacher)]
+sealed record Teacher(string Subject) : Person(PersonType.Teacher);
+
+static readonly JsonSerializerOptions Options = new JsonSerializerOptions {
+    Converters = { new TypedClassConverter([typeof(Person).Assembly]) }
+}.UseRzRecommendedSettings();
+
+[Fact]
+public void DeserializeStudent() {
+    var json = """{"type":"student","id":"42"}""";
+    var student = JsonSerializer.Deserialize<Person>(json, Options);
+
+    student.Should().BeOfType<Student>();
+    student.As<Student>().Id.Should().Be("42", $"but {student}");
+}
+```
