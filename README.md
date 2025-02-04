@@ -103,3 +103,81 @@ would simplify error handling code when writing in functional paradigm.
 
 So `TaskOption<T>` is made to work similar to `OptionAsync` but with async/await pattern that allows
 exceptions to be escalated normally, as well as, support `None` returning value.
+
+## Nullable as Option like
+
+```c#
+int? x = 123;
+string MyToString(int a) => a.ToString();
+string? y = x.Apply(MyToString);    // "123"
+```
+
+## On(x)
+
+### Catch
+
+```c#
+var x = Task.FromResult(123);
+var y = await On(x).Catch(_ => -1);
+y.Should().Be(123);
+```
+
+### BeforeThrow
+
+```c#
+var x = Task.FromException<int>(new Exception("Test"));
+bool effect = false;
+Func<Task> action = () => On(x).BeforeThrow(_ => effect = true);
+await action.Should().ThrowAsync<Exception>();
+effect.Should().BeTrue();
+```
+
+## Utilities
+
+### ToReadOnlyCollection
+
+Convert `ICollection` to `IReadOnlyCollection` with `ToReadOnlyCollection()`.
+
+### Encryption
+
+```c#
+var nonce = Encryption.NonceFromASCII("Hello test");
+var key = Encryption.CreateAesKey();
+var aes = Encryption.CreateAes(key, nonce);
+var encrypted = aes.Encrypt("Hello world");
+var decrypted = aes.Decrypt(encrypted);
+```
+
+## JSON deserialization of derived classes
+
+Introduce a `RzJsonDerivedType` attribute to support JSON deserialization of derived classes. This is an alternative 
+solution to .NET 7 `JsonDerivedType` solution.
+
+```c#
+enum PersonType
+{
+    [JsonStringEnumMemberName("student")] Student,
+    [JsonStringEnumMemberName("teacher")] Teacher
+}
+
+abstract record Person(PersonType Type);
+
+[RzJsonDerivedType(PersonType.Student)]
+sealed record Student(string Id) : Person(PersonType.Student);
+
+[RzJsonDerivedType(PersonType.Teacher)]
+sealed record Teacher(string Subject) : Person(PersonType.Teacher);
+
+static readonly JsonSerializerOptions Options = new JsonSerializerOptions {
+    Converters = { new TypedClassConverter([typeof(Person).Assembly]) }
+}.UseRzRecommendedSettings();
+
+[Fact]
+public void DeserializeStudent() {
+    var json = """{"type":"student","id":"42"}""";
+    var student = JsonSerializer.Deserialize<Person>(json, Options);
+
+    student.Should().BeOfType<Student>();
+    student.As<Student>().Id.Should().Be("42", $"but {student}");
+}
+```

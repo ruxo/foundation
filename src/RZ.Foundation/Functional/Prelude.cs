@@ -1,44 +1,94 @@
 ﻿using System;
 using System.Threading.Tasks;
-using LanguageExt;
-using LanguageExt.Common;
+using JetBrains.Annotations;
+using RZ.Foundation.Types;
+
+// ReSharper disable InconsistentNaming
+
 // ReSharper disable CheckNamespace
 
 namespace RZ.Foundation;
 
 public static partial class Prelude
 {
-    public static OutcomeAsync<T> TryCatch<T>(Func<Task<Outcome<T>>> handler) =>
-        from v in TryAsync(handler).ToOutcome()
-        from result in v.ToAsync()
-        select result;
+    #region ToOutcome
 
-    public static OutcomeAsync<T> TryCatch<T>(Func<Task<Either<Error, T>>> handler) =>
-        from v in TryAsync(handler).ToEither()
-        from result in v.ToAsync()
-        select result;
+    [Pure]
+    [PublicAPI]
+    public static Outcome<T> ToOutcome<T>(this Option<T> opt, ErrorInfo? error = default)
+        => opt.Match(v => (Outcome<T>)v, () => error ?? new(StandardErrorCodes.NotFound));
 
-    public static OutcomeAsync<T> TryCatch<T>(Func<Task<T>> handler) =>
-        TryAsync(handler).ToOutcome();
+    [Pure]
+    [PublicAPI]
+    public static Outcome<T> ToOutcome<T>(this Either<ErrorInfo, T> opt) => opt.Match(v => (Outcome<T>)v, e => e);
 
-    public static OutcomeAsync<Unit> TryCatch(Func<Task> handler) =>
-        TryAsync(async () => {
-                     await handler();
-                     return Unit.Default;
-                 }).ToEither();
+    [Pure]
+    [PublicAPI]
+    public static Outcome<T> ToOutcome<T>(this Try<T> self) => self.ToEither(e => ErrorFrom.Exception(e)).ToOutcome();
 
-    public static Outcome<T> TryCatch<T>(Func<Outcome<T>> handler) =>
-        Try(handler).ToOutcome().Either.Bind(x => x.Either);
+    #endregion
 
-    public static Outcome<T> TryCatch<T>(Func<Either<Error, T>> handler) =>
-        Try(handler).ToOutcome().Either.Bind(identity);
+    #region Try/Catch
 
-    public static Outcome<T> TryCatch<T>(Func<T> handler) =>
-        Try(handler).ToEither(Error.New);
+    [PublicAPI]
+    public static async Task<Outcome<T>> TryCatch<T>([InstantHandle] Func<Task<Outcome<T>>> handler) {
+        try{
+            return await handler();
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
 
-    public static Outcome<Unit> TryCatch(Action handler) =>
-        Try(() => {
-                handler();
-                return unit;
-            }).ToEither(Error.New);
+    [PublicAPI]
+    public static async Task<Outcome<T>> TryCatch<T>([InstantHandle] Func<Task<T>> handler) {
+        try{
+            return await handler();
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
+    [PublicAPI]
+    public static async Task<Outcome<Unit>> TryCatch([InstantHandle] Func<Task> handler) {
+        try{
+            await handler();
+            return unit;
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
+    [PublicAPI]
+    public static Outcome<T> TryCatch<T>([InstantHandle] Func<Outcome<T>> handler) {
+        try{
+            return handler();
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
+    public static Outcome<T> TryCatch<T>([InstantHandle] Func<T> handler) {
+        try{
+            return handler();
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
+    public static Outcome<Unit> TryCatch([InstantHandle] Action handler) {
+        try{
+            handler();
+            return unit;
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
+    #endregion
 }

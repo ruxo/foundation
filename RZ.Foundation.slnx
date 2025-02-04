@@ -1,0 +1,17 @@
+﻿<Solution>
+  <Folder Name="/Misc/">
+    <File Path="README.md" />
+    <File Path="CHANGES.md" />
+    <File Path="src\CommonGlobalUsings.cs" />
+    <File Path="src\Directory.Build.props" />
+    <File Path="build.ps1" />
+    <File Path=".gitignore" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src\RZ.Foundation.Testing\RZ.Foundation.Testing.csproj" Type="Classic C#" />
+    <Project Path="src\RZ.Foundation\RZ.Foundation.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="test\RZ.Foundation.Test\RZ.Foundation.Test.csproj" Type="Classic C#" />
+  </Folder>
+</Solution>

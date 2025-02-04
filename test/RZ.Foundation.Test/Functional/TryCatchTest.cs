@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LanguageExt;
-using LanguageExt.Common;
+using JetBrains.Annotations;
+using RZ.Foundation.Types;
 using Xunit;
-using static LanguageExt.Prelude;
-using static RZ.Foundation.Prelude;
 
 namespace RZ.Foundation.Functional;
 
+[UsedImplicitly(ImplicitUseTargetFlags.Members)]
 public sealed class TryCatchTest
 {
     [Fact]
@@ -25,24 +24,6 @@ public sealed class TryCatchTest
         var outcome = Task.FromResult(SuccessOutcome(42));
 
         var result = await TryCatch(() => outcome);
-
-        result.Should().Be(SuccessOutcome(42));
-    }
-
-    [Fact]
-    public void Try_catch_either_sync() {
-        var either = Either<Error, int>.Right(42);
-
-        var result = TryCatch(() => either);
-
-        result.Should().Be(SuccessOutcome(42));
-    }
-
-    [Fact]
-    public async Task Try_catch_either() {
-        var either = Task.FromResult(Either<Error, int>.Right(42));
-
-        var result = await TryCatch(() => either);
 
         result.Should().Be(SuccessOutcome(42));
     }
@@ -86,24 +67,44 @@ public sealed class TryCatchTest
 
     [Fact]
     public void Try_catch_action_exception() {
-        void test() {
-            throw new Exception("test");
-        }
-        var result = TryCatch(test);
+        var result = TryCatch(Test);
 
         result.IsFail.Should().BeTrue();
-        result.UnwrapError().IsExceptional.Should().BeTrue();
+        result.UnwrapError().Is(StandardErrorCodes.Unhandled).Should().BeTrue();
+        result.UnwrapError().Message.Should().Be("test");
+        return;
+
+        void Test() {
+            throw new Exception("test");
+        }
     }
 
     [Fact]
     public async Task Try_catch_async_action_exception() {
-        async Task test() {
+        var result = await TryCatch(Test);
+
+        result.IsFail.Should().BeTrue();
+        result.UnwrapError().Is(StandardErrorCodes.Unhandled).Should().BeTrue();
+        result.UnwrapError().Message.Should().Be("test");
+        return;
+
+        async Task Test() {
             await Task.Yield();
             throw new Exception("test");
         }
-        var result = await TryCatch(test);
+    }
+
+    [Fact(DisplayName = "Forward ErrorInfoException correctly")]
+    public void Try_catch_errorinfoexception() {
+        var result = TryCatch(Test);
 
         result.IsFail.Should().BeTrue();
-        result.UnwrapError().IsExceptional.Should().BeTrue();
+        result.UnwrapError().Is("test").Should().BeTrue();
+        result.UnwrapError().Message.Should().Be("message");
+        return;
+
+        void Test() {
+            throw new ErrorInfoException("test", "message");
+        }
     }
 }

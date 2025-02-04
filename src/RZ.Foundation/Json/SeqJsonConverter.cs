@@ -2,20 +2,19 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using LanguageExt;
 
 namespace RZ.Foundation.Json;
 
-public sealed class SeqJsonConverter : JsonConverterFactory
+public class SeqJsonConverter : JsonConverterFactory
 {
     public static readonly SeqJsonConverter Default = new();
-    
+
     static readonly Type SeqType = typeof(Seq<>);
-    public override bool CanConvert(Type typeToConvert) => 
+    public override bool CanConvert(Type typeToConvert) =>
         JsonConverterHelper.CanConvert(SeqType, typeToConvert);
 
     static readonly Type SeqSerializerType = typeof(SeqSerializer<>);
-    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) => 
+    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) =>
         JsonConverterHelper.CreateConverter(SeqSerializerType, typeToConvert);
 
     sealed class SeqSerializer<T> : JsonConverter<Seq<T>>

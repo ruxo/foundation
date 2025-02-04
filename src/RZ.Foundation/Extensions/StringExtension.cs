@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using LanguageExt;
-using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Extensions;
 
@@ -14,7 +12,7 @@ public static class StringExtension
     public static string Join(this IEnumerable<string> sseq, char delimiter) => string.Join(delimiter.ToString(), sseq);
     public static string Join(this IEnumerable<string> sseq, string delimiter) => string.Join(delimiter, sseq);
 
-    public static Option<DateTime> ToDateTime(this string s) => DateTime.TryParse(s, out var dt) ? Some(dt) : None;
+    public static Option<DateTime> ToDateTime(this string s) => DateTime.TryParse(s, out var dt) ? dt : None;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string Left(this string s, int n) => s[..Math.Min(s.Length, n)];

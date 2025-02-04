@@ -4,8 +4,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using LanguageExt;
-using static LanguageExt.Prelude;
+
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -105,7 +104,7 @@ namespace RZ.Foundation.Extensions
 
         #region Average methods
 
-        public static ValueTask<T> Average<T>(this IAsyncEnumerable<T> seq, CancellationToken cancelToken = default) where T: INumber<T> => 
+        public static ValueTask<T> Average<T>(this IAsyncEnumerable<T> seq, CancellationToken cancelToken = default) where T: INumber<T> =>
             seq.AverageBy(identity, cancelToken);
 
         public static async ValueTask<TAverage> AverageBy<T, TAverage>(this IAsyncEnumerable<T> seq, Func<T, TAverage> getter, CancellationToken cancelToken = default)
@@ -136,7 +135,7 @@ namespace RZ.Foundation.Extensions
             seq.Map(x => (R)(object) x, cancelToken);
 
         #region Choose methods
-        public static IAsyncEnumerable<B> ChooseAsync<A, B>(this IEnumerable<A> source, Func<A, Task<Option<B>>> selector) => 
+        public static IAsyncEnumerable<B> ChooseAsync<A, B>(this IEnumerable<A> source, Func<A, Task<Option<B>>> selector) =>
             source.ChooseAsync(x => selector(x).ToValue());
 
         public static async IAsyncEnumerable<B> ChooseAsync<A, B>(this IEnumerable<A> source, Func<A, ValueTask<Option<B>>> selector) {
@@ -155,7 +154,7 @@ namespace RZ.Foundation.Extensions
             }
         }
 
-        public static IAsyncEnumerable<B> ChooseAsync<A, B>(this IAsyncEnumerable<A> source, Func<A, Task<Option<B>>> selector, CancellationToken cancelToken = default) => 
+        public static IAsyncEnumerable<B> ChooseAsync<A, B>(this IAsyncEnumerable<A> source, Func<A, Task<Option<B>>> selector, CancellationToken cancelToken = default) =>
             source.ChooseAsync(x => selector(x).ToValue(), cancelToken);
 
         public static async IAsyncEnumerable<B> ChooseAsync<A, B>(this IAsyncEnumerable<A> source, Func<A, ValueTask<Option<B>>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
@@ -186,7 +185,7 @@ namespace RZ.Foundation.Extensions
         public static async IAsyncEnumerable<Seq<T>> Chunk<T>(this IAsyncEnumerable<T> seq, int size, [EnumeratorCancellation] CancellationToken cancelToken = default) {
             await using var itor = seq.GetAsyncEnumerator(cancelToken);
             while (true) {
-                var result = await itor.TakeAtMost(size);
+                var result = Seq(await itor.TakeAtMost(size));
                 if (result.IsEmpty) break;
                 yield return result;
             }
@@ -198,7 +197,7 @@ namespace RZ.Foundation.Extensions
             foreach (var i in second)
                 yield return i;
         }
-        
+
         public static async IAsyncEnumerable<T> Concat<T>(this IAsyncEnumerable<T> first, IAsyncEnumerable<T> second, [EnumeratorCancellation] CancellationToken cancelToken = default) {
             await foreach (var i in first.WithCancellation(cancelToken))
                 yield return i;
@@ -236,10 +235,10 @@ namespace RZ.Foundation.Extensions
             return set.Count;
         }
 
-        public static IAsyncEnumerable<T> Distinct<T>(this IAsyncEnumerable<T> seq, CancellationToken cancelToken = default) => 
+        public static IAsyncEnumerable<T> Distinct<T>(this IAsyncEnumerable<T> seq, CancellationToken cancelToken = default) =>
             seq.DistinctBy(identity, cancelToken: cancelToken);
 
-        public static async IAsyncEnumerable<T> DistinctBy<T,R>(this IAsyncEnumerable<T> seq, Func<T,R> keyGetter, IEqualityComparer<R>? comparer = null, [EnumeratorCancellation] CancellationToken cancelToken = default) 
+        public static async IAsyncEnumerable<T> DistinctBy<T,R>(this IAsyncEnumerable<T> seq, Func<T,R> keyGetter, IEqualityComparer<R>? comparer = null, [EnumeratorCancellation] CancellationToken cancelToken = default)
         {
             var set = new System.Collections.Generic.HashSet<R>(16, comparer);
             await foreach (var i in seq.WithCancellation(cancelToken))
@@ -359,7 +358,7 @@ namespace RZ.Foundation.Extensions
             while(stack.TryPop(out var i))
                 yield return i;
         }
-       
+
         public static IAsyncEnumerable<T> Skip<T>(this IAsyncEnumerable<T> seq, int n, CancellationToken cancelToken = default)
         {
             var counter = 0;
@@ -442,7 +441,7 @@ namespace RZ.Foundation.Extensions
 
         #endregion
 
-        public static ValueTask<Option<T>> TryFold<T>(this IAsyncEnumerable<T> seq, Func<T, T, T> folder, CancellationToken cancelToken = default) => 
+        public static ValueTask<Option<T>> TryFold<T>(this IAsyncEnumerable<T> seq, Func<T, T, T> folder, CancellationToken cancelToken = default) =>
             seq.TryFold(identity, folder, cancelToken);
 
         public static async ValueTask<Option<R>> TryFold<T, R>(this IAsyncEnumerable<T> seq, Func<T,R> seeder, Func<R, T, R> folder, CancellationToken cancelToken = default)
@@ -486,7 +485,7 @@ namespace RZ.Foundation.Extensions
             return seq.TrySearch(getKey, (last,current) => comparer.Compare(current, last) > 0, cancelToken);
         }
 
-        public static ValueTask<Option<T>> TryMin<T>(this IAsyncEnumerable<T> seq, IComparer<T>? comparer = null, CancellationToken cancelToken = default) => 
+        public static ValueTask<Option<T>> TryMin<T>(this IAsyncEnumerable<T> seq, IComparer<T>? comparer = null, CancellationToken cancelToken = default) =>
             seq.TryMinBy(identity, comparer, cancelToken);
 
         public static ValueTask<Option<T>> TryMinBy<T, K>(this IAsyncEnumerable<T> seq, Func<T, K> getKey, IComparer<K>? comparer=null, CancellationToken cancelToken = default)
@@ -516,7 +515,7 @@ namespace RZ.Foundation.Extensions
             where R: INumber<R> {
             await using var itor = seq.GetAsyncEnumerator(cancelToken);
             if (!await itor.MoveNextAsync()) return None;
-            
+
             var sum = getValue(itor.Current);
             while(await itor.MoveNextAsync()) sum += getValue(itor.Current);
             return sum;
@@ -529,7 +528,7 @@ namespace RZ.Foundation.Extensions
                     yield return i;
         }
 
-        public static IAsyncEnumerable<T> WhereAsync<T>(this IAsyncEnumerable<T> source, Func<T, Task<bool>> predicate, CancellationToken cancelToken = default) => 
+        public static IAsyncEnumerable<T> WhereAsync<T>(this IAsyncEnumerable<T> source, Func<T, Task<bool>> predicate, CancellationToken cancelToken = default) =>
             source.WhereAsync(x => predicate(x).ToValue(), cancelToken);
 
         public static async IAsyncEnumerable<T> WhereAsync<T>(this IAsyncEnumerable<T> source, Func<T, ValueTask<bool>> predicate, [EnumeratorCancellation] CancellationToken cancelToken = default) {

@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using LanguageExt.Common;
-using static LanguageExt.Prelude;
 
 namespace RZ.Foundation.Extensions
 {
@@ -30,8 +29,8 @@ namespace RZ.Foundation.Extensions
         public static async Task<Result<T>> RetryUntil<T>(Func<Task<T>> task, Func<Exception,bool>? onFailure = null) {
             Result<T> result;
             var cont = true;
-            do {
-                result = await TryAsync(task).Try();
+            do{
+                result = await Try(task).ToResult();
                 if (result.IsFaulted) cont = onFailure?.Invoke(result.GetFail()) ?? true;
             } while (result.IsFaulted && cont);
 
@@ -41,8 +40,8 @@ namespace RZ.Foundation.Extensions
         public static Result<T> RetryUntil<T>(Func<T> task, Func<Exception,bool>? onFailure = null) {
             Result<T> result;
             var cont = true;
-            do {
-                result = Try(task).Try();
+            do{
+                result = Try(task).ToResult();
                 if (result.IsFaulted) cont = onFailure?.Invoke(result.GetFail()) ?? true;
             } while (result.IsFaulted && cont);
 
