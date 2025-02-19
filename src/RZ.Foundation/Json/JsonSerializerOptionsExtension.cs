@@ -1,4 +1,5 @@
-﻿using System.Text.Encodings.Web;
+﻿using System.Linq;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -7,7 +8,8 @@ namespace RZ.Foundation.Json;
 public static class JsonSerializerOptionsExtension
 {
     public static JsonSerializerOptions UseRzConverters(this JsonSerializerOptions opts) {
-        opts.Converters.Add(new JsonStringEnumConverter());
+        if (!opts.Converters.Any(c => c is JsonStringEnumConverter))
+            opts.Converters.Add(new JsonStringEnumConverter());
         opts.Converters.Add(new OptionJsonConverter());
         opts.Converters.Add(new SeqJsonConverter());
         opts.Converters.Add(new SetJsonConverter());

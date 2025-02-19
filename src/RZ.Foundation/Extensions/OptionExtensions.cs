@@ -90,10 +90,10 @@ public static class OptionHelper
 public static class OptionExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T Get<T>(this Option<T> opt) => opt.GetOrThrow(() => new InvalidOperationException());
+    public static T Get<T>(this Option<T> opt) => opt.GetOrThrow(() => new InvalidOperationException("Option value is in None state"));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static B Get<A,B>(this Option<A> opt, Func<A,B> getter) => opt.IsSome? getter(opt.Get()) : throw new InvalidOperationException();
+    public static B Get<A,B>(this Option<A> opt, Func<A,B> getter) => opt.IsSome? getter(opt.Get()) : throw new InvalidOperationException("Option value is in None state");
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T GetOrThrow<T>(this Option<T> opt, Func<Exception> noneHandler) => opt.IfNone(() => throw noneHandler());

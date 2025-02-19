@@ -1,13 +1,16 @@
 ﻿using FluentAssertions;
 using FluentAssertions.Execution;
+using JetBrains.Annotations;
 
 namespace RZ.Foundation.Testing;
 
+[PublicAPI]
 public static class OptionExtensions
 {
     public static OptionAssertions<T> Should<T>(this Option<T> v) => new(v);
 }
 
+[PublicAPI]
 public readonly ref struct OptionAssertions<T>(Option<T> v)
 {
     public void BeSome(T value, string because = "", params object[] becauseArgs) {
@@ -32,6 +35,7 @@ public readonly ref struct OptionAssertions<T>(Option<T> v)
                .FailWith("Expect {context:option} to be nothing {reason}, but found {0}", v);
     }
 
+    [PublicAPI]
     public readonly struct PassValue
     {
         readonly Option<T> target;

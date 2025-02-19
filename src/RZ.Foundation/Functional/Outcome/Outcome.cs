@@ -72,6 +72,8 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     [Pure] public static implicit operator Outcome<T>(ErrorInfo value) => new(value);
     [Pure] public static implicit operator Outcome<T>(Error value)     => new(ErrorFrom.Exception(value));
 
+    public void Deconstruct(out ErrorInfo? error, out T? data) => (error, data) = (Error, Data);
+
     [Pure]
     public static implicit operator Outcome<T>(Either<ErrorInfo, T> value)
         => value.Match(v => new Outcome<T>(v), e => new Outcome<T>(e));

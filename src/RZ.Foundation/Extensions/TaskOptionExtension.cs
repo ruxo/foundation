@@ -77,8 +77,8 @@ public static class TaskOptionExtension
         return o.IsSome;
     }
 
-    public static async Task<B> GetT<A,B>(this Option<A> opt, Func<A,Task<B>> getter) => opt.IsSome? await getter(opt.Get()) : throw new InvalidOperationException();
-    public static async ValueTask<B> GetTV<A,B>(this Option<A> opt, Func<A,ValueTask<B>> getter) => opt.IsSome? await getter(opt.Get()) : throw new InvalidOperationException();
+    public static async Task<B> GetT<A,B>(this Option<A> opt, Func<A,Task<B>> getter) => opt.IsSome? await getter(opt.Get()) : throw new InvalidOperationException("Option value is in None state");
+    public static async ValueTask<B> GetTV<A,B>(this Option<A> opt, Func<A,ValueTask<B>> getter) => opt.IsSome? await getter(opt.Get()) : throw new InvalidOperationException("Option value is in None state");
 
     public static Task<B?> GetOrDefaultT<A, B>(this Option<A> opt, Func<A, Task<B>> getter) => opt.MapT(getter).IfNoneUnsafeAsync(default(B));
     public static async ValueTask<B?> GetOrDefaultTV<A, B>(this Option<A> opt, Func<A, ValueTask<B>> getter) {
