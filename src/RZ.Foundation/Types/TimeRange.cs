@@ -56,12 +56,17 @@ public readonly struct TimeRange : IEquatable<TimeRange>
     public bool IsOverlapped(TimeRange other)
         => Intersect(other) != Empty;
 
+    /// <summary>
+    /// Merge another time range
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns></returns>
     public IEnumerable<TimeRange> Include(TimeRange other) {
         if (Contains(other))
             yield return this;
         else if (other.Contains(this))
             yield return other;
-        else if (Intersect(other).IsEmpty){
+        else if (Intersect(other).IsEmpty && Begin != other.End && End != other.Begin){
             yield return this;
             yield return other;
         } else{

@@ -102,6 +102,8 @@ public sealed class TimeRangeTest
         { WorkHours, T(20,21), [WorkHours] },
         { WorkHours, WorkHours, [] },
         { LunchTime, WorkHours, [] },
+        { T(12,14), LunchTime, [T(13,14)] },
+        { T(12,14), T(13,14), [LunchTime] },
         { WorkHours, Hours24, [] },
         { LunchTime, Before6, [] },
         { InfiniteDays, Hours24, [new TimeRange(end: TimeSpan.Zero), new TimeRange(24.Hours())] },
@@ -124,7 +126,10 @@ public sealed class TimeRangeTest
         { WorkHours, Hours24, [Hours24] },
         { LunchTime, Before6, [Before6] },
         { InfiniteDays, Hours24, [InfiniteDays] },
-        { Before6, Hours24, [new TimeRange(end: 1.Days())] }
+        { Before6, Hours24, [new TimeRange(end: 1.Days())] },
+        { LunchTime, new TimeRange(TimeSpan.FromHours(12, 30), 14.Hours()), [T(12,14)] },
+        { new TimeRange(12.Hours(), TimeSpan.FromHours(13, 30)), T(13, 14), [T(12,14)] },
+        { LunchTime, T(13, 14), [T(12,14)] }
     };
 
     [Theory]
