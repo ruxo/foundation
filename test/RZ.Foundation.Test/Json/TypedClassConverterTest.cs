@@ -6,6 +6,8 @@ using Xunit;
 
 namespace RZ.Foundation.Json;
 
+#if NET9_0_OR_GREATER
+
 [UsedImplicitly(ImplicitUseTargetFlags.Members)]
 public sealed class TypedClassConverterTest
 {
@@ -131,3 +133,5 @@ public sealed class TypedClassConverterTest
 
     #endregion
 }
+
+#endif

@@ -27,7 +27,7 @@ public sealed class TimeRangeTest
 
     static readonly TimeRange WorkHours = T(8, 17);
     static readonly TimeRange LunchTime = T(12, 13);
-    static readonly TimeRange InfiniteDays = new();
+    static readonly TimeRange InfiniteDays;
     static readonly TimeRange Before6 = new(null, 18.Hours());
     static readonly TimeRange Hours24 = new(TimeSpan.Zero, 24.Hours());
 
@@ -127,8 +127,8 @@ public sealed class TimeRangeTest
         { LunchTime, Before6, [Before6] },
         { InfiniteDays, Hours24, [InfiniteDays] },
         { Before6, Hours24, [new TimeRange(end: 1.Days())] },
-        { LunchTime, new TimeRange(TimeSpan.FromHours(12, 30), 14.Hours()), [T(12,14)] },
-        { new TimeRange(12.Hours(), TimeSpan.FromHours(13, 30)), T(13, 14), [T(12,14)] },
+        { LunchTime, new TimeRange(12.Hours() + 30.Minutes(), 14.Hours()), [T(12,14)] },
+        { new TimeRange(12.Hours(), 13.Hours() + 30.Minutes()), T(13, 14), [T(12,14)] },
         { LunchTime, T(13, 14), [T(12,14)] }
     };
 
