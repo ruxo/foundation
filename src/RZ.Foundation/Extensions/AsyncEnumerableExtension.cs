@@ -50,9 +50,7 @@ namespace RZ.Foundation.Extensions
             await using var aItor = a.GetAsyncEnumerator(cancelToken);
             await using var bItor = b.GetAsyncEnumerator(cancelToken);
             while (await aItor.MoveNextAsync() && await bItor.MoveNextAsync())
-            {
                 yield return (aItor.Current, bItor.Current);
-            }
         }
 
         public static async ValueTask<bool> Any<T>(this IAsyncEnumerable<T> source, Func<T,bool> predicate,

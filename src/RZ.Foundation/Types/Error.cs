@@ -135,7 +135,7 @@ public sealed class ErrorInfoException : ApplicationException
             AdditionalData,
             InnerException is ErrorInfoException ei
                 ? ei.ToErrorInfo()
-                : Optional(InnerException).Map(e => ErrorFrom.Exception(e)).ToNullable(),
+                : Optional(InnerException).Map(ErrorFrom.Exception).ToNullable(),
             SubErrors,
             StackTrace);
 }

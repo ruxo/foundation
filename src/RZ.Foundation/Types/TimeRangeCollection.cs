@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace RZ.Foundation.Types;
 
+[PublicAPI]
 public static class TimeRangeCollection
 {
     public static TimeRange? FindContainer(this IEnumerable<TimeRange> self, TimeRange other)

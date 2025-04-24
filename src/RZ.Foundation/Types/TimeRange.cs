@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 using LanguageExt.UnitsOfMeasure;
 
 namespace RZ.Foundation.Types;
@@ -18,10 +19,12 @@ public readonly struct TimeRange : IEquatable<TimeRange>
     /// </summary>
     public TimeSpan? End { get; }
 
+    [JsonIgnore]
     public TimeSpan Duration => NullAsMax(End) - NullAsMin(Begin);
 
     public static readonly TimeRange Empty = new(TimeSpan.MinValue, TimeSpan.MinValue);
 
+    [JsonConstructor]
     public TimeRange(TimeSpan? begin = null, TimeSpan? end = null)
     {
         if (end <= begin)
@@ -35,7 +38,10 @@ public readonly struct TimeRange : IEquatable<TimeRange>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TimeRange Create(TimeSpan? begin = null, TimeSpan? end = null) => new(begin, end);
 
+    [JsonIgnore]
     public bool IsNoLimit => Begin == null && End == null;
+
+    [JsonIgnore]
     public bool IsEmpty => !IsNoLimit && Begin == End;
 
     public bool Contains(TimeSpan d) => NullAsMin(Begin) <= d && d <= NullAsMax(End);
