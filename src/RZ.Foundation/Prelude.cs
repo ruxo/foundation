@@ -58,10 +58,11 @@ public static partial class Prelude {
                                                            };
 
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Func<T, Task<T>> SideEffectAsync<T>(Func<T, Task> f) => async x => {
-                                                                              await f(x);
-                                                                              return x;
-                                                                          };
+    public static Func<T, Task<T>> SideEffectAsync<T>([InstantHandle] Func<T, Task> f)
+        => async x => {
+            await f(x);
+            return x;
+        };
 
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T SideEffect<T>(this T x, Action<T> f) {

@@ -21,4 +21,7 @@ public static class StringExtension
     public static string Right(this string s, int n) {
         return s[Math.Max(0, s.Length - n)..];
     }
+
+    public static string? NotEmpty(this string s) => string.IsNullOrEmpty(s)? null : s;
+    public static string? NotWhiteSpace(this string s) => string.IsNullOrWhiteSpace(s)? null : s;
 }
