@@ -1,11 +1,11 @@
 ﻿<Solution>
   <Folder Name="/Misc/">
-    <File Path="README.md" />
     <File Path="CHANGES.md" />
     <File Path="src\CommonGlobalUsings.cs" />
     <File Path="src\Directory.Build.props" />
     <File Path="build.ps1" />
     <File Path=".gitignore" />
+    <File Path="README.adoc" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src\RZ.Foundation.Testing\RZ.Foundation.Testing.csproj" Type="Classic C#" />

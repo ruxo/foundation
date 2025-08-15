@@ -1,18 +1,19 @@
-# RZ Functional library for C#
+= RZ Functional library for C
 
-This library is an add-on to LanguageExt library. It tries to provide some 
+This library is an add-on to LanguageExt library. It tries to provide some
 syntactic sugar for more natural expression.
 
-## Option[T] Extension (RZ.Foundation) ##
+== Option[T] Extension (RZ.Foundation)
 
-### Convert between C# nullable value and Option[T] ##
+=== Convert between C# nullable value and Option[T]
 
-Prelude module provides conversion functions for C# nullable and Option[T]. 
+Prelude module provides conversion functions for C# nullable and Option[T].
 Unfortunately, Value Type/Ref Type semantic differences make creating generic functions to
 support both meta-types tedious and, in some case, confuse the compiler and generating
-a warning. 
+a warning.
 
-```c#
+[source,c#]
+----
 using static LanguageExt.Prelude;
 
 int? x = 123;
@@ -23,58 +24,64 @@ int? z = y.ToNullable(); // convert an Option<T> to a nullable value
 string? a = "Hello";
 Option<string> b = Some(a);
 string? c = b.ToNullable();
-```
+----
 
-### Getting a value out of Option[T] ###
+=== Getting a value out of Option[T]
 
 Suppose that we have follow option values:
 
-```c#
+[source,c#]
+----
 using static LanguageExt.Prelude;
 
 var some = Some(123);
 var none = Option<int>.None;
-```
+----
 
-#### Get ####
+==== Get
 
-```c#
+[source,c#]
+----
 var x = some.Get();     // 123
 var y = none.Get();     // an exception is thrown!
-```
+----
 
-#### GetOrThrow ####
+==== GetOrThrow
 
 In case you want to specific an exception.
 
-```c#
+[source,c#]
+----
 var x = some.GetOrThrow(() => new MyException());     // 123
 var y = none.GetOrThrow(() => new MyException());     // MyException is thrown!
-```
+----
 
-#### GetOrDefault ####
+==== GetOrDefault
 
-```c#
+[source,c#]
+----
 var x = some.GetOrDefault();   // 123
 var y = none.GetOrDefault();   // 0, int's default value
-```
+----
 
-### Replace None value ###
+=== Replace None value
 
-```c#
+[source,c#]
+----
 using static LanguageExt.Prelude;
 var x = Option<int>.None;
 var y = x.OrElse(123);  // Option<int> of 123
 var z = x.OrElse(Some(456)) // Option<int> of 456
 var a = x.OrElse(() => None);    // stay None
 var b = await x.OrElseAsync(() => Task.FromResult(999));    // Option<int> of 999
-```
+----
 
-### Perform action (Side effect) ###
+=== Perform action (Side effect)
 
 `Then` is the operation to perform an action. The method returns the original value.
 
-```c#
+[source,c#]
+----
 using static LanguageExt.Prelude;
 var x = None<int>();
 x.Then(v => Console.WriteLine("Value = {0}", v));
@@ -84,17 +91,18 @@ x.Then(v => Console.WriteLine("Value = {0}", v), () => Console.WriteLine("No val
 await x.ThenAsync(v => Task.Run(() => Console.WriteLine("V = {0}", v)));
 await x.ThenAsync(v => Task.Run(() => Console.WriteLine("V = {0}", v)),
                   () => Task.Run(() => Console.WriteLine("No value")));
-```
+----
 
-### Type casting ###
+=== Type casting
 
-```c#
+[source,c#]
+----
 Option<object> x = Some((object) "I am string");
 Option<string> y = x.TryCast<object,string>();
 Option<int> z = x.TryCast<object,int>();   // None!
-```
+----
 
-## TaskOption[T] ##
+== TaskOption[T]
 
 LanguageExt's `OptionAsync` should be a wrapper of `Task<Option<T>>`, but its recent async/await handler
 has been implemented in way that consumes all exceptions as `None` value. This makes sense when we don’t
@@ -104,46 +112,50 @@ would simplify error handling code when writing in functional paradigm.
 So `TaskOption<T>` is made to work similar to `OptionAsync` but with async/await pattern that allows
 exceptions to be escalated normally, as well as, support `None` returning value.
 
-## Nullable as Option like
+== Nullable as Option like
 
-```c#
+[source,c#]
+----
 int? x = 123;
 string MyToString(int a) => a.ToString();
 string? y = x.Apply(MyToString);    // "123"
-```
+----
 
-## On(x)
+== On(x)
 
-### Catch
+=== Catch
 
-```c#
+[source,c#]
+----
 var x = Task.FromResult(123);
 var y = await On(x).Catch(_ => -1);
 y.Should().Be(123);
-```
+----
 
-### BeforeThrow
+=== BeforeThrow
 
-```c#
+[source,c#]
+----
 var x = Task.FromException<int>(new Exception("Test"));
 bool effect = false;
 Func<Task> action = () => On(x).BeforeThrow(_ => effect = true);
 await action.Should().ThrowAsync<Exception>();
 effect.Should().BeTrue();
-```
+----
 
-## Utilities
+== Utilities
 
-### ToReadOnlyCollection
+=== ToReadOnlyCollection
 
 Convert `ICollection` to `IReadOnlyCollection` with `ToReadOnlyCollection()`.
 
-### Encryption
+=== Encryption
 
-```c#
+[source,c#]
+----
 var nonce = Encryption.NonceFromASCII("Hello test");
 var key = Encryption.CreateAesKey();
 var aes = Encryption.CreateAes(key, nonce);
 var encrypted = aes.Encrypt("Hello world");
 var decrypted = aes.Decrypt(encrypted);
-```
+----
