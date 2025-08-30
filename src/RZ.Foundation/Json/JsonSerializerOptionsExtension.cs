@@ -18,16 +18,29 @@ public static class JsonSerializerOptionsExtension
         return opts;
     }
 
+    public static JsonSerializerOptions UseCommonApiResponseSettings(this JsonSerializerOptions opts) {
+        opts.WriteIndented = false;
+        opts.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        opts.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+        opts.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        return opts;
+    }
+
     /// <summary>
     /// Recommendation for JSON serialization settings.
     /// </summary>
     /// <param name="opts">a JSON option to be set</param>
     /// <returns>The same, modified, JSON object</returns>
-    public static JsonSerializerOptions UseRzRecommendedSettings(this JsonSerializerOptions opts) {
-        opts.WriteIndented = false;
-        opts.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        opts.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-        opts.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-        return opts.UseRzConverters();
+    public static JsonSerializerOptions UseRzRecommendedSettings(this JsonSerializerOptions opts)
+        => opts.UseCommonApiResponseSettings().UseRzConverters();
+
+    /// <summary>
+    /// GraphQL style has enum literals in UPPER SNAKE_CASE.
+    /// </summary>
+    /// <param name="opts"></param>
+    /// <returns></returns>
+    public static JsonSerializerOptions UseRzGraphStyleSettings(this JsonSerializerOptions opts) {
+        opts.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper));
+        return opts.UseCommonApiResponseSettings();
     }
 }

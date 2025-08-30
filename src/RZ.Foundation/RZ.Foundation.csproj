@@ -20,6 +20,6 @@
     <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.1" />
   </ItemGroup>
 </Project>
