@@ -2,9 +2,8 @@
 using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
-using static RZ.Foundation.Prelude;
 
-namespace RZ.Foundation.Testing;
+namespace RZ.Foundation.Extensions;
 
 public sealed class TaskExtensionTests
 {
