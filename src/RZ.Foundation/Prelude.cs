@@ -44,9 +44,8 @@ public static partial class Prelude {
 
     #endregion
 
-
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Func<T> constant<T>(T x) => () => x;
+    public static Func<T> Constant<T>(T x) => () => x;
 
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.NoOptimization)]
     public static void Noop() { }
@@ -58,7 +57,7 @@ public static partial class Prelude {
                                                            };
 
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Func<T, Task<T>> SideEffectAsync<T>([InstantHandle] Func<T, Task> f)
+    public static Func<T, ValueTask<T>> SideEffectAsync<T>([InstantHandle] Func<T, ValueTask> f)
         => async x => {
             await f(x);
             return x;
@@ -71,7 +70,7 @@ public static partial class Prelude {
     }
 
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async Task<T> SideEffectAsync<T>(this T x, Func<T,Task> f) {
+    public static async ValueTask<T> SideEffectAsync<T>(this T x, Func<T,ValueTask> f) {
         await f(x);
         return x;
     }
@@ -108,7 +107,7 @@ public static partial class Prelude {
         => a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx,cx))));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async Task<T> ThrowIfError<T>(Task<Outcome<T>> value)
+    public static async ValueTask<T> ThrowIfError<T>(ValueTask<Outcome<T>> value)
         => (await value).Unwrap();
 
     public static T ThrowIfNotFound<T>(this Option<T> optionValue, string message)
@@ -242,7 +241,7 @@ public static partial class Prelude {
         }
     }
 
-    public static async Task<(Exception? Error, T Value)> Try<T>(Task<T> task)
+    public static async ValueTask<(Exception? Error, T Value)> Try<T>(ValueTask<T> task)
     {
         try
         {
@@ -253,7 +252,7 @@ public static partial class Prelude {
         }
     }
 
-    public static async Task<(Exception? Error, Unit Value)> Try(Task task)
+    public static async ValueTask<(Exception? Error, Unit Value)> Try(ValueTask task)
     {
         try
         {
@@ -265,7 +264,7 @@ public static partial class Prelude {
         }
     }
 
-    public static async Task<(Exception? Error, Unit Value)> Try(Func<Task> f)
+    public static async ValueTask<(Exception? Error, Unit Value)> Try(Func<ValueTask> f)
     {
         try
         {
@@ -277,7 +276,7 @@ public static partial class Prelude {
         }
     }
 
-    public static async Task<(Exception? Error, Unit Value)> Try<S>(S state, Func<S, Task> f)
+    public static async ValueTask<(Exception? Error, Unit Value)> Try<S>(S state, Func<S, ValueTask> f)
     {
         try
         {
@@ -313,7 +312,7 @@ public static partial class Prelude {
         }
     }
 
-    public static async Task<(Exception? Error, T Value)> Try<T>(Func<Task<T>> f)
+    public static async ValueTask<(Exception? Error, T Value)> Try<T>(Func<ValueTask<T>> f)
     {
         try
         {
@@ -325,7 +324,7 @@ public static partial class Prelude {
         }
     }
 
-    public static async Task<(Exception? Error, T Value)> Try<S,T>(S state, Func<S, Task<T>> f)
+    public static async ValueTask<(Exception? Error, T Value)> Try<S,T>(S state, Func<S, ValueTask<T>> f)
     {
         try
         {
@@ -345,7 +344,7 @@ public static partial class Prelude {
         };
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async Task<Option<T>> ToOption<T>(this Task<(Exception?, T)> result)
+    public static async ValueTask<Option<T>> ToOption<T>(this ValueTask<(Exception?, T)> result)
         => (await result).ToOption();
 
     [Pure]
@@ -356,7 +355,7 @@ public static partial class Prelude {
         };
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async Task<Outcome<T>> ToOutcome<T>(this Task<(Exception?, T)> result)
+    public static async ValueTask<Outcome<T>> ToOutcome<T>(this ValueTask<(Exception?, T)> result)
         => (await result).ToOutcome();
 
     [Pure]
@@ -367,7 +366,7 @@ public static partial class Prelude {
         };
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async Task<Result<T>> ToResult<T>(this Task<(Exception?, T)> result)
+    public static async ValueTask<Result<T>> ToResult<T>(this ValueTask<(Exception?, T)> result)
         => (await result).ToResult();
 
     #endregion

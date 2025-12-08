@@ -19,13 +19,13 @@ public sealed class TestCache
             return count.ToString();
         }
 
-        public async Task<string> FetcherAsync() {
+        public async ValueTask<string> FetcherAsync() {
             ++count;
             await Task.Yield();
             return count.ToString();
         }
     }
-    
+
     [Fact]
     public void TestCacheSync() {
         var mytime = new DateTime(2022, 1, 1);
@@ -39,7 +39,7 @@ public sealed class TestCache
         cache.Get().Should().Be("2");
         cache.Get().Should().Be("2");
     }
-    
+
     [Fact]
     public async Task TestCacheAsync() {
         var mytime = new DateTime(2022, 1, 1);
@@ -76,10 +76,6 @@ public sealed class TestCache
 
         var result = new ConcurrentQueue<string>();
         async Task getCache() => result.Enqueue(await cache.Get());
-        Task<string> getCacheEveryMinute() {
-            mytime += 1.Minutes();
-            return cache.Get();
-        }
 
         await Task.WhenAll(getCache(), getCache(), getCache(), getCache(), getCache(), getCache(), getCache(), getCache());
 
@@ -87,5 +83,11 @@ public sealed class TestCache
 
         var result1 = await Task.WhenAll(getCacheEveryMinute(), getCacheEveryMinute(), getCacheEveryMinute(), getCacheEveryMinute());
         result1.Except(new[]{ "2", "3", "4", "5" }).Should().BeEmpty("But ({0})", string.Join(", ", result1));
+        return;
+
+        async Task<string> getCacheEveryMinute() {
+            mytime += 1.Minutes();
+            return await cache.Get();
+        }
     }
 }

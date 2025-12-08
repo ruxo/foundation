@@ -47,7 +47,7 @@ public record WebRequestData(Uri Uri)
 [PublicAPI]
 public static class WebRequestDataExtension
 {
-    public static async Task<(string MimeType, byte[] Data)> Retrieve(this WebRequestData imageRequest, HttpClient http) {
+    public static async ValueTask<(string MimeType, byte[] Data)> Retrieve(this WebRequestData imageRequest, HttpClient http) {
         var response = await http.SendAsync(imageRequest.ToHttpRequest());
         if (response.IsSuccessStatusCode){
             var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";

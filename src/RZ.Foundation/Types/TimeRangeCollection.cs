@@ -7,15 +7,18 @@ namespace RZ.Foundation.Types;
 [PublicAPI]
 public static class TimeRangeCollection
 {
-    public static TimeRange? FindContainer(this IEnumerable<TimeRange> self, TimeRange other)
-        => self.Find(x => x.Contains(other)).ToNullable();
+    extension(IEnumerable<TimeRange> self)
+    {
+        public TimeRange? FindContainer(TimeRange other)
+            => self.Find(x => x.Contains(other)).ToNullable();
 
-    public static TimeRange? FindOverlapped(this IEnumerable<TimeRange> self, TimeRange other)
-        => self.Find(x => x.IsOverlapped(other)).ToNullable();
+        public TimeRange? FindOverlapped(TimeRange other)
+            => self.Find(x => x.IsOverlapped(other)).ToNullable();
 
-    public static IEnumerable<TimeRange> Exclude(this IEnumerable<TimeRange> self, TimeRange other)
-        => self.SelectMany(x => x.Exclude(other));
+        public IEnumerable<TimeRange> Exclude(TimeRange other)
+            => self.SelectMany(x => x.Exclude(other));
 
-    public static IEnumerable<TimeRange> Exclude(this IEnumerable<TimeRange> self, IEnumerable<TimeRange> others)
-        => others.Aggregate(self, (current, tr) => current.Exclude(tr).ToArray());
+        public IEnumerable<TimeRange> Exclude(IEnumerable<TimeRange> others)
+            => others.Aggregate(self, (current, tr) => current.Exclude(tr).ToArray());
+    }
 }

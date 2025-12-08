@@ -32,6 +32,7 @@ public static class TaskExtensions
     #region API Result helpers
 
     public static bool IsSuccess(this Task task) => task.IsCompleted && !(task.IsCanceled || task.IsFaulted);
+    public static bool IsSuccess(this ValueTask task) => task.IsCompleted && !(task.IsCanceled || task.IsFaulted);
 
     public static Exception UnwrapAggregateException(this Exception ex) => ex is AggregateException ae ? ae.InnerException! : ex;
 

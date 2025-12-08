@@ -21,7 +21,7 @@ public sealed class TryCatchTest
 
     [Fact]
     public async Task Try_catch_async_outcome() {
-        var outcome = Task.FromResult(SuccessOutcome(42));
+        var outcome = new ValueTask<Outcome<int>>(SuccessOutcome(42));
 
         var result = await TryCatch(() => outcome);
 
@@ -37,7 +37,7 @@ public sealed class TryCatchTest
 
     [Fact]
     public async Task Try_catch_async_value() {
-        var result = await TryCatch(() => Task.FromResult(42));
+        var result = await TryCatch(() => new ValueTask<int>(42));
 
         result.Should().Be(SuccessOutcome(42));
     }
@@ -88,7 +88,7 @@ public sealed class TryCatchTest
         result.UnwrapError().Message.Should().Be("test");
         return;
 
-        async Task Test() {
+        async ValueTask Test() {
             await Task.Yield();
             throw new Exception("test");
         }

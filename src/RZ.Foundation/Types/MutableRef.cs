@@ -1,4 +1,6 @@
-﻿namespace RZ.Foundation.Types;
+﻿using JetBrains.Annotations;
+
+namespace RZ.Foundation.Types;
 
 /// <summary>
 /// Wrap an immutable type to make it refer-able.
@@ -14,6 +16,7 @@ public sealed class MutableRef<T>
     public static implicit operator T(MutableRef<T> value) => value.Value;
 }
 
+[PublicAPI]
 public static class MutableRef
 {
     public static MutableRef<T> New<T>() => new();

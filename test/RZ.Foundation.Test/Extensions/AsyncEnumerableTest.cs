@@ -21,7 +21,7 @@ public class AsyncEnumerableTest
             return i + 1;
         }
 
-        var result = await source.MapAsync(mapAsync).ToArrayAsync();
+        var result = await source.MapAsync(mapAsync).ToArrayAsync(TestContext.Current.CancellationToken);
         result.Should().BeEquivalentTo([2,3,4,5,6]);
     }
     [Fact]

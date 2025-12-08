@@ -24,6 +24,6 @@ public class TryTest
         result.Should().Be(123);
     }
 
-    static async Task<int> JustThrow() => throw new Exception("JustThrow");
-    static       Task<int> JustReturn() => Task.FromResult(123);
+    static async ValueTask<int> JustThrow() => throw new Exception("JustThrow");
+    static       ValueTask<int> JustReturn() => new(123);
 }
