@@ -1,25 +1,24 @@
 using FluentAssertions;
-using Xunit;
 
 namespace RZ.Foundation.Extensions
 {
     public sealed class CollectionExtensionTest
     {
-        [Fact]
+        [Test]
         public void RemoveAtMiddle() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.RemoveAt(2);
             result.Should().BeEquivalentTo(new[] {1, 2, 4, 5});
         }
 
-        [Fact]
+        [Test]
         public void RemoveAtInvalidPos_ReturnSame() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.RemoveAt(-2);
             result.Should().BeEquivalentTo(source);
         }
 
-        [Fact]
+        [Test]
         public void PartitionEvenOddNumbers() {
             var source = new[] {1, 2, 3, 4, 5};
             var (evens, odds) = source.Partition(i => i % 2 == 0);
@@ -27,42 +26,42 @@ namespace RZ.Foundation.Extensions
             odds.Should().BeEquivalentTo(new[] {1, 3, 5});
         }
 
-        [Fact]
+        [Test]
         public void TryFirst() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.TryFirst();
             result.Get().Should().Be(1);
         }
 
-        [Fact]
+        [Test]
         public void TryFirstWithPredicate() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.TryFirst(i => i%2 == 0);
             result.Get().Should().Be(2);
         }
 
-        [Fact]
+        [Test]
         public void TryFistWithEmpty_ReturnsNone() {
             var source = new int[0];
             var result = source.TryFirst();
             result.IsNone.Should().BeTrue();
         }
 
-        [Fact]
+        [Test]
         public void TryFirstWithPredicateFalse() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.TryFirst(i => i%7 == 0);
             result.IsNone.Should().BeTrue();
         }
 
-        [Fact]
+        [Test]
         public void TryFindIndex_ValidCondition() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.TryFindIndex(i => i == 3);
             result.Get().Should().Be(2);
         }
 
-        [Fact]
+        [Test]
         public void TryFindIndex_NotFoundCondition() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.TryFindIndex(i => i == 999);

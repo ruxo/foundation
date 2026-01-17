@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
+using RZ.Foundation.Extensions;
 
 namespace RZ.Foundation.Helpers;
 
+[PublicAPI]
 public static class Memoir
 {
     public interface ICache<in A,B>
@@ -29,7 +27,7 @@ public static class Memoir
     public sealed class DictionaryCache<A, B> : ICache<A, B> where A : notnull
     {
         readonly Dictionary<A,B> cache = new();
-        public Option<B> Get(A x)             => cache.Get(x);
+        public Option<B> Get(A x)             => ReadOnly(cache).TryGetValue(x);
         public void      Store(A x, B result) => cache[x] = result;
     }
     public sealed class MultithreadLocker<A> : ILocker<A> where A: notnull {

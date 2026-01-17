@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
-using PureAttribute = System.Diagnostics.Contracts.PureAttribute;
+using static RZ.Foundation.AOT.Prelude;
 
 namespace RZ.Foundation.Extensions;
 
@@ -43,10 +39,10 @@ public static class CollectionExtension{
     [Pure]
     public static IEnumerable<T> RemoveAt<T>(this IEnumerable<T> array, int n) => array.Where((_, i) => i != n);
 
-    [Pure]
+    [Pure, Obsolete("Use TryGetValue instead")]
     public static Option<T> Get<TKey, T>(this IDictionary<TKey, T> dict, TKey key) => dict.TryGetValue(key);
 
-    [Pure]
+    [Pure, Obsolete("Use Find instead")]
     public static Option<T> Get<TKey, T>(this Map<TKey, T> dict, TKey key) => dict.Find(key);
 
     /// <summary>

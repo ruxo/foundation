@@ -6,11 +6,9 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using JetBrains.Annotations;
 using LanguageExt.Common;
 using RZ.Foundation.Json;
 using Seq = LanguageExt.Seq;
-using PureAttribute = System.Diagnostics.Contracts.PureAttribute;
 
 namespace RZ.Foundation.Types;
 
@@ -86,7 +84,7 @@ public sealed record ErrorInfo
     public bool Is(ErrorInfo another) => Is(another.Code);
 
     [Pure]
-    public string ToString(JsonSerializerOptions? options) => JsonSerializer.Serialize(this, options);
+    public string ToString(JsonSerializerOptions? options) => JsonSerializer.Serialize(this,ErrorInfoJsonContext.Default.ErrorInfo);
 
     [Pure]
     public override string ToString() => ToString(null);
@@ -100,6 +98,11 @@ public sealed record ErrorInfo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Throw<T>() => throw new ErrorInfoException(this);
 }
+
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+                             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(ErrorInfo))]
+public partial class ErrorInfoJsonContext : JsonSerializerContext;
 
 [PublicAPI]
 public sealed class ErrorInfoException : ApplicationException
@@ -167,6 +170,11 @@ public static class ErrorFrom
                              innerError: e.InnerException?.Apply(Exception),
                              subErrors: e.InnerException is AggregateException ae ? ae.InnerExceptions.Map(Exception) : null,
                              stack: e.StackTrace);
+    }
+
+    public static ErrorInfo Exception(Exception e, string message, [CallerMemberName] string? caller = null) {
+        var error = Exception(e);
+        return new ErrorInfo(error.Code, $"[{caller}] {message}", innerError: error);
     }
 
     public static ErrorInfo Exception(Error e) {

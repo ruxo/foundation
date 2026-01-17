@@ -1,5 +1,6 @@
 ﻿<Solution>
   <Folder Name="/Misc/">
+    <File Path="global.json" />
     <File Path="README.md" />
     <File Path="CHANGES.md" />
     <File Path="src\CommonGlobalUsings.cs" />
@@ -8,9 +9,11 @@
     <File Path=".gitignore" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/RZ.Foundation.AOT/RZ.Foundation.AOT.csproj" />
     <Project Path="src\RZ.Foundation\RZ.Foundation.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="test\RZ.Foundation.Test\RZ.Foundation.Test.csproj" Type="Classic C#" />
+    <Project Path="test/RZ.Foundation.AOT.Test/RZ.Foundation.AOT.Test.csproj" />
+    <Project Path="test\RZ.Foundation.Test\RZ.Foundation.Test.csproj" Type="C#" />
   </Folder>
 </Solution>

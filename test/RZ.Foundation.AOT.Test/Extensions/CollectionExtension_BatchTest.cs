@@ -1,12 +1,10 @@
-using System.Linq;
 using FluentAssertions;
-using Xunit;
 
 namespace RZ.Foundation.Extensions
 {
     public class CollectionExtension_BatchTest
     {
-        [Fact]
+        [Test]
         public void BatchWithDividableNumber() {
             var x = Enumerable.Range(1, 100);
 
@@ -19,7 +17,7 @@ namespace RZ.Foundation.Extensions
             result[3].Should().Equal(Enumerable.Range(61, 20));
             result[4].Should().Equal(Enumerable.Range(81, 20));
         }
-        [Fact]
+        [Test]
         public void BatchWithIndividableNumber() {
             var x = Enumerable.Range(1, 90);
 
@@ -33,14 +31,14 @@ namespace RZ.Foundation.Extensions
             result[4].Should().Equal(Enumerable.Range(81, 10));
         }
 
-        [Fact]
+        [Test]
         public void BatchWithEmptySeq() {
             var result = Enumerable.Empty<int>().Batch(20).ToArray();
 
             result.Should().BeEmpty();
         }
 
-        [Fact]
+        [Test]
         public void BatchWithGreaterSizeReturnsItself() {
             var x = Enumerable.Range(1, 11).ToArray();
 
