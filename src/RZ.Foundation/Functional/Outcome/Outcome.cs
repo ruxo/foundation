@@ -6,10 +6,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
-using JetBrains.Annotations;
 using LanguageExt.Common;
 using RZ.Foundation.Types;
-using PureAttribute = System.Diagnostics.Contracts.PureAttribute;
 
 namespace RZ.Foundation;
 

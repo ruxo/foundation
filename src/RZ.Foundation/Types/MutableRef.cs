@@ -6,12 +6,11 @@ namespace RZ.Foundation.Types;
 /// Wrap an immutable type to make it refer-able.
 /// </summary>
 /// <typeparam name="T">A type which is supposed to be immutable, such as a value type, record, or any immutable types.</typeparam>
-public sealed class MutableRef<T>
+public sealed class MutableRef<T>(T value)
 {
     public MutableRef() : this(default!) {}
-    public MutableRef(T value) => Value = value;
 
-    public T Value { get; set; }
+    public T Value { get; set; } = value;
 
     public static implicit operator T(MutableRef<T> value) => value.Value;
 }

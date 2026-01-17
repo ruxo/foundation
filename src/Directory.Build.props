@@ -4,10 +4,9 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
-        <PackageReference Include="MinVer" Version="6.0.0">
+        <PackageReference Include="MinVer" Version="7.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <Compile Include="../CommonGlobalUsings.cs" />
     </ItemGroup>
 </Project>

@@ -1,15 +1,11 @@
-﻿using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using FluentAssertions;
+﻿using FluentAssertions;
 using RZ.Foundation.Helpers;
-using Xunit;
 
 namespace RZ.Foundation;
 
 public class MemoirTest
 {
-    [Fact]
+    [Test]
     public void MemoirDictSameKey() {
         var sideeffect = 0;
         int test(int x) {
@@ -25,8 +21,8 @@ public class MemoirTest
         result.Should().Be(2);
     }
 
-    [Fact]
-    public async Task MemoirDictSameKeyMultithread() {
+    [Test]
+    public async Task MemoirDictSameKeyMultithread(CancellationToken cancelToken) {
         var sideeffect = 0;
         int test(int x) {
             ++sideeffect;
@@ -35,7 +31,7 @@ public class MemoirTest
         var memoir = Memoir.From(test, new Memoir.DictionaryCache<int,int>(), new Memoir.MultithreadLocker<int>());
         var startLine = new ManualResetEventSlim();
         var tasks = Enumerable.Range(1, 1000).Select(_ => Task.Run(() => {
-            startLine.Wait(TestContext.Current.CancellationToken);
+            startLine.Wait(cancelToken);
             return memoir(1);
         })).ToArray();
 

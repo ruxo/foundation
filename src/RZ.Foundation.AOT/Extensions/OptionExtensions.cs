@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using LanguageExt.Common;
 
 // ReSharper disable UnusedMethodReturnValue.Global
 
@@ -13,10 +9,9 @@ namespace RZ.Foundation.Extensions;
 [PublicAPI]
 public static class OptionHelper
 {
-    static readonly Exception DummyException = new ("Dummy extension in RZ.Foundation");
-
     extension<T>(Option<T> o)
     {
+        [PublicAPI]
         public bool IfSome(out T data) {
             data = o.IsSome ? o.Get() : default!;
             return o.IsSome;
@@ -28,23 +23,11 @@ public static class OptionHelper
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Option<ImmutableHashSet<T>> ToNotEmptyOption<T>(this ImmutableHashSet<T> data) =>
-        data.IsEmpty ? LanguageExt.Prelude.None : data;
+        data.IsEmpty ? None : data;
 
     public static Option<T[]> ToNotEmptyOption<T>(this IEnumerable<T> data) {
         var array = data.AsArray();
-        return array.Length > 0 ? array : LanguageExt.Prelude.None;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Option<T> None<T>() => Option<T>.None;
-
-    extension<T>(Option<T> o)
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Result<T> ToResult() => o.IsSome ? o.Get().AsSuccess() : DummyException.AsFailure<T>();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Result<T> ToResult(Func<Exception> none) => o.IsSome ? o.Get().AsSuccess() : none().AsFailure<T>();
+        return array.Length > 0 ? array : None;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -190,7 +173,7 @@ public static class OptionHelper
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Option<R> TryCast<R>() =>
-            opt.IsSome && opt.Get() is R v ? Some(v) : Prelude.None;
+            opt.IsSome && opt.Get() is R v ? Some(v) : None;
     }
 }
 
