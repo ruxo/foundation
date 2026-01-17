@@ -219,6 +219,8 @@ public static partial class Prelude {
     public static OnHandler<T> On<T>(Task<T> task)
         => new(task);
 
+    #region Try
+
     public static (Exception? Error, Unit Value) Try<S>(S state, Action<S> f) {
         try{
             f(state);
@@ -334,6 +336,8 @@ public static partial class Prelude {
             return (e, default!);
         }
     }
+
+    #endregion
 
     [Pure]
     public static Option<T> ToOption<T>(this in (Exception?, T) result)

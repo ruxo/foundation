@@ -6,8 +6,12 @@
         <RepositoryType>public</RepositoryType>
         <IsAotCompatible>true</IsAotCompatible>
         <RootNamespace>RZ.Foundation</RootNamespace>
+        <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Functional\" />
     </ItemGroup>
 </Project>

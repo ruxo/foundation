@@ -1,5 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using RZ.Foundation.Types;
+
 // ReSharper disable InconsistentNaming
 
 namespace RZ.Foundation.AOT;
@@ -43,7 +48,7 @@ public static class Prelude
     public static void Noop() { }
 
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Func<T, T> SideEffect<T>(Action<T> f) => x => {
+    public static Func<T, T> SideEffect<T>([InstantHandle] Action<T> f) => x => {
                                                                f(x);
                                                                return x;
                                                            };
@@ -55,16 +60,19 @@ public static class Prelude
             return x;
         };
 
-    [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T SideEffect<T>(this T x, Action<T> f) {
-        f(x);
-        return x;
-    }
+    extension<T>(T x)
+    {
+        [PublicAPI, ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T SideEffect([InstantHandle] Action<T> f) {
+            f(x);
+            return x;
+        }
 
-    [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async ValueTask<T> SideEffectAsync<T>(this T x, Func<T,ValueTask> f) {
-        await f(x);
-        return x;
+        [PublicAPI, ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async ValueTask<T> SideEffectAsync([InstantHandle] Func<T,ValueTask> f) {
+            await f(x);
+            return x;
+        }
     }
 
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -90,10 +98,353 @@ public static class Prelude
         return unit;
     }
 
+    public static string ToJson(params (string Key, JsonNode? Value)[] pairs) {
+        using var stream = new MemoryStream();
+        using var writer = new Utf8JsonWriter(stream);
+        writer.WriteStartObject();
+        foreach (var (key, value) in pairs) {
+            writer.WritePropertyName(key);
+            if (value is null)
+                writer.WriteNullValue();
+            else
+                value.WriteTo(writer);
+        }
+        writer.WriteEndObject();
+        writer.Flush();
+        return Encoding.UTF8.GetString(stream.ToArray());
+    }
+
     #region ReadOnly
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IReadOnlyDictionary<K,V> ReadOnly<K,V>(Dictionary<K,V> dict) where K: notnull => dict;
+
+    #endregion
+
+    #region On & Try
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandlerSync On(Action task)
+        => new(task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandlerSyncX<TX> On<TX>(TX x, Action<TX> task)
+        => new(x, task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandlerSync<T> On<T>(Func<T> task)
+        => new(task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandlerSync<TX,T> On<TX,T>(TX x, Func<TX,T> task)
+        => new(x, task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandler On(Task task)
+        => new(task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandlerX<TX> On<TX>(TX x, Func<TX,Task> task)
+        => new(x, task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandler<TX,T> On<TX,T>(TX x, Func<TX,Task<T>> task)
+        => new(x, task);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OnHandler<T> On<T>(Task<T> task)
+        => new(task);
+
+    #region Try
+
+    public static (Exception? Error, Unit Value) Try<S>(S state, Action<S> f) {
+        try{
+            f(state);
+            return (null, unit);
+        }
+        catch (Exception e){
+            return (e, unit);
+        }
+    }
+
+    public static (Exception? Error, Unit Value) Try(Action f)
+    {
+        try{
+            f();
+            return (null, unit);
+        }
+        catch (Exception e){
+            return (e, unit);
+        }
+    }
+
+    public static async ValueTask<(Exception? Error, T Value)> Try<T>(ValueTask<T> task)
+    {
+        try
+        {
+            return (null, await task);
+        }
+        catch (Exception e){
+            return (e, default!);
+        }
+    }
+
+    public static async ValueTask<(Exception? Error, Unit Value)> Try(ValueTask task)
+    {
+        try
+        {
+            await task;
+            return (null, unit);
+        }
+        catch (Exception e){
+            return (e, unit);
+        }
+    }
+
+    public static async ValueTask<(Exception? Error, Unit Value)> Try(Func<ValueTask> f)
+    {
+        try
+        {
+            await f();
+            return (null, unit);
+        }
+        catch (Exception e){
+            return (e, unit);
+        }
+    }
+
+    public static async ValueTask<(Exception? Error, Unit Value)> Try<S>(S state, Func<S, ValueTask> f)
+    {
+        try
+        {
+            await f(state);
+            return (null, unit);
+        }
+        catch (Exception e){
+            return (e, unit);
+        }
+    }
+
+    public static (Exception? Error, T Value) Try<S,T>(S state, Func<S,T> f)
+    {
+        try
+        {
+            return (null, f(state));
+        }
+        catch (Exception e)
+        {
+            return (e, default!);
+        }
+    }
+
+    public static (Exception? Error, T Value) Try<T>(Func<T> f)
+    {
+        try
+        {
+            return (null, f());
+        }
+        catch (Exception e)
+        {
+            return (e, default!);
+        }
+    }
+
+    public static async ValueTask<(Exception? Error, T Value)> Try<T>(Func<ValueTask<T>> f)
+    {
+        try
+        {
+            return (null, await f());
+        }
+        catch (Exception e)
+        {
+            return (e, default!);
+        }
+    }
+
+    public static async ValueTask<(Exception? Error, T Value)> Try<S,T>(S state, Func<S, ValueTask<T>> f)
+    {
+        try
+        {
+            return (null, await f(state));
+        }
+        catch (Exception e)
+        {
+            return (e, default!);
+        }
+    }
+
+    #endregion
+
+    [Pure]
+    public static Option<T> ToOption<T>(this in (Exception?, T) result)
+        => result switch {
+            (null, var value) => value,
+            (_, _)            => None
+        };
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static async ValueTask<Option<T>> ToOption<T>(this ValueTask<(Exception?, T)> result)
+        => (await result).ToOption();
+
+    [Pure]
+    public static Outcome<T> ToOutcome<T>(this in (Exception?, T) result)
+        => result switch {
+            (null, var value) => value,
+            var (error, _)    => ErrorFrom.Exception(error)
+        };
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static async ValueTask<Outcome<T>> ToOutcome<T>(this ValueTask<(Exception?, T)> result)
+        => (await result).ToOutcome();
+
+    #endregion
+
+    #region ToOutcome
+
+    [Pure]
+    [PublicAPI]
+    public static Outcome<T> ToOutcome<T>(this Option<T> opt, ErrorInfo? error = null)
+        => opt.Match(v => (Outcome<T>)v, () => error ?? new(StandardErrorCodes.NotFound));
+
+    [Pure]
+    [PublicAPI]
+    public static Outcome<T> ToOutcome<T>(this Either<ErrorInfo, T> opt) => opt.Match(v => (Outcome<T>)v, e => e);
+
+    [Pure]
+    [PublicAPI]
+    public static Outcome<T> ToOutcome<T>(this Try<T> self) => self.ToEither(ErrorFrom.Exception).ToOutcome();
+
+    #endregion
+
+    #region Try/Catch
+
+    [PublicAPI]
+    public static async ValueTask<Outcome<T>> TryCatch<T>([InstantHandle] Func<ValueTask<Outcome<T>>> handler) {
+        try{
+            return await handler();
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
+    [PublicAPI]
+    public static async ValueTask<Outcome<T>> TryCatch<T>([InstantHandle] Func<ValueTask<T>> handler) {
+        try{
+            return await handler();
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
+    [PublicAPI]
+    public static async ValueTask<Outcome<Unit>> TryCatch([InstantHandle] Func<ValueTask> handler) {
+        try{
+            await handler();
+            return unit;
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
+    [PublicAPI]
+    public static Outcome<T> TryCatch<T>([InstantHandle] Func<Outcome<T>> handler) {
+        try{
+            return handler();
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
+    public static Outcome<T> TryCatch<T>([InstantHandle] Func<T> handler) {
+        try{
+            return handler();
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
+    public static Outcome<Unit> TryCatch([InstantHandle] Action handler) {
+        try{
+            handler();
+            return unit;
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
+    #endregion
+
+    #region Outcome Helpers
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    static OutcomeCatch<T> matchError<T>(Func<ErrorInfo, bool> predicate, Func<ErrorInfo, Outcome<T>> fail) =>
+        new(predicate, fail);
+
+    #region catch
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeCatch<T> @catch<T>(Outcome<T> replacement)
+        => new(static _ => true, _ => replacement);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeCatch<T> @catch<T>(Func<ErrorInfo, T> replacement)
+        => new(static _ => true, e => replacement(e));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeCatch<T> @catch<T>(Func<ErrorInfo, ErrorInfo> replacement)
+        => new(static _ => true, e => replacement(e));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeCatch<T> @catch<T>(Func<ErrorInfo, Outcome<T>> replacement)
+        => new(static _ => true, replacement);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeCatch<T> @catch<T>(ErrorInfo error, Outcome<T> replacement)
+        => matchError(e => e.Is(error), e => replacement);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeCatch<T> @catch<T>(ErrorInfo error, Func<ErrorInfo, T> @catch)
+        => matchError(e => e.Is(error), e => SuccessOutcome(@catch(e)));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeCatch<T> @catch<T>(ErrorInfo error, Func<ErrorInfo, ErrorInfo> replacement)
+        => matchError(e => e.Is(error), e => (Outcome<T>) replacement(e));
+
+    #endregion
+
+    #region failDo
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeSideEffect failDo(Action<ErrorInfo> fail) =>
+        new(ToUnit(fail));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeSideEffect failDo(Func<ErrorInfo, Unit> fail) =>
+        new(fail);
+
+    #endregion
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeSideEffect<T> @do<T>(Action<T> sideEffect) =>
+        new(ToUnit(sideEffect));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OutcomeSideEffect<T> @do<T>(Func<T, Unit> sideEffect) =>
+        new(sideEffect);
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Outcome<T> FailedOutcome<T>(ErrorInfo error) => error;
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Outcome<T> SuccessOutcome<T>(T value) => value;
+
+    public static readonly Outcome<Unit> UnitOutcome = unit;
 
     #endregion
 }

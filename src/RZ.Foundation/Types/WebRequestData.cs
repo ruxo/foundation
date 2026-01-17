@@ -2,7 +2,6 @@
 using System.Net.Http;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace RZ.Foundation.Types;
 
@@ -55,6 +54,8 @@ public static class WebRequestDataExtension
             return (contentType, data);
         }
         var error = await response.Content.ReadAsStringAsync();
-        throw new ErrorInfoException(StandardErrorCodes.ServiceError, $"Get image failed: {error}", data: new { response.StatusCode });
+        throw new ErrorInfoException(StandardErrorCodes.ServiceError,
+                                     $"Get image failed: {error}",
+                                     data: AOT.Prelude.ToJson(("StatusCode", response.StatusCode.ToString())));
     }
 }
