@@ -23,4 +23,7 @@
       <Compile Include="../CommonGlobalUsings.cs" />
       <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RZ.Foundation.AOT\RZ.Foundation.AOT.csproj" />
+  </ItemGroup>
 </Project>
