@@ -1,13 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using LanguageExt.Common;
-using RZ.Foundation.Json;
 using Seq = LanguageExt.Seq;
 
 namespace RZ.Foundation.Types;
@@ -17,6 +14,7 @@ namespace RZ.Foundation.Types;
 /// </summary>
 public sealed record ErrorInfo
 {
+    [PublicAPI]
     public readonly record struct StackInfo(string? Value)
     {
         public static implicit operator StackInfo(string? stackInfo) => new(stackInfo);
@@ -25,8 +23,8 @@ public sealed record ErrorInfo
         public static implicit operator StackInfo(StackTrace stack) => new(stack.ToString());
     }
 
-    public ErrorInfo(string code, string? message = default, object? debugInfo = null, object? data = null,
-              ErrorInfo? innerError = default, IEnumerable<ErrorInfo>? subErrors = default, string? stack = default, string? traceId = default) =>
+    public ErrorInfo(string code, string? message = null, string? debugInfo = null, string? data = null,
+              ErrorInfo? innerError = null, IEnumerable<ErrorInfo>? subErrors = null, string? stack = null, string? traceId = null) =>
         (Code, Message, TraceId, DebugInfo, Data, InnerError, SubErrors, Stack) =
         (code, message ?? code, traceId ?? Activity.Current?.Id, debugInfo, data, innerError, subErrors, stack);
 
@@ -47,16 +45,16 @@ public sealed record ErrorInfo
     public string? TraceId { get; init; } = Activity.Current?.Id;
 
     /// <summary>
-    /// **JSON SERIALIZABLE** Information for debug. This should not be shown in Release mode.
+    /// Information for debug. This should not be shown in Release mode.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public object? DebugInfo { get; init;  }
+    public string? DebugInfo { get; init;  }
 
     /// <summary>
-    /// **JSON SERIALIZABLE** Serialized associated data
+    /// Serialized associated data
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public object? Data { get; }
+    public string? Data { get; }
 
     /// <summary>
     /// Parent error
@@ -84,16 +82,15 @@ public sealed record ErrorInfo
     public bool Is(ErrorInfo another) => Is(another.Code);
 
     [Pure]
-    public string ToString(JsonSerializerOptions? options) => JsonSerializer.Serialize(this,ErrorInfoJsonContext.Default.ErrorInfo);
+    public string ToString(JsonTypeInfo<ErrorInfo>? options)
+        => JsonSerializer.Serialize(this, options ?? ErrorInfoJsonContext.Default.ErrorInfo);
 
     [Pure]
     public override string ToString() => ToString(null);
 
-    static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions().UseRzRecommendedSettings();
-
     [Pure]
-    public static Option<ErrorInfo> TryParse(string s) =>
-        Try(() => JsonSerializer.Deserialize<ErrorInfo>(s, SerializerOptions)!).ToOption();
+    public static Option<ErrorInfo> TryParse(string s, JsonTypeInfo<ErrorInfo>? options = null) =>
+        Try(() => JsonSerializer.Deserialize<ErrorInfo>(s, options ?? ErrorInfoJsonContext.Default.ErrorInfo)!).ToOption();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Throw<T>() => throw new ErrorInfoException(this);
@@ -107,7 +104,7 @@ public partial class ErrorInfoJsonContext : JsonSerializerContext;
 [PublicAPI]
 public sealed class ErrorInfoException : ApplicationException
 {
-    public ErrorInfoException(string code, string? message = null, object? debugInfo = null, object? data = null, Exception? innerException = null,
+    public ErrorInfoException(string code, string? message = null, string? debugInfo = null, string? data = null, Exception? innerException = null,
                               IEnumerable<ErrorInfo>? subErrors = null) : base(message ?? code, innerException)
         => (Code, DebugInfo, AdditionalData, SubErrors) = (code, debugInfo, data, subErrors);
 
@@ -120,14 +117,14 @@ public sealed class ErrorInfoException : ApplicationException
     public string Code { get; }
 
     /// <summary>
-    /// **JSON SERIALIZABLE** object represents a debug information
+    /// object represents a debug information
     /// </summary>
-    public object? DebugInfo { get; }
+    public string? DebugInfo { get; }
 
     /// <summary>
-    /// **JSON SERIALIZABLE** object for additional data
+    /// object for additional data
     /// </summary>
-    public object? AdditionalData { get; }
+    public string? AdditionalData { get; }
 
     public IEnumerable<ErrorInfo>? SubErrors { get; }
 

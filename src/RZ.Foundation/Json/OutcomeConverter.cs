@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using JetBrains.Annotations;
 using RZ.Foundation.Types;
 
 namespace RZ.Foundation.Json;
@@ -34,14 +33,10 @@ public class OutcomeConverter : JsonConverterFactory
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject){
                 var key = reader.GetString()!;
                 Trace.Assert(reader.Read());
-                if (key.Equals("data", StringComparison.OrdinalIgnoreCase)){
-                    var value = JsonSerializer.Deserialize<T>(ref reader, options) ?? throw new ErrorInfoException(StandardErrorCodes.InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: possibly type mismatched");
-                    return SuccessOutcome(value);
-                }
-                if (key.Equals("error", StringComparison.OrdinalIgnoreCase)){
-                    var error = JsonSerializer.Deserialize<ErrorInfo>(ref reader, options) ?? throw new ErrorInfoException(StandardErrorCodes.InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: possibly error type mismatched");
-                    return FailedOutcome<T>(error);
-                }
+                if (key.Equals("data", StringComparison.OrdinalIgnoreCase))
+                    return JsonSerializer.Deserialize<T>(ref reader, options) ?? throw new ErrorInfoException(StandardErrorCodes.InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: possibly type mismatched");
+                if (key.Equals("error", StringComparison.OrdinalIgnoreCase))
+                    return JsonSerializer.Deserialize<ErrorInfo>(ref reader, options) ?? throw new ErrorInfoException(StandardErrorCodes.InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: possibly error type mismatched");
                 reader.Skip();
             }
             return new ErrorInfo(StandardErrorCodes.InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: not malformed Outcome JSON");

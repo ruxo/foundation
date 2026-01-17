@@ -1,16 +1,13 @@
-﻿using System;
-using System.Threading.Tasks;
-using FluentAssertions;
+﻿using FluentAssertions;
 using JetBrains.Annotations;
 using RZ.Foundation.Types;
-using Xunit;
 
 namespace RZ.Foundation.Functional;
 
 [UsedImplicitly(ImplicitUseTargetFlags.Members)]
 public sealed class TryCatchTest
 {
-    [Fact]
+    [Test]
     public void Try_catch_sync_outcome() {
         var outcome = SuccessOutcome(42);
 
@@ -19,7 +16,7 @@ public sealed class TryCatchTest
         result.Should().Be(SuccessOutcome(42));
     }
 
-    [Fact]
+    [Test]
     public async Task Try_catch_async_outcome() {
         var outcome = new ValueTask<Outcome<int>>(SuccessOutcome(42));
 
@@ -28,21 +25,21 @@ public sealed class TryCatchTest
         result.Should().Be(SuccessOutcome(42));
     }
 
-    [Fact]
+    [Test]
     public void Try_catch_value() {
         var result = TryCatch(() => 42);
 
         result.Should().Be(SuccessOutcome(42));
     }
 
-    [Fact]
+    [Test]
     public async Task Try_catch_async_value() {
         var result = await TryCatch(() => new ValueTask<int>(42));
 
         result.Should().Be(SuccessOutcome(42));
     }
 
-    [Fact]
+    [Test]
     public void Try_catch_action() {
         var called = false;
         var result = TryCatch(() => {
@@ -53,7 +50,7 @@ public sealed class TryCatchTest
         called.Should().BeTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task Try_catch_async_action() {
         var called = false;
         var result = await TryCatch(async () => {
@@ -65,7 +62,7 @@ public sealed class TryCatchTest
         called.Should().BeTrue();
     }
 
-    [Fact]
+    [Test]
     public void Try_catch_action_exception() {
         var result = TryCatch(Test);
 
@@ -79,7 +76,7 @@ public sealed class TryCatchTest
         }
     }
 
-    [Fact]
+    [Test]
     public async Task Try_catch_async_action_exception() {
         var result = await TryCatch(Test);
 
@@ -94,7 +91,7 @@ public sealed class TryCatchTest
         }
     }
 
-    [Fact(DisplayName = "Forward ErrorInfoException correctly")]
+    [Test]
     public void Try_catch_errorinfoexception() {
         var result = TryCatch(Test);
 

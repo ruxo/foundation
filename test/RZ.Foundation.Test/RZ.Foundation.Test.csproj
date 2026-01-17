@@ -27,4 +27,8 @@
     <PackageReference Include="xunit.v3" Version="3.2.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Functional\" />
+  </ItemGroup>
+
 </Project>
