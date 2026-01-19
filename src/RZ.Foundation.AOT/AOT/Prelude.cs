@@ -311,6 +311,24 @@ public static class Prelude
 
     #region Try/Catch
 
+    public static async ValueTask<Outcome<T>> TryCatch<T>(Task<T> task) {
+        try{
+            return await task;
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
+    public static async ValueTask<Outcome<T>> TryCatch<T>(ValueTask<T> task) {
+        try{
+            return await task;
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
     [PublicAPI]
     public static async ValueTask<Outcome<T>> TryCatch<T>([InstantHandle] Func<ValueTask<Outcome<T>>> handler) {
         try{

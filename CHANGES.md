@@ -1,5 +1,13 @@
 # Version changes
 
+## 8.2.1
+
+- Add 2 more TryCatch helper functions for converting simple ValueTask or Task to Outcome
+
+## 8.2.0
+
+* Split to AOT Foundation project
+
 ## 7.0.0
 
 * Introduce two new libraries: `RZ.Foundation.Blazor` and `RZ.Foundation.Blazor.MudBlazor`
