@@ -1,7 +1,4 @@
-﻿using System;
-using System.Net.Http;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace RZ.Foundation.Types;
 
@@ -23,15 +20,18 @@ public record WebRequestData(Uri Uri)
     public string[][] Headers { get; init; } = [];
     public string? Body { get; init; }
 
-    public HttpRequestMessage ToHttpRequest() {
-        var req = new HttpRequestMessage(ToHttpMethod(Method), Uri) {
+    public Outcome<HttpRequestMessage> ToHttpRequest() {
+        if (ToHttpMethod(Method).IfNone(out var method))
+            return new ErrorInfo(StandardErrorCodes.InvalidResponse, $"Unsupported HTTP method: {Method}");
+
+        var req = new HttpRequestMessage(method, Uri) {
             Content = Optional(Body).Map(x => new StringContent(x)).ToNullable()
         };
         Headers.Iter(h => req.Headers.Add(h[0], h[1]));
         return req;
     }
 
-    static HttpMethod ToHttpMethod(string method)
+    static Option<HttpMethod> ToHttpMethod(string method)
         => method switch {
             "GET"    => HttpMethod.Get,
             "POST"   => HttpMethod.Post,
@@ -39,23 +39,27 @@ public record WebRequestData(Uri Uri)
             "DELETE" => HttpMethod.Delete,
             "PATCH"  => HttpMethod.Patch,
 
-            _ => throw new NotSupportedException($"Invalid HTTP method: {method}")
+            _ => None
         };
 }
 
 [PublicAPI]
 public static class WebRequestDataExtension
 {
-    public static async ValueTask<(string MimeType, byte[] Data)> Retrieve(this WebRequestData imageRequest, HttpClient http) {
-        var response = await http.SendAsync(imageRequest.ToHttpRequest());
+    public static async ValueTask<Outcome<(string MimeType, byte[] Data)>> Retrieve(this WebRequestData imageRequest, HttpClient http) {
+        if (Fail(imageRequest.ToHttpRequest(), out var e, out var request)
+         || Fail(await http.TrySend(request), out e, out var response))
+            return e;
+
         if (response.IsSuccessStatusCode){
             var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
-            var data = await response.Content.ReadAsByteArrayAsync();
+            if (Fail(await response.Content.ReadAsByteArray(), out e, out var data)) return e;
+
             return (contentType, data);
         }
-        var error = await response.Content.ReadAsStringAsync();
-        throw new ErrorInfoException(StandardErrorCodes.ServiceError,
-                                     $"Get image failed: {error}",
-                                     data: AOT.Prelude.ToJson(("StatusCode", response.StatusCode.ToString())));
+        if (Fail(await response.Content.ReadAsString(), out e, out var error)) return e;
+
+        return new ErrorInfo(StandardErrorCodes.ServiceError, $"Get image failed: {error}",
+                             data: ToJson(("StatusCode", response.StatusCode.ToString())));
     }
 }

@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using LanguageExt.UnitsOfMeasure;
@@ -19,14 +16,12 @@ public readonly struct TimeRange : IEquatable<TimeRange>
     /// </summary>
     public TimeSpan? End { get; }
 
-    [JsonIgnore]
-    public TimeSpan Duration => NullAsMax(End) - NullAsMin(Begin);
+    [JsonIgnore] public TimeSpan Duration => NullAsMax(End) - NullAsMin(Begin);
 
     public static readonly TimeRange Empty = new(TimeSpan.MinValue, TimeSpan.MinValue);
 
     [JsonConstructor]
-    public TimeRange(TimeSpan? begin = null, TimeSpan? end = null)
-    {
+    public TimeRange(TimeSpan? begin = null, TimeSpan? end = null) {
         if (end <= begin)
             Begin = End = TimeSpan.MinValue;
         else{
@@ -38,19 +33,16 @@ public readonly struct TimeRange : IEquatable<TimeRange>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TimeRange Create(TimeSpan? begin = null, TimeSpan? end = null) => new(begin, end);
 
-    [JsonIgnore]
-    public bool IsNoLimit => Begin == null && End == null;
+    [JsonIgnore] public bool IsNoLimit => Begin == null && End == null;
 
-    [JsonIgnore]
-    public bool IsEmpty => !IsNoLimit && Begin == End;
+    [JsonIgnore] public bool IsEmpty => !IsNoLimit && Begin == End;
 
     public bool Contains(TimeSpan d) => NullAsMin(Begin) <= d && d <= NullAsMax(End);
 
     public bool Contains(TimeRange other)
         => (Begin == null || Begin <= other.Begin) && (End == null || End >= other.End);
 
-    public TimeRange Intersect(TimeRange other)
-    {
+    public TimeRange Intersect(TimeRange other) {
         if (IsEmpty || other.IsEmpty)
             return Empty;
         var begin = NullAsMin(Begin) > NullAsMin(other.Begin) ? Begin : other.Begin;
@@ -75,7 +67,8 @@ public readonly struct TimeRange : IEquatable<TimeRange>
         else if (Intersect(other).IsEmpty && Begin != other.End && End != other.Begin){
             yield return this;
             yield return other;
-        } else{
+        }
+        else{
             var begin = NullAsMin(Begin) < NullAsMin(other.Begin) ? Begin : other.Begin;
             var end = NullAsMax(End) > NullAsMax(other.End) ? End : other.End;
             yield return Create(begin, end);
@@ -86,8 +79,7 @@ public readonly struct TimeRange : IEquatable<TimeRange>
         var common = Intersect(other);
         if (common.IsEmpty)
             yield return this;
-        else if (common == this)
-        {}
+        else if (common == this){ }
         else if (common == other){
             if (NullAsMin(Begin) < NullAsMin(other.Begin))
                 yield return new TimeRange(Begin, other.Begin);
@@ -116,7 +108,7 @@ public readonly struct TimeRange : IEquatable<TimeRange>
         => obj is TimeRange range && this == range;
 
     public override int GetHashCode() {
-        unchecked {
+        unchecked{
             return ((Begin?.GetHashCode() ?? 0) * 397) ^ (End?.GetHashCode() ?? 0);
         }
     }
@@ -126,29 +118,33 @@ public readonly struct TimeRange : IEquatable<TimeRange>
     public override string ToString()
         => Begin == null && End == null
                ? "[*]"
-               : IsEmpty ? "[]" : $"[{DisplayTime(Begin)} - {DisplayTime(End)}]";
+               : IsEmpty
+                   ? "[]"
+                   : $"[{DisplayTime(Begin)} - {DisplayTime(End)}]";
 
     public static TimeRange Parse(string s)
-        => TryParse(s).IfNone(() => throw ExceptionExtension.CreateError($"Unrecognized TimeRange format: {s}", "invalid_request", nameof(TimeRange), s));
+        => TryParse(s).IfNone(() => throw new ErrorInfoException(StandardErrorCodes.InvalidRequest, $"Unrecognized TimeRange format: {s}", debugInfo: s));
 
     public static Option<TimeRange> TryParse(string s) {
-        var trimmed = s.Trim('[',']',' ');
+        var trimmed = s.Trim('[', ']', ' ');
         if (trimmed == "*")
             return new TimeRange();
         if (string.IsNullOrEmpty(trimmed))
             return Empty;
 
         var timeParts = trimmed.Split('-').Select(part => part.Trim()).ToArray();
-        return timeParts.Length == 2 ? Create(ParsePart(timeParts[0]), ParsePart(timeParts[1])) : None;
+        return timeParts.Length == 2
+                   ? With(ParsePart(timeParts[0]), ParsePart(timeParts[1])).Map(x => Create(x.Item1.ToNullable(), x.Item2.ToNullable()))
+                   : None;
     }
 
-    static TimeSpan? ParsePart(string p)
+    static Option<Option<TimeSpan>> ParsePart(string p)
         => p == "*"
-               ? null
+               ? Some(Option<TimeSpan>.None)
                : TimeSpan.TryParse(p, out var v)
-                   ? v
-                   : throw new InvalidOperationException($"Invalid time part: {p}").AddMetaData("invalid_request", nameof(TimeRange), p);
+                   ? Some(v)
+                   : None;
 
     static string DisplayTime(TimeSpan? t)
-        => (t >= 1.Days()? t.Value.ToString(@"d\:hh\:mm") : t?.ToString(@"hh\:mm")) ?? "*";
+        => (t >= 1.Days() ? t.Value.ToString(@"d\:hh\:mm") : t?.ToString(@"hh\:mm")) ?? "*";
 }

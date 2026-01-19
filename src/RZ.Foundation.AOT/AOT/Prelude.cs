@@ -26,7 +26,7 @@ public static class Prelude
     public static Option<T> Some<T>(T v) => LanguageExt.Prelude.Some(v);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Option<T> Some<T>(T? v) where T: struct => LanguageExt.Prelude.Some(v);
+    public static Option<T> Some<T>(T? v) where T : struct => LanguageExt.Prelude.Some(v);
 
     public static readonly OptionNone None = LanguageExt.Prelude.None;
 
@@ -34,7 +34,7 @@ public static class Prelude
     public static Option<T> Optional<T>(T? value) => LanguageExt.Prelude.Optional(value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Option<T> Optional<T>(T? value) where T: struct => LanguageExt.Prelude.Optional(value);
+    public static Option<T> Optional<T>(T? value) where T : struct => LanguageExt.Prelude.Optional(value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T identity<T>(T x) => x;
@@ -49,9 +49,9 @@ public static class Prelude
 
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Func<T, T> SideEffect<T>([InstantHandle] Action<T> f) => x => {
-                                                               f(x);
-                                                               return x;
-                                                           };
+        f(x);
+        return x;
+    };
 
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Func<T, ValueTask<T>> SideEffectAsync<T>([InstantHandle] Func<T, ValueTask> f)
@@ -69,7 +69,7 @@ public static class Prelude
         }
 
         [PublicAPI, ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async ValueTask<T> SideEffectAsync([InstantHandle] Func<T,ValueTask> f) {
+        public async ValueTask<T> SideEffectAsync([InstantHandle] Func<T, ValueTask> f) {
             await f(x);
             return x;
         }
@@ -102,7 +102,7 @@ public static class Prelude
         using var stream = new MemoryStream();
         using var writer = new Utf8JsonWriter(stream);
         writer.WriteStartObject();
-        foreach (var (key, value) in pairs) {
+        foreach (var (key, value) in pairs){
             writer.WritePropertyName(key);
             if (value is null)
                 writer.WriteNullValue();
@@ -114,10 +114,24 @@ public static class Prelude
         return Encoding.UTF8.GetString(stream.ToArray());
     }
 
+    #region With
+
+    public static Option<(A, B)> With<A, B>(Option<A> a, Option<B> b) => a.Bind(ax => b.Map(bx => (ax, bx)));
+
+    public static Option<(A, B, C)> With<A, B, C>(Option<A> a, Option<B> b, Option<C> c)
+        => a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx, cx))));
+
+    public static Outcome<(A, B)> With<A, B>(Outcome<A> a, Outcome<B> b) => a.Bind(ax => b.Map(bx => (ax, bx)));
+
+    public static Outcome<(A, B, C)> With<A, B, C>(Outcome<A> a, Outcome<B> b, Outcome<C> c)
+        => a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx, cx))));
+
+    #endregion
+
     #region ReadOnly
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IReadOnlyDictionary<K,V> ReadOnly<K,V>(Dictionary<K,V> dict) where K: notnull => dict;
+    public static IReadOnlyDictionary<K, V> ReadOnly<K, V>(Dictionary<K, V> dict) where K : notnull => dict;
 
     #endregion
 
@@ -136,7 +150,7 @@ public static class Prelude
         => new(task);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static OnHandlerSync<TX,T> On<TX,T>(TX x, Func<TX,T> task)
+    public static OnHandlerSync<TX, T> On<TX, T>(TX x, Func<TX, T> task)
         => new(x, task);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -144,11 +158,11 @@ public static class Prelude
         => new(task);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static OnHandlerX<TX> On<TX>(TX x, Func<TX,Task> task)
+    public static OnHandlerX<TX> On<TX>(TX x, Func<TX, Task> task)
         => new(x, task);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static OnHandler<TX,T> On<TX,T>(TX x, Func<TX,Task<T>> task)
+    public static OnHandler<TX, T> On<TX, T>(TX x, Func<TX, Task<T>> task)
         => new(x, task);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -167,8 +181,7 @@ public static class Prelude
         }
     }
 
-    public static (Exception? Error, Unit Value) Try(Action f)
-    {
+    public static (Exception? Error, Unit Value) Try(Action f) {
         try{
             f();
             return (null, unit);
@@ -178,10 +191,8 @@ public static class Prelude
         }
     }
 
-    public static async ValueTask<(Exception? Error, T Value)> Try<T>(ValueTask<T> task)
-    {
-        try
-        {
+    public static async ValueTask<(Exception? Error, T Value)> Try<T>(ValueTask<T> task) {
+        try{
             return (null, await task);
         }
         catch (Exception e){
@@ -189,10 +200,8 @@ public static class Prelude
         }
     }
 
-    public static async ValueTask<(Exception? Error, Unit Value)> Try(ValueTask task)
-    {
-        try
-        {
+    public static async ValueTask<(Exception? Error, Unit Value)> Try(ValueTask task) {
+        try{
             await task;
             return (null, unit);
         }
@@ -201,10 +210,8 @@ public static class Prelude
         }
     }
 
-    public static async ValueTask<(Exception? Error, Unit Value)> Try(Func<ValueTask> f)
-    {
-        try
-        {
+    public static async ValueTask<(Exception? Error, Unit Value)> Try(Func<ValueTask> f) {
+        try{
             await f();
             return (null, unit);
         }
@@ -213,10 +220,8 @@ public static class Prelude
         }
     }
 
-    public static async ValueTask<(Exception? Error, Unit Value)> Try<S>(S state, Func<S, ValueTask> f)
-    {
-        try
-        {
+    public static async ValueTask<(Exception? Error, Unit Value)> Try<S>(S state, Func<S, ValueTask> f) {
+        try{
             await f(state);
             return (null, unit);
         }
@@ -225,50 +230,38 @@ public static class Prelude
         }
     }
 
-    public static (Exception? Error, T Value) Try<S,T>(S state, Func<S,T> f)
-    {
-        try
-        {
+    public static (Exception? Error, T Value) Try<S, T>(S state, Func<S, T> f) {
+        try{
             return (null, f(state));
         }
-        catch (Exception e)
-        {
+        catch (Exception e){
             return (e, default!);
         }
     }
 
-    public static (Exception? Error, T Value) Try<T>(Func<T> f)
-    {
-        try
-        {
+    public static (Exception? Error, T Value) Try<T>(Func<T> f) {
+        try{
             return (null, f());
         }
-        catch (Exception e)
-        {
+        catch (Exception e){
             return (e, default!);
         }
     }
 
-    public static async ValueTask<(Exception? Error, T Value)> Try<T>(Func<ValueTask<T>> f)
-    {
-        try
-        {
+    public static async ValueTask<(Exception? Error, T Value)> Try<T>(Func<ValueTask<T>> f) {
+        try{
             return (null, await f());
         }
-        catch (Exception e)
-        {
+        catch (Exception e){
             return (e, default!);
         }
     }
 
-    public static async ValueTask<(Exception? Error, T Value)> Try<S,T>(S state, Func<S, ValueTask<T>> f)
-    {
-        try
-        {
+    public static async ValueTask<(Exception? Error, T Value)> Try<S, T>(S state, Func<S, ValueTask<T>> f) {
+        try{
             return (null, await f(state));
         }
-        catch (Exception e)
-        {
+        catch (Exception e){
             return (e, default!);
         }
     }
@@ -382,6 +375,24 @@ public static class Prelude
 
     #region Outcome Helpers
 
+    public static bool Success<T>(Outcome<T> outcome, [NotNullWhen(true)] out T? v, [NotNullWhen(false)] out ErrorInfo? e) {
+        if (outcome.IsSuccess){
+            (v, e) = (outcome.Data!, null);
+            return true;
+        }
+        (v, e) = (default!, outcome.Error!);
+        return false;
+    }
+
+    public static bool Fail<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e, [NotNullWhen(false)] out T? v) {
+        if (outcome.IsSuccess){
+            (v, e) = (outcome.Data!, null);
+            return false;
+        }
+        (v, e) = (default!, outcome.Error!);
+        return true;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static OutcomeCatch<T> matchError<T>(Func<ErrorInfo, bool> predicate, Func<ErrorInfo, Outcome<T>> fail) =>
         new(predicate, fail);
@@ -406,7 +417,7 @@ public static class Prelude
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OutcomeCatch<T> @catch<T>(ErrorInfo error, Outcome<T> replacement)
-        => matchError(e => e.Is(error), e => replacement);
+        => matchError(e => e.Is(error), _ => replacement);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OutcomeCatch<T> @catch<T>(ErrorInfo error, Func<ErrorInfo, T> @catch)
@@ -414,7 +425,7 @@ public static class Prelude
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static OutcomeCatch<T> @catch<T>(ErrorInfo error, Func<ErrorInfo, ErrorInfo> replacement)
-        => matchError(e => e.Is(error), e => (Outcome<T>) replacement(e));
+        => matchError(e => e.Is(error), e => (Outcome<T>)replacement(e));
 
     #endregion
 
@@ -445,6 +456,21 @@ public static class Prelude
     public static Outcome<T> SuccessOutcome<T>(T value) => value;
 
     public static readonly Outcome<Unit> UnitOutcome = unit;
+
+    #endregion
+
+    #region Throw If Error
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static async ValueTask<T> ThrowIfError<T>(ValueTask<Outcome<T>> value)
+        => (await value).Unwrap();
+
+    public static T ThrowIfNotFound<T>(this Option<T> optionValue, string message)
+        => optionValue.GetOrThrow(() => new ErrorInfoException("not-found", message));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T ThrowIfNotFound<T>(Option<T> value)
+        => value.ThrowIfNotFound("Not found");
 
     #endregion
 }

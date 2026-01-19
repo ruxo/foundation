@@ -5,6 +5,7 @@ using Seq = LanguageExt.Seq;
 
 namespace RZ.Foundation.Extensions;
 
+[PublicAPI]
 public static class AsyncEnumeratorExtension
 {
     public static async ValueTask<IEnumerable<T>> TakeAtMost<T>(this IAsyncEnumerator<T> itor, int n) {

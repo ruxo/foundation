@@ -14,6 +14,7 @@ function build {
 
 Push-Location ./src
 
+build .\RZ.Foundation.AOT
 build .\RZ.Foundation
 
 Pop-Location

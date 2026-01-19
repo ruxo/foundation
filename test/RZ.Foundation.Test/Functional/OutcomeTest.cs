@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 using RZ.Foundation.Json;
 using RZ.Foundation.Types;
 using Xunit;
-using static RZ.Foundation.AOT.Prelude;
 
 namespace RZ.Foundation.Functional;
 

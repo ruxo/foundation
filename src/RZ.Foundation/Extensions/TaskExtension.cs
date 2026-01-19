@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 // ReSharper disable UnusedType.Global
 // ReSharper disable MemberCanBePrivate.Global

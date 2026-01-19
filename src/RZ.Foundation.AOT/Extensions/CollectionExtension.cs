@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
-using static RZ.Foundation.AOT.Prelude;
 
 namespace RZ.Foundation.Extensions;
 
@@ -17,27 +16,30 @@ public static class CollectionExtension{
         while(queue.TryDequeue(out _)) { }
     }
 
-    /// <summary>
-    /// Syntactic sugar for "Select"
-    /// </summary>
-    [Pure]
-    public static IEnumerable<V> Map<T, V>(this IEnumerable<T> seq, Func<T, V> mapper) => seq.Select(mapper);
-
-    /// <summary>
-    /// Syntactic sugar for "SelectMany"
-    /// </summary>
-    [Pure]
-    public static IEnumerable<V> Chain<T, V>(this IEnumerable<T> seq, Func<T, IEnumerable<V>> binder) => seq.SelectMany(binder);
-
-    /// <summary>
-    /// Remove an element from an array. Note it is not atomic operation.
-    /// </summary>
-    /// <param name="array">an array</param>
-    /// <param name="n">position to remove.</param>
+    /// <param name="seq">an array</param>
     /// <typeparam name="T">Type parameter of array</typeparam>
-    /// <returns>Return a new sequence without element at n.  If n is out of range, a new array of same content is returned.</returns>
-    [Pure]
-    public static IEnumerable<T> RemoveAt<T>(this IEnumerable<T> array, int n) => array.Where((_, i) => i != n);
+    extension<T>(IEnumerable<T> seq)
+    {
+        /// <summary>
+        /// Syntactic sugar for "Select"
+        /// </summary>
+        [Pure]
+        public IEnumerable<V> Map<V>(Func<T, V> mapper) => seq.Select(mapper);
+
+        /// <summary>
+        /// Syntactic sugar for "SelectMany"
+        /// </summary>
+        [Pure]
+        public IEnumerable<V> Chain<V>(Func<T, IEnumerable<V>> binder) => seq.SelectMany(binder);
+
+        /// <summary>
+        /// Remove an element from an array. Note it is not atomic operation.
+        /// </summary>
+        /// <param name="n">position to remove.</param>
+        /// <returns>Return a new sequence without element at n.  If n is out of range, a new array of same content is returned.</returns>
+        [Pure]
+        public IEnumerable<T> RemoveAt(int n) => seq.Where((_, i) => i != n);
+    }
 
     [Pure, Obsolete("Use TryGetValue instead")]
     public static Option<T> Get<TKey, T>(this IDictionary<TKey, T> dict, TKey key) => dict.TryGetValue(key);

@@ -1,6 +1,4 @@
-﻿using JetBrains.Annotations;
-
-namespace RZ.Foundation.Types;
+﻿namespace RZ.Foundation.Types;
 
 /// <summary>
 /// Wrap an immutable type to make it refer-able.
