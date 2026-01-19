@@ -1,18 +1,13 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using JetBrains.Annotations;
 using LanguageExt;
-using Xunit;
 
 namespace RZ.Foundation.Extensions;
 
 [UsedImplicitly(ImplicitUseTargetFlags.Members)]
 public class AsyncEnumerableTest
 {
-    [Fact]
+    [Test]
     public async Task MapFromEnumerable() {
         var source = new[]{ 1, 2, 3, 4, 5 };
 
@@ -21,10 +16,10 @@ public class AsyncEnumerableTest
             return i + 1;
         }
 
-        var result = await source.MapAsync(mapAsync).ToArrayAsync(TestContext.Current.CancellationToken);
+        var result = await source.MapAsync(mapAsync).ToArrayAsync();
         result.Should().BeEquivalentTo([2,3,4,5,6]);
     }
-    [Fact]
+    [Test]
     public async Task ChooseFromEnumerable() {
         var source = new[]{ 1, 2, 3, 4, 5 };
 
@@ -34,10 +29,10 @@ public class AsyncEnumerableTest
             return r%2 == 0 ? Some(r) : None;
         }
 
-        var result = await source.ChooseAsync(chooseAsync).ToArrayAsync(TestContext.Current.CancellationToken);
+        var result = await source.ChooseAsync(chooseAsync).ToArrayAsync();
         result.Should().BeEquivalentTo([2,4,6]);
     }
-    [Fact]
+    [Test]
     public async Task ChainFromEnumerable() {
         var source = new[]{ 1, 2, 3 };
 
@@ -45,8 +40,7 @@ public class AsyncEnumerableTest
             return Enumerable.Repeat(i, i).ToAsyncEnumerable();
         }
 
-        var result = await source.FlattenT(chainAsync)
-                                 .ToArrayAsync(TestContext.Current.CancellationToken);
+        var result = await source.FlattenT(chainAsync).ToArrayAsync();
         result.Should().BeEquivalentTo([1,2,2,3,3,3]);
     }
 }

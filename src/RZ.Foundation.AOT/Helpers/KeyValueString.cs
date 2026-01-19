@@ -12,6 +12,7 @@ namespace RZ.Foundation.Helpers;
 ///
 /// <p>A key/pair string is a semi-colon separated of <c>key=value</c> strings. The value must be JSON encoded.</p>
 /// </summary>
+[PublicAPI]
 public static class KeyValueString
 {
     /// <summary>

@@ -1,7 +1,4 @@
-using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace RZ.Foundation.Helpers;
 
@@ -11,15 +8,9 @@ namespace RZ.Foundation.Helpers;
 // ReSharper disable once UnusedType.Global
 public static class Cache
 {
-    public sealed class Context<T> : IDisposable
+    public sealed class Context<T>(Func<T> getter, IDisposable disposable) : IDisposable
     {
-        Func<T> getter;
-        readonly IDisposable disposable;
-
-        public Context(Func<T> getter, IDisposable disposable) {
-            this.getter = getter;
-            this.disposable = disposable;
-        }
+        Func<T> getter = getter;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Get() => getter();
@@ -64,15 +55,9 @@ public static class Cache
         return new(getter, locker);
     }
 
-    public sealed class AsyncContext<T> : IDisposable
+    public sealed class AsyncContext<T>(Func<ValueTask<T>> getter, IDisposable disposable) : IDisposable
     {
-        Func<ValueTask<T>> getter;
-        readonly IDisposable disposable;
-
-        public AsyncContext(Func<ValueTask<T>> getter, IDisposable disposable) {
-            this.getter = getter;
-            this.disposable = disposable;
-        }
+        Func<ValueTask<T>> getter = getter;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ValueTask<T> Get() => getter();
