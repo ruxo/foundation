@@ -26,7 +26,4 @@
   <ItemGroup>
     <ProjectReference Include="..\RZ.Foundation.AOT\RZ.Foundation.AOT.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Types\" />
-  </ItemGroup>
 </Project>

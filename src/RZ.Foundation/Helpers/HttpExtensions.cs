@@ -16,7 +16,7 @@ public static class HttpExtensions
             return r.IsSuccessStatusCode
                        ? (await r.Content.ReadFromJsonAsync<T>())!
                        : new ErrorInfo(StandardErrorCodes.HttpError, $"({r.StatusCode}) HTTP failed",
-                                       data: AOT.Prelude.ToJson(("StatusCode", r.StatusCode.ToString()),
+                                       data: ToJson(("StatusCode", r.StatusCode.ToString()),
                                                                 ("ReasonPhrase", r.ReasonPhrase)));
         }
 
@@ -26,7 +26,7 @@ public static class HttpExtensions
             return r.IsSuccessStatusCode
                        ? await r.Content.ReadAsStreamAsync()
                        : new ErrorInfo(StandardErrorCodes.HttpError, $"({r.StatusCode}) HTTP failed",
-                                       data: AOT.Prelude.ToJson(("StatusCode", r.StatusCode.ToString()),
+                                       data: ToJson(("StatusCode", r.StatusCode.ToString()),
                                                                 ("ReasonPhrase", r.ReasonPhrase)));
         }
     }
