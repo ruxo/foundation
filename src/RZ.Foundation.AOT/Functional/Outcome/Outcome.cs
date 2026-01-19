@@ -142,7 +142,7 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
 
     public bool IfFail(out ErrorInfo e, out T v) {
         if (status == EitherStatus.IsRight){
-            (e, v) = (default!, Data!);
+            (e, v) = (null!, Data!);
             return false;
         }
         else{
@@ -153,7 +153,7 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
 
     public bool IfSuccess(out T v, out ErrorInfo e) {
         if (status == EitherStatus.IsRight){
-            (e, v) = (default!, Data!);
+            (e, v) = (null!, Data!);
             return true;
         }
         else{

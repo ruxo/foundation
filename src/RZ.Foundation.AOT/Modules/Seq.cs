@@ -1,7 +1,6 @@
-using System.Collections.Generic;
-
 namespace RZ.Foundation.Modules;
 
+[PublicAPI]
 public static class Seq
 {
     public static IEnumerable<T> InitInfinite<T>(T value) {

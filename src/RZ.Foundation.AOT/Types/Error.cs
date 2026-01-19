@@ -41,37 +41,31 @@ public sealed record ErrorInfo
     /// <summary>
     /// Distributed trace ID
     /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? TraceId { get; init; } = Activity.Current?.Id;
 
     /// <summary>
     /// Information for debug. This should not be shown in Release mode.
     /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? DebugInfo { get; init;  }
 
     /// <summary>
     /// Serialized associated data
     /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Data { get; }
 
     /// <summary>
     /// Parent error
     /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ErrorInfo? InnerError { get; }
 
     /// <summary>
     /// Aggregation of sub-errors
     /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IEnumerable<ErrorInfo>? SubErrors { get; }
 
     /// <summary>
     /// Stack trace, if needed. It shouldn't be used in Release mode.
     /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Stack { get; init; }
 
     [Pure]
@@ -89,11 +83,22 @@ public sealed record ErrorInfo
     public override string ToString() => ToString(null);
 
     [Pure]
-    public static Option<ErrorInfo> TryParse(string s, JsonTypeInfo<ErrorInfo>? options = null) =>
-        Try(() => JsonSerializer.Deserialize<ErrorInfo>(s, options ?? ErrorInfoJsonContext.Default.ErrorInfo)!).ToOption();
+    public static Option<ErrorInfo> TryParse(string s, JsonTypeInfo<ErrorInfo>? options = null)
+        => Try(s, json => JsonSerializer.Deserialize<ErrorInfo>(json, options ?? ErrorInfoJsonContext.Default.ErrorInfo)!).ToOption();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Throw<T>() => throw new ErrorInfoException(this);
+
+    [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ErrorInfo NoDebug()
+        => With(debug: None, stack: None, inner: None, subErrors: None);
+
+    public ErrorInfo With(string? code = null, Option<string>? debug = null, Option<StackInfo>? stack = null,
+                          Option<ErrorInfo>? inner = null, Option<Seq<ErrorInfo>>? subErrors = null)
+        => new(code ?? Code, Message, (debug ?? Optional(DebugInfo)).ToNullable(), Data,
+               (inner ?? InnerError).ToNullable(),
+               subErrors is null ? SubErrors : subErrors.Value.ToNullable(),
+               (stack?.Bind(s => Optional(s.Value)) ?? Optional(Stack)).ToNullable(), TraceId);
 }
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
@@ -169,9 +174,10 @@ public static class ErrorFrom
                              stack: e.StackTrace);
     }
 
-    public static ErrorInfo Exception(Exception e, string message, [CallerMemberName] string? caller = null) {
+    public static ErrorInfo Exception(Exception e, string message, string? data = null, string? debugInfo = null,
+                                      [CallerMemberName] string? caller = null) {
         var error = Exception(e);
-        return new ErrorInfo(error.Code, $"[{caller}] {message}", innerError: error);
+        return new ErrorInfo(error.Code, $"[{caller}] {message}", data: data, debugInfo: debugInfo, innerError: error);
     }
 
     public static ErrorInfo Exception(Error e) {
@@ -182,7 +188,7 @@ public static class ErrorFrom
         return new ErrorInfo(errorInfoAttr.IfNone(StandardErrorCodes.Unhandled),
                              e.Message,
                              e.ToString(),
-                             data: default,
+                             data: null,
                              e.Inner.Map(Exception).ToNullable(),
                              subErrors.IsEmpty ? null : subErrors,
                              stack: e.Exception.ToNullable()?.StackTrace);

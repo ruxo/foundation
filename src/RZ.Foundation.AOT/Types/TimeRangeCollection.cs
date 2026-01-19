@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
-
-namespace RZ.Foundation.Types;
+﻿namespace RZ.Foundation.Types;
 
 [PublicAPI]
 public static class TimeRangeCollection

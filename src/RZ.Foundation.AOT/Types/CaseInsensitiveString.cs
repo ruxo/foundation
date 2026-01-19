@@ -1,7 +1,4 @@
-﻿using System;
-using JetBrains.Annotations;
-
-namespace RZ.Foundation.Types;
+﻿namespace RZ.Foundation.Types;
 
 [PublicAPI]
 public readonly record struct CaseInsensitiveString(string Value) : IComparable<CaseInsensitiveString>
