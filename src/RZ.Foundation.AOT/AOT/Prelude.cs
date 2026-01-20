@@ -558,6 +558,9 @@ public static class Prelude
     public static async ValueTask<T> ThrowIfError<T>(ValueTask<Outcome<T>> value)
         => (await value).Unwrap();
 
+    public static async ValueTask<T?> ThrowUnlessNotFound<T>(ValueTask<Outcome<T>> value)
+        => Success(await value, out var v, out var e) ? (T?) v : e.IsNotFound() ? default(T?) : throw new ErrorInfoException(e);
+
     public static T ThrowIfNotFound<T>(this Option<T> optionValue, string message)
         => optionValue.GetOrThrow(() => new ErrorInfoException("not-found", message));
 
