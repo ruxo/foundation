@@ -106,28 +106,15 @@ public static class AsyncEnumerableExtension
         #endregion
     }
 
-    #region Choose methods
 
     extension<A>(IEnumerable<A> seq)
     {
-        public IAsyncEnumerable<B> ChooseAsync<B>(Func<A, int, CancellationToken, ValueTask<Option<B>>> selector) {
-            return Impl(seq, selector);
-
-            static async IAsyncEnumerable<B> Impl(IEnumerable<A> source, Func<A, int, CancellationToken, ValueTask<Option<B>>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
-                var counter = 0;
-                foreach (var i in source){
-                    cancelToken.ThrowIfCancellationRequested();
-
-                    var result = await selector(i, counter++, cancelToken).ConfigureAwait(false);
-                    if (result.IsSome)
-                        yield return result.Get();
-                }
-            }
-        }
     }
 
     extension<A>(IAsyncEnumerable<A> seq)
     {
+        #region Choose methods
+
         public IAsyncEnumerable<B> ChooseAsync<B>(Func<A, int, CancellationToken, ValueTask<Option<B>>> selector) {
             return seq.IsKnownEmpty() ? AsyncEnumerable.Empty<B>() : Impl(seq, selector);
 
@@ -154,40 +141,34 @@ public static class AsyncEnumerableExtension
             }
         }
 
-        public IAsyncEnumerable<B> ChooseAsync<B>(Func<A, int, CancellationToken, ValueTask<Outcome<B>>> selector, Action<ErrorInfo> errorHandle) {
-            return seq.IsKnownEmpty() ? AsyncEnumerable.Empty<B>() : Impl(seq, selector);
+        public IAsyncEnumerable<Outcome<B>> ChooseAsync<B>(Func<A, int, CancellationToken, ValueTask<Outcome<B>>> selector) {
+            return seq.IsKnownEmpty() ? AsyncEnumerable.Empty<Outcome<B>>() : Impl(seq, selector);
 
-            async IAsyncEnumerable<B> Impl(IAsyncEnumerable<A> seq, Func<A, int, CancellationToken, ValueTask<Outcome<B>>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
+            async IAsyncEnumerable<Outcome<B>> Impl(IAsyncEnumerable<A> seq, Func<A, int, CancellationToken, ValueTask<Outcome<B>>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
                 var counter = 0;
                 await foreach (var i in seq.WithCancellation(cancelToken)){
                     var result = await selector(i, counter++, cancelToken).ConfigureAwait(false);
-                    if (Success(result, out var v, out var error))
-                        yield return v;
-                    else if (!error.IsNotFound())
-                        errorHandle(error);
+                    if (!result.IsNotFound())
+                        yield return result;
                 }
             }
         }
 
-        public IAsyncEnumerable<B> Choose<B>(Func<A, int, Outcome<B>> selector, Action<ErrorInfo> errorHandle) {
-            return seq.IsKnownEmpty() ? AsyncEnumerable.Empty<B>() : Impl(seq, selector);
+        public IAsyncEnumerable<Outcome<B>> Choose<B>(Func<A, int, Outcome<B>> selector) {
+            return seq.IsKnownEmpty() ? AsyncEnumerable.Empty<Outcome<B>>() : Impl(seq, selector);
 
-            async IAsyncEnumerable<B> Impl(IAsyncEnumerable<A> seq, Func<A, int, Outcome<B>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
+            async IAsyncEnumerable<Outcome<B>> Impl(IAsyncEnumerable<A> seq, Func<A, int, Outcome<B>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
                 var counter = 0;
                 await foreach (var i in seq.WithCancellation(cancelToken)){
-                    if (Success(selector(i, counter++), out var result, out var error))
+                    var result = selector(i, counter++);
+                    if (!result.IsNotFound())
                         yield return result;
-                    else if (!error.IsNotFound())
-                        errorHandle(error);
                 }
             }
         }
-    }
 
-    #endregion
+        #endregion
 
-    extension<A>(IAsyncEnumerable<A> seq)
-    {
         public IAsyncEnumerable<A> Concat(IEnumerable<A> second) {
             return seq.IsKnownEmpty() ? seq : Impl(seq, second);
 
@@ -446,5 +427,23 @@ public static class AsyncEnumerableExtension
             while (await itor.MoveNextAsync().ConfigureAwait(false)) sum += getValue(itor.Current, counter++);
             return sum;
         }
+    }
+
+    extension<T>(IAsyncEnumerable<Outcome<T>> seq)
+    {
+        public async ValueTask<Outcome<List<T>>> MakeMutableList(CancellationToken cancelToken = default) {
+            if (seq.IsKnownEmpty()) return ErrorInfo.NotFound;
+
+            var result = new List<T>();
+            await foreach (var i in seq.WithCancellation(cancelToken))
+                if (Success(i, out var v, out var e))
+                    result.Add(v);
+                else
+                    return e;
+            return result;
+        }
+
+        public async ValueTask<Outcome<IReadOnlyList<T>>> MakeList(CancellationToken cancelToken = default)
+            => Success(await seq.MakeMutableList(cancelToken), out var v, out var e)? v : e;
     }
 }
