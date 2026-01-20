@@ -1,5 +1,3 @@
-using System;
-
 namespace RZ.Foundation.Extensions;
 
 [PublicAPI]

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RZ.Foundation.Helpers;
+﻿namespace RZ.Foundation.Helpers;
 
 [PublicAPI]
 public static class TryConvert

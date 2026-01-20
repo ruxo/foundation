@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RZ.Foundation.Injectable;
+﻿namespace RZ.Foundation.Injectable;
 
 [PublicAPI]
 public interface IUniqueId
