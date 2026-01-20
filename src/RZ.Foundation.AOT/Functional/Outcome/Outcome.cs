@@ -140,27 +140,36 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
         return unit;
     }
 
-    public bool IfFail(out ErrorInfo e, out T v) {
-        if (status == EitherStatus.IsRight){
-            (e, v) = (null!, Data!);
-            return false;
-        }
-        else{
-            (e, v) = (Error!, default!);
-            return true;
-        }
+    public bool IfFail([NotNullWhen(true)] out ErrorInfo? e) {
+        e = status == EitherStatus.IsRight ? null : Error;
+        return status == EitherStatus.IsLeft;
     }
 
-    public bool IfSuccess(out T v, out ErrorInfo e) {
-        if (status == EitherStatus.IsRight){
-            (e, v) = (null!, Data!);
-            return true;
-        }
-        else{
-            (e, v) = (Error!, default!);
-            return false;
-        }
+    public bool UnlessSuccess([NotNullWhen(false)] out T? v) {
+        v = status == EitherStatus.IsRight ? Data : default;
+        return status == EitherStatus.IsLeft;
     }
+
+    public bool IfSuccess([NotNullWhen(true)] out T? v) {
+        v = status == EitherStatus.IsRight ? Data : default;
+        return status == EitherStatus.IsRight;
+    }
+
+    public bool UnlessFail([NotNullWhen(false)] out ErrorInfo? e) {
+        e = status == EitherStatus.IsRight ? null : Error;
+        return status == EitherStatus.IsRight;
+    }
+
+    public bool IfFail([NotNullWhen(true)] out ErrorInfo? e, [NotNullWhen(false)] out T? v) {
+        (e, v) = status == EitherStatus.IsRight? (null, Data) : (Error, default(T));
+        return status == EitherStatus.IsLeft;
+    }
+
+    public bool IfSuccess([NotNullWhen(true)] out T? v, [NotNullWhen(false)] out ErrorInfo? e) {
+        (e, v) = status == EitherStatus.IsRight? (null, Data) : (Error, default(T));
+        return status == EitherStatus.IsRight;
+    }
+
     public V Match<V>(Func<T, V> success, Func<ErrorInfo, V> fail)
         => status == EitherStatus.IsRight ? success(Data!) : fail(Error!);
 

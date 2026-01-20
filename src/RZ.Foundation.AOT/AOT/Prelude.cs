@@ -329,6 +329,26 @@ public static class Prelude
         }
     }
 
+    public static async ValueTask<Outcome<Unit>> TryCatch(Task task) {
+        try{
+            await task;
+            return unit;
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
+    public static async ValueTask<Outcome<Unit>> TryCatch(ValueTask task) {
+        try{
+            await task;
+            return unit;
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
+        }
+    }
+
     [PublicAPI]
     public static async ValueTask<Outcome<T>> TryCatch<T>([InstantHandle] Func<ValueTask<Outcome<T>>> handler) {
         try{
@@ -391,24 +411,46 @@ public static class Prelude
 
     #endregion
 
+    #region Option Helpers
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IfSome<T>(Option<T> opt, [NotNullWhen(true)] out T? data) => opt.IfSome(out data);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool UnlessSome<T>(Option<T> opt, [NotNullWhen(false)] out T? data) => opt.UnlessSome(out data);
+
+    #endregion
+
     #region Outcome Helpers
 
     public static bool Success<T>(Outcome<T> outcome, [NotNullWhen(true)] out T? v, [NotNullWhen(false)] out ErrorInfo? e) {
-        if (outcome.IsSuccess){
-            (v, e) = (outcome.Data!, null);
-            return true;
-        }
-        (v, e) = (default!, outcome.Error!);
-        return false;
+        (v, e) = outcome.IsSuccess? (outcome.Data, null) : (default(T), outcome.Error);
+        return outcome.IsSuccess;
+    }
+
+    public static bool Success<T>(Outcome<T> outcome, [NotNullWhen(true)] out T? v) {
+        v = outcome.IsSuccess? outcome.Data : default;
+        return outcome.IsSuccess;
+    }
+
+    public static bool UnlessFail<T>(Outcome<T> outcome, [NotNullWhen(false)] out ErrorInfo? e) {
+        e = outcome.IsSuccess? null : outcome.Error;
+        return outcome.IsSuccess;
     }
 
     public static bool Fail<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e, [NotNullWhen(false)] out T? v) {
-        if (outcome.IsSuccess){
-            (v, e) = (outcome.Data!, null);
-            return false;
-        }
-        (v, e) = (default!, outcome.Error!);
-        return true;
+        (v, e) = outcome.IsSuccess? (outcome.Data!, null) : (default(T), outcome.Error);
+        return outcome.IsFail;
+    }
+
+    public static bool Fail<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e) {
+        e = outcome.IsSuccess? null : outcome.Error;
+        return outcome.IsFail;
+    }
+
+    public static bool UnlessSuccess<T>(Outcome<T> outcome, [NotNullWhen(false)] out T? v) {
+        v = outcome.IsSuccess? outcome.Data : default;
+        return outcome.IsFail;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

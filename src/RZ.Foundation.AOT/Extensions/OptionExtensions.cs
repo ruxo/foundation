@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -12,13 +13,16 @@ public static class OptionHelper
     extension<T>(Option<T> o)
     {
         [PublicAPI]
-        public bool IfSome(out T data) {
-            data = o.IsSome ? o.Get() : default!;
+        public bool IfSome([NotNullWhen(true)] out T? data) {
+            data = o.IsSome? (T)o.Case! : default;
             return o.IsSome;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IfNone(out T data) => !o.IfSome(out data);
+        [PublicAPI]
+        public bool UnlessSome([NotNullWhen(false)] out T? data) {
+            data = o.IsSome? (T)o.Case! : default;
+            return o.IsNone;
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
