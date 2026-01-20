@@ -21,7 +21,7 @@ public record WebRequestData(Uri Uri)
     public string? Body { get; init; }
 
     public Outcome<HttpRequestMessage> ToHttpRequest() {
-        if (ToHttpMethod(Method).IfNone(out var method))
+        if (ToHttpMethod(Method).UnlessSome(out var method))
             return new ErrorInfo(StandardErrorCodes.InvalidResponse, $"Unsupported HTTP method: {Method}");
 
         var req = new HttpRequestMessage(method, Uri) {
