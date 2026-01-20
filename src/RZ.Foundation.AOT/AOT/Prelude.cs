@@ -365,6 +365,16 @@ public static class Prelude
         }
     }
 
+    public static async IAsyncEnumerable<Outcome<T>> TryCatch<T>(IAsyncEnumerable<T> enumerable, [EnumeratorCancellation] CancellationToken cancelToken = default) {
+       await using var itor = enumerable.GetAsyncEnumerator(cancelToken);
+       ErrorInfo? e;
+       while (Success(await TryCatch(itor.MoveNextAsync()), out var hasNext, out e) && hasNext)
+           yield return itor.Current;
+
+       if (e is not null)
+           yield return e;
+    }
+
     [PublicAPI]
     public static async ValueTask<Outcome<T>> TryCatch<T>([InstantHandle] Func<ValueTask<Outcome<T>>> handler) {
         try{
