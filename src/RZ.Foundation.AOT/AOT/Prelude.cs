@@ -121,10 +121,26 @@ public static class Prelude
     public static Option<(A, B, C)> With<A, B, C>(Option<A> a, Option<B> b, Option<C> c)
         => a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx, cx))));
 
+    public static Option<IReadOnlyList<T>> With<T>(IReadOnlyList<Option<T>> a)
+        => IfSome(a.Aggregate(Some(new List<T>(a.Count)),
+                              (result, x) => from list in result
+                                             from v in x
+                                             select list.SideEffect(l => l.Add(v))), out var final)
+               ? final
+               : None;
+
     public static Outcome<(A, B)> With<A, B>(Outcome<A> a, Outcome<B> b) => a.Bind(ax => b.Map(bx => (ax, bx)));
 
     public static Outcome<(A, B, C)> With<A, B, C>(Outcome<A> a, Outcome<B> b, Outcome<C> c)
         => a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx, cx))));
+
+    public static Outcome<IReadOnlyList<T>> With<T>(IReadOnlyList<Outcome<T>> a)
+        => Fail(a.Aggregate(SuccessOutcome(new List<T>(a.Count)),
+                            (result, x) => from list in result
+                                           from v in x
+                                           select list.SideEffect(l => l.Add(v))), out var e, out var final)
+               ? e
+               : final;
 
     #endregion
 
@@ -424,32 +440,32 @@ public static class Prelude
     #region Outcome Helpers
 
     public static bool Success<T>(Outcome<T> outcome, [NotNullWhen(true)] out T? v, [NotNullWhen(false)] out ErrorInfo? e) {
-        (v, e) = outcome.IsSuccess? (outcome.Data, null) : (default(T), outcome.Error);
+        (v, e) = outcome.IsSuccess ? (outcome.Data, null) : (default(T), outcome.Error);
         return outcome.IsSuccess;
     }
 
     public static bool Success<T>(Outcome<T> outcome, [NotNullWhen(true)] out T? v) {
-        v = outcome.IsSuccess? outcome.Data : default;
+        v = outcome.IsSuccess ? outcome.Data : default;
         return outcome.IsSuccess;
     }
 
     public static bool UnlessFail<T>(Outcome<T> outcome, [NotNullWhen(false)] out ErrorInfo? e) {
-        e = outcome.IsSuccess? null : outcome.Error;
+        e = outcome.IsSuccess ? null : outcome.Error;
         return outcome.IsSuccess;
     }
 
     public static bool Fail<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e, [NotNullWhen(false)] out T? v) {
-        (v, e) = outcome.IsSuccess? (outcome.Data!, null) : (default(T), outcome.Error);
+        (v, e) = outcome.IsSuccess ? (outcome.Data!, null) : (default(T), outcome.Error);
         return outcome.IsFail;
     }
 
     public static bool Fail<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e) {
-        e = outcome.IsSuccess? null : outcome.Error;
+        e = outcome.IsSuccess ? null : outcome.Error;
         return outcome.IsFail;
     }
 
     public static bool UnlessSuccess<T>(Outcome<T> outcome, [NotNullWhen(false)] out T? v) {
-        v = outcome.IsSuccess? outcome.Data : default;
+        v = outcome.IsSuccess ? outcome.Data : default;
         return outcome.IsFail;
     }
 
