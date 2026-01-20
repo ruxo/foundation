@@ -1,10 +1,6 @@
-using System;
 using System.Collections.Concurrent;
-using System.Linq;
-using System.Threading.Tasks;
 using FluentAssertions;
 using LanguageExt.UnitsOfMeasure;
-using Xunit;
 
 namespace RZ.Foundation.Helpers;
 
@@ -26,7 +22,7 @@ public sealed class TestCache
         }
     }
 
-    [Fact]
+    [Test]
     public void TestCacheSync() {
         var mytime = new DateTime(2022, 1, 1);
 
@@ -40,7 +36,7 @@ public sealed class TestCache
         cache.Get().Should().Be("2");
     }
 
-    [Fact]
+    [Test]
     public async Task TestCacheAsync() {
         var mytime = new DateTime(2022, 1, 1);
 
@@ -54,7 +50,7 @@ public sealed class TestCache
         (await cache.Get()).Should().Be("2");
     }
 
-    [Fact]
+    [Test]
     public void TestMultiaccessSync() {
         var mytime = new DateTime(2022, 1, 1);
 
@@ -68,7 +64,7 @@ public sealed class TestCache
         result.Should().AllBe("1");
     }
 
-    [Fact]
+    [Test]
     public async Task TestMultiaccessAsync() {
         var mytime = new DateTime(2022, 1, 1);
 

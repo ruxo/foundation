@@ -1,39 +1,38 @@
 ﻿using FluentAssertions;
-using Xunit;
 
 namespace RZ.Foundation.Helpers;
 
 public sealed class SnakeCaseTest
 {
-    [Fact]
+    [Test]
     public void OneWord() {
         var result = SnakeCase.ToSnakeCase("Hello");
 
         result.Should().Be("hello");
     }
 
-    [Fact]
+    [Test]
     public void TwoWords() {
         var result = SnakeCase.ToSnakeCase("HelloWorld");
 
         result.Should().Be("hello_world");
     }
 
-    [Fact]
+    [Test]
     public void AbbreviationShouldNotBeSplit() {
         var result = SnakeCase.ToSnakeCase("ABC");
 
         result.Should().Be("abc");
     }
 
-    [Fact]
+    [Test]
     public void TwoSplitWordsShouldJustBeLowerCase() {
         var result = SnakeCase.ToSnakeCase("Hello_World");
 
         result.Should().Be("hello_world");
     }
 
-    [Fact]
+    [Test]
     public void TwoWordsShouldJustBeLowerCase() {
         var result = SnakeCase.ToSnakeCase("Hello World");
 
