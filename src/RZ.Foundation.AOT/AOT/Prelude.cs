@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Frozen;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
@@ -148,6 +149,12 @@ public static class Prelude
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IReadOnlyDictionary<K, V> ReadOnly<K, V>(Dictionary<K, V> dict) where K : notnull => dict;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IReadOnlyDictionary<K, V> ReadOnly<K, V>(FrozenDictionary<K, V> dict) where K : notnull => dict;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IReadOnlyList<T> ReadOnly<T>(params T[] list) => list;
 
     #endregion
 
