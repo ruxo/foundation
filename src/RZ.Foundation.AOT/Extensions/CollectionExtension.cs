@@ -6,14 +6,15 @@ using System.Runtime.CompilerServices;
 namespace RZ.Foundation.Extensions;
 
 [PublicAPI]
-public static class CollectionExtension{
+public static class CollectionExtension
+{
     /// <summary>
     /// Clear concurrent queue content
     /// </summary>
     /// <param name="queue"></param>
     /// <typeparam name="T"></typeparam>
-    public static void Clear<T>(this ConcurrentQueue<T> queue){
-        while(queue.TryDequeue(out _)) { }
+    public static void Clear<T>(this ConcurrentQueue<T> queue) {
+        while (queue.TryDequeue(out _)){ }
     }
 
     /// <param name="seq">an array</param>
@@ -23,13 +24,13 @@ public static class CollectionExtension{
         /// <summary>
         /// Syntactic sugar for "Select"
         /// </summary>
-        [Pure]
+        [Pure, PublicAPI]
         public IEnumerable<V> Map<V>(Func<T, V> mapper) => seq.Select(mapper);
 
         /// <summary>
         /// Syntactic sugar for "SelectMany"
         /// </summary>
-        [Pure]
+        [Pure, PublicAPI]
         public IEnumerable<V> Chain<V>(Func<T, IEnumerable<V>> binder) => seq.SelectMany(binder);
 
         /// <summary>
@@ -37,8 +38,67 @@ public static class CollectionExtension{
         /// </summary>
         /// <param name="n">position to remove.</param>
         /// <returns>Return a new sequence without element at n.  If n is out of range, a new array of same content is returned.</returns>
-        [Pure]
+        [Pure, PublicAPI]
         public IEnumerable<T> RemoveAt(int n) => seq.Where((_, i) => i != n);
+
+        #region Choose methods
+
+        [PublicAPI]
+        public IAsyncEnumerable<B> ChooseAsync<B>(Func<T, int, CancellationToken, ValueTask<Option<B>>> selector) {
+            return Impl(seq, selector);
+
+            static async IAsyncEnumerable<B> Impl(IEnumerable<T> source, Func<T, int, CancellationToken, ValueTask<Option<B>>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
+                var counter = 0;
+                foreach (var i in source){
+                    cancelToken.ThrowIfCancellationRequested();
+
+                    var result = await selector(i, counter++, cancelToken).ConfigureAwait(false);
+                    if (result.IsSome)
+                        yield return result.Get();
+                }
+            }
+        }
+
+        [PublicAPI]
+        public IAsyncEnumerable<Outcome<B>> ChooseAsync<B>(Func<T, int, CancellationToken, ValueTask<Outcome<B>>> selector) {
+            return Impl(seq, selector);
+
+            static async IAsyncEnumerable<Outcome<B>> Impl(IEnumerable<T> source, Func<T, int, CancellationToken, ValueTask<Outcome<B>>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
+                var counter = 0;
+                foreach (var i in source){
+                    cancelToken.ThrowIfCancellationRequested();
+
+                    var result = await selector(i, counter++, cancelToken).ConfigureAwait(false);
+                    if (!result.IsNotFound())
+                        yield return result;
+                }
+            }
+        }
+
+        #endregion
+    }
+
+    extension<T>(IEnumerable<Outcome<T>> seq)
+    {
+        #region To XX
+
+        [PublicAPI]
+        public Outcome<List<T>> MakeMutableList() {
+            var result = new List<T>();
+            foreach (var i in seq)
+                if (Success(i, out var v, out var e))
+                    result.Add(v);
+                else
+                    return e;
+            return result;
+        }
+
+        [PublicAPI]
+        public Outcome<IReadOnlyList<T>> MakeList()
+            => Success(seq.MakeMutableList(), out var v, out var e)? v : e;
+
+        #endregion
+
     }
 
     [Pure, Obsolete("Use TryGetValue instead")]
@@ -73,7 +133,7 @@ public static class CollectionExtension{
     public static (A[], B[]) Partition<T, A, B>(this IEnumerable<T> e, Func<T, bool> predicate, Func<T, A> trueTransform, Func<T, B> falseTransform) {
         var trueResult = new List<A>();
         var falseResult = new List<B>();
-        foreach(var i in e)
+        foreach (var i in e)
             if (predicate(i))
                 trueResult.Add(trueTransform(i));
             else
@@ -86,7 +146,7 @@ public static class CollectionExtension{
         dict.Remove(key, out var v) ? v : None;
 
     [Pure]
-    public static ImmutableDictionary<K, V> ToImmutableDictionary<K, V>(this IEnumerable<(K Key, V Value)> pairs) where K: notnull =>
+    public static ImmutableDictionary<K, V> ToImmutableDictionary<K, V>(this IEnumerable<(K Key, V Value)> pairs) where K : notnull =>
         pairs.ToImmutableDictionary(k => k.Key, v => v.Value);
 
     /// <summary>
@@ -137,7 +197,7 @@ public static class CollectionExtension{
         => seq.IsEmpty ? None : Some(seq.Max());
 
     [Pure]
-    public static Option<Result> TryMax<T,Result>(this Seq<T> seq, Func<T, Result> selector)
+    public static Option<Result> TryMax<T, Result>(this Seq<T> seq, Func<T, Result> selector)
         => seq.IsEmpty ? None : Some(seq.Max(selector));
 
     [Pure]
@@ -155,7 +215,7 @@ public static class CollectionExtension{
         => seq.IsEmpty ? None : Some(seq.Min());
 
     [Pure]
-    public static Option<Result> TryMin<T,Result>(this Seq<T> seq, Func<T, Result> selector)
+    public static Option<Result> TryMin<T, Result>(this Seq<T> seq, Func<T, Result> selector)
         => seq.IsEmpty ? None : Some(seq.Min(selector));
 
     [Pure]
@@ -182,7 +242,7 @@ public static class CollectionExtension{
     [Pure]
     public static Option<int> TryFindIndex<T>(this IEnumerable<T> seq, Predicate<T> predicate) {
         var index = -1;
-        foreach (var i in seq) {
+        foreach (var i in seq){
             ++index;
             if (predicate(i))
                 return index;
@@ -223,7 +283,7 @@ public static class CollectionExtension{
         => new ForwardReadOnlyCollection<T>(collection);
 
     public static int GetCombinationHashCode<T>(this IEnumerable<T> seq) => seq.Aggregate(0, (hash, v) => hash ^ GetHashCode(v));
-    public static int GetCollectionHashCode<T>(this IEnumerable<T> seq) => seq.Aggregate(0, (hash, v) => HashAndShift(hash, GetHashCode(v)));
-    static int HashAndShift(int current, int newHash) => ((current ^ newHash) << 7) | ((current ^ newHash) >> (32 - 7));
-    static int GetHashCode<T>(T? v) => v?.GetHashCode() ?? 0;
+    public static int GetCollectionHashCode<T>(this IEnumerable<T> seq)  => seq.Aggregate(0, (hash, v) => HashAndShift(hash, GetHashCode(v)));
+    static        int HashAndShift(int current, int newHash)             => ((current ^ newHash) << 7) | ((current ^ newHash) >> (32 - 7));
+    static        int GetHashCode<T>(T? v)                               => v?.GetHashCode() ?? 0;
 }

@@ -190,6 +190,9 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     public ErrorInfo? UnwrapErrorOrDefault(ErrorInfo? defaultValue = null)
         => Error;
 
+    [Pure]
+    public bool IsNotFound() => Error?.IsNotFound() ?? false;
+
     [Pure, ExcludeFromCodeCoverage]
     public override string ToString() =>
         new StringBuilder(128)
