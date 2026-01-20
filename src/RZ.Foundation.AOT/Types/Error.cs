@@ -75,6 +75,13 @@ public sealed record ErrorInfo
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Is(ErrorInfo another) => Is(another.Code);
 
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsNotFound() => Is(StandardErrorCodes.NotFound);
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ErrorInfo Wrap(string code, string? message = null, string? debugInfo = null, string? data = null, string? traceId = null)
+        => new(code, message ?? Code, debugInfo ?? DebugInfo, data ?? Data, this, subErrors: null, traceId ?? TraceId);
+
     [Pure]
     public string ToString(JsonTypeInfo<ErrorInfo>? options)
         => JsonSerializer.Serialize(this, options ?? ErrorInfoJsonContext.Default.ErrorInfo);
