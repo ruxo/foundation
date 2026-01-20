@@ -14,6 +14,8 @@ namespace RZ.Foundation.Types;
 /// </summary>
 public sealed record ErrorInfo
 {
+    public static readonly ErrorInfo NotFound = new(StandardErrorCodes.NotFound);
+
     [PublicAPI]
     public readonly record struct StackInfo(string? Value)
     {
