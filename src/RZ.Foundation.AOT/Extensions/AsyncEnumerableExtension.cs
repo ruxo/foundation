@@ -1,19 +1,13 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using RZ.Foundation.Types;
-
-// ReSharper disable VariableHidesOuterVariable
-// ReSharper disable PossibleMultipleEnumeration
-
-// ReSharper disable UnusedMember.Global
-// ReSharper disable MemberCanBePrivate.Global
 
 namespace RZ.Foundation.Extensions;
 
 [PublicAPI]
 public static class AsyncEnumerableExtension
 {
-    public static bool IsKnownEmpty<T>(this IAsyncEnumerable<T> source)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsKnownEmpty<T>([NoEnumeration] this IAsyncEnumerable<T> source)
         => ReferenceEquals(source, AsyncEnumerable.Empty<T>());
 
     [Obsolete("Use ToAsyncEnumerable instead")]
@@ -28,24 +22,26 @@ public static class AsyncEnumerableExtension
     {
         #region Aggregation
 
+        [PublicAPI]
         public IAsyncEnumerable<B> Aggregate<B>(Func<B, A, B> folder, B seed) {
             return seq.IsKnownEmpty() ? AsyncEnumerable.Empty<B>() : Impl(seq, folder, seed);
 
             static async IAsyncEnumerable<B> Impl(IAsyncEnumerable<A> seq, Func<B, A, B> folder, B seed, [EnumeratorCancellation] CancellationToken cancelToken = default) {
                 var accumulator = seed;
-                await foreach (var item in seq.WithCancellation(cancelToken)){
+                await foreach (var item in seq.ConfigureAwait(false).WithCancellation(cancelToken)){
                     accumulator = folder(accumulator, item);
                     yield return accumulator;
                 }
             }
         }
 
+        [PublicAPI]
         public IAsyncEnumerable<B> AggregateAsync<B>(Func<B, A, CancellationToken, ValueTask<B>> folder, B seed) {
             return seq.IsKnownEmpty() ? AsyncEnumerable.Empty<B>() : Impl(seq, folder, seed);
 
             static async IAsyncEnumerable<B> Impl(IAsyncEnumerable<A> seq, Func<B, A, CancellationToken, ValueTask<B>> folder, B seed, [EnumeratorCancellation] CancellationToken cancelToken = default) {
                 var accumulator = seed;
-                await foreach (var item in seq.WithCancellation(cancelToken)){
+                await foreach (var item in seq.ConfigureAwait(false).WithCancellation(cancelToken)){
                     accumulator = await folder(accumulator, item, cancelToken).ConfigureAwait(false);
                     yield return accumulator;
                 }
@@ -54,26 +50,36 @@ public static class AsyncEnumerableExtension
 
         #endregion
 
-        public async ValueTask<bool> All(Func<A, int, bool> predicate, CancellationToken cancelToken = default)
-            => (await seq.TryFind((i, n) => !predicate(i, n), cancelToken).ConfigureAwait(false)).IsNone;
+        [PublicAPI]
+        public async ValueTask<bool> All(Func<A, int, bool> predicate, CancellationToken cancelToken = default) {
+            var index = 0;
+            await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken))
+                if (!predicate(i, index++))
+                    return false;
+            return true;
+        }
 
+        [PublicAPI]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAsyncEnumerable<(A, A)> AllPairs(IAsyncEnumerable<A> b)
             => seq.Zip<A, A, (A, A)>(b, (lhs, rhs, _) => new((lhs, rhs)));
 
+        [PublicAPI]
         public async ValueTask<bool> Any(Func<A, int, bool> predicate, CancellationToken cancelToken = default)
             => (await seq.TryFind(predicate, cancelToken).ConfigureAwait(false)).IsSome;
 
+        [PublicAPI]
         public async ValueTask<bool> Any(CancellationToken cancelToken = default) {
             await using var itor = seq.GetAsyncEnumerator(cancelToken);
             return await itor.MoveNextAsync().ConfigureAwait(false);
         }
 
+        [PublicAPI]
         public IAsyncEnumerable<A> AppendAsync(ValueTask<A> element) {
             return seq.IsKnownEmpty() ? seq : Impl(seq, element);
 
             static async IAsyncEnumerable<A> Impl(IAsyncEnumerable<A> seq, ValueTask<A> element, [EnumeratorCancellation] CancellationToken cancelToken = default) {
-                await foreach (var i in seq.WithCancellation(cancelToken))
+                await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken))
                     yield return i;
                 yield return await element.ConfigureAwait(false);
             }
@@ -81,22 +87,24 @@ public static class AsyncEnumerableExtension
 
         #region Average methods
 
+        [PublicAPI]
         public async ValueTask<TAverage> AverageBy<TAverage>(Func<A, int, TAverage> getter, CancellationToken cancelToken = default)
             where TAverage : INumber<TAverage> {
             var v = TAverage.Zero;
             var counter = 0;
-            await foreach (var i in seq.WithCancellation(cancelToken)){
+            await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken)){
                 v += getter(i, counter);
                 counter++;
             }
             return v / TAverage.CreateChecked(counter);
         }
 
+        [PublicAPI]
         public async ValueTask<Option<TAverage>> TryAverageBy<TAverage>(Func<A, int, TAverage> getter, CancellationToken cancelToken = default)
             where TAverage : INumber<TAverage> {
             var v = TAverage.Zero;
             var counter = 0;
-            await foreach (var i in seq.WithCancellation(cancelToken)){
+            await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken)){
                 v += getter(i, counter);
                 counter++;
             }
@@ -106,21 +114,17 @@ public static class AsyncEnumerableExtension
         #endregion
     }
 
-
-    extension<A>(IEnumerable<A> seq)
-    {
-    }
-
     extension<A>(IAsyncEnumerable<A> seq)
     {
         #region Choose methods
 
+        [PublicAPI]
         public IAsyncEnumerable<B> ChooseAsync<B>(Func<A, int, CancellationToken, ValueTask<Option<B>>> selector) {
             return seq.IsKnownEmpty() ? AsyncEnumerable.Empty<B>() : Impl(seq, selector);
 
             static async IAsyncEnumerable<B> Impl(IAsyncEnumerable<A> seq, Func<A, int, CancellationToken, ValueTask<Option<B>>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
                 var counter = 0;
-                await foreach (var i in seq.WithCancellation(cancelToken)){
+                await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken)){
                     var result = await selector(i, counter++, cancelToken).ConfigureAwait(false);
                     if (result.IsSome)
                         yield return result.Get();
@@ -128,12 +132,13 @@ public static class AsyncEnumerableExtension
             }
         }
 
+        [PublicAPI]
         public IAsyncEnumerable<B> Choose<B>(Func<A, int, Option<B>> selector) {
             return seq.IsKnownEmpty() ? AsyncEnumerable.Empty<B>() : Impl(seq, selector);
 
             static async IAsyncEnumerable<B> Impl(IAsyncEnumerable<A> seq, Func<A, int, Option<B>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
                 var counter = 0;
-                await foreach (var i in seq.WithCancellation(cancelToken)){
+                await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken)){
                     var result = selector(i, counter++);
                     if (result.IsSome)
                         yield return result.Get();
@@ -141,12 +146,13 @@ public static class AsyncEnumerableExtension
             }
         }
 
+        [PublicAPI]
         public IAsyncEnumerable<Outcome<B>> ChooseAsync<B>(Func<A, int, CancellationToken, ValueTask<Outcome<B>>> selector) {
             return seq.IsKnownEmpty() ? AsyncEnumerable.Empty<Outcome<B>>() : Impl(seq, selector);
 
-            async IAsyncEnumerable<Outcome<B>> Impl(IAsyncEnumerable<A> seq, Func<A, int, CancellationToken, ValueTask<Outcome<B>>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
+            static async IAsyncEnumerable<Outcome<B>> Impl(IAsyncEnumerable<A> seq, Func<A, int, CancellationToken, ValueTask<Outcome<B>>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
                 var counter = 0;
-                await foreach (var i in seq.WithCancellation(cancelToken)){
+                await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken)){
                     var result = await selector(i, counter++, cancelToken).ConfigureAwait(false);
                     if (!result.IsNotFound())
                         yield return result;
@@ -154,12 +160,13 @@ public static class AsyncEnumerableExtension
             }
         }
 
+        [PublicAPI]
         public IAsyncEnumerable<Outcome<B>> Choose<B>(Func<A, int, Outcome<B>> selector) {
             return seq.IsKnownEmpty() ? AsyncEnumerable.Empty<Outcome<B>>() : Impl(seq, selector);
 
-            async IAsyncEnumerable<Outcome<B>> Impl(IAsyncEnumerable<A> seq, Func<A, int, Outcome<B>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
+            static async IAsyncEnumerable<Outcome<B>> Impl(IAsyncEnumerable<A> seq, Func<A, int, Outcome<B>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
                 var counter = 0;
-                await foreach (var i in seq.WithCancellation(cancelToken)){
+                await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken)){
                     var result = selector(i, counter++);
                     if (!result.IsNotFound())
                         yield return result;
@@ -169,11 +176,12 @@ public static class AsyncEnumerableExtension
 
         #endregion
 
+        [PublicAPI]
         public IAsyncEnumerable<A> Concat(IEnumerable<A> second) {
             return seq.IsKnownEmpty() ? seq : Impl(seq, second);
 
             static async IAsyncEnumerable<A> Impl(IAsyncEnumerable<A> seq, IEnumerable<A> second, [EnumeratorCancellation] CancellationToken cancelToken = default) {
-                await foreach (var i in seq.WithCancellation(cancelToken))
+                await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken))
                     yield return i;
                 foreach (var i in second)
                     yield return i;
@@ -238,7 +246,7 @@ public static class AsyncEnumerableExtension
 
             static async IAsyncEnumerable<B> Impl(IAsyncEnumerable<A> seq, Func<A, int, CancellationToken, ValueTask<IEnumerable<B>>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
                 var counter = 0;
-                await foreach (var i in seq.WithCancellation(cancelToken))
+                await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken))
                 foreach (var inner in await selector(i, counter++, cancelToken).ConfigureAwait(false))
                     yield return inner;
             }
@@ -249,7 +257,7 @@ public static class AsyncEnumerableExtension
 
             static async IAsyncEnumerable<B> Impl(IAsyncEnumerable<A> seq, Func<A, int, IEnumerable<B>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
                 var counter = 0;
-                await foreach (var i in seq.WithCancellation(cancelToken))
+                await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken))
                 foreach (var inner in selector(i, counter++))
                     yield return inner;
             }
@@ -260,7 +268,7 @@ public static class AsyncEnumerableExtension
 
             static async IAsyncEnumerable<B> Impl(IAsyncEnumerable<A> seq, Func<A, int, IAsyncEnumerable<B>> selector, [EnumeratorCancellation] CancellationToken cancelToken = default) {
                 var counter = 0;
-                await foreach (var i in seq.WithCancellation(cancelToken))
+                await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken))
                 await foreach (var inner in selector(i, counter++).WithCancellation(cancelToken))
                     yield return inner;
             }
@@ -290,14 +298,14 @@ public static class AsyncEnumerableExtension
             if (seq.IsKnownEmpty()) return;
 
             var counter = 0;
-            await foreach (var i in seq.WithCancellation(cancelToken)) action(i, counter++);
+            await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken)) action(i, counter++);
         }
 
         public async ValueTask Iter(Func<T, int, CancellationToken, ValueTask> action, CancellationToken cancelToken = default) {
             if (seq.IsKnownEmpty()) return;
 
             var counter = 0;
-            await foreach (var i in seq.WithCancellation(cancelToken)) await action(i, counter++, cancelToken).ConfigureAwait(false);
+            await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken)) await action(i, counter++, cancelToken).ConfigureAwait(false);
         }
     }
 
@@ -309,7 +317,7 @@ public static class AsyncEnumerableExtension
             if (seq.IsKnownEmpty()) return None;
 
             var counter = 0;
-            await foreach (var i in seq.WithCancellation(cancelToken))
+            await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken))
                 if (finder(i, counter++))
                     return i;
             return None;
@@ -317,6 +325,7 @@ public static class AsyncEnumerableExtension
 
         #region First
 
+        [PublicAPI]
         public async ValueTask<Option<T>> TryFirst(CancellationToken cancelToken = default) {
             if (seq.IsKnownEmpty()) return None;
 
@@ -324,6 +333,7 @@ public static class AsyncEnumerableExtension
             return await enumerator.MoveNextAsync().ConfigureAwait(false) ? enumerator.Current : None;
         }
 
+        [PublicAPI]
         public async ValueTask<Option<T>> TryFirst(Func<T, bool> predicate, CancellationToken cancelToken = default) {
             if (seq.IsKnownEmpty()) return None;
 
@@ -334,6 +344,7 @@ public static class AsyncEnumerableExtension
             return None;
         }
 
+        [PublicAPI]
         public async ValueTask<Option<T>> TryFirstAsync(Func<T, CancellationToken, ValueTask<bool>> predicate, CancellationToken cancelToken = default) {
             if (seq.IsKnownEmpty()) return None;
 
@@ -350,6 +361,7 @@ public static class AsyncEnumerableExtension
         public ValueTask<Option<T>> TryFold(Func<T, T, int, T> folder, CancellationToken cancelToken = default)
             => seq.TryFold(identity, folder, cancelToken);
 
+        [PublicAPI]
         public async ValueTask<Option<R>> TryFold<R>(Func<T, R> seeder, Func<R, T, int, R> folder, CancellationToken cancelToken = default) {
             if (seq.IsKnownEmpty()) return None;
 
@@ -361,16 +373,18 @@ public static class AsyncEnumerableExtension
             return result;
         }
 
+        [PublicAPI]
         public async ValueTask<Option<T>> TryGetAt(int index, CancellationToken cancelToken = default) {
             if (seq.IsKnownEmpty() || index < 0) return None;
 
             var counter = 0;
-            await foreach (var i in seq.WithCancellation(cancelToken))
+            await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken))
                 if (counter++ == index)
                     return i;
             return None;
         }
 
+        [PublicAPI]
         public async ValueTask<Option<T>> TryLast(CancellationToken cancelToken = default) {
             if (seq.IsKnownEmpty()) return None;
 
@@ -383,30 +397,37 @@ public static class AsyncEnumerableExtension
             return result;
         }
 
+        [PublicAPI]
         public ValueTask<Option<T>> TryMax(IComparer<T>? comparer = null, CancellationToken cancelToken = default)
             => seq.TryMaxBy(identity, comparer, cancelToken);
 
+        [PublicAPI]
         public ValueTask<Option<T>> TryMaxBy<K>(Func<T, K> getKey, IComparer<K>? comparer = null, CancellationToken cancelToken = default) {
             comparer ??= Comparer<K>.Default;
             return seq.TrySearch(getKey, (last, current, _) => comparer.Compare(current, last) > 0, cancelToken);
         }
 
+        [PublicAPI]
         public ValueTask<Option<T>> TryMin(IComparer<T>? comparer = null, CancellationToken cancelToken = default) =>
             seq.TryMinBy(identity, comparer, cancelToken);
 
+        [PublicAPI]
         public ValueTask<Option<T>> TryMinBy<K>(Func<T, K> getKey, IComparer<K>? comparer = null, CancellationToken cancelToken = default) {
             comparer ??= Comparer<K>.Default;
             return seq.TrySearch(getKey, (last, current, _) => comparer.Compare(current, last) < 0, cancelToken);
         }
 
+        [PublicAPI]
         public ValueTask<Option<T>> TrySearch<K>(Func<T, K> getKey, Func<K, K, int, bool> chooseCurrent, CancellationToken cancelToken = default) {
             return seq.TryFold(identity, Selector, cancelToken);
             T Selector(T last, T current, int n) => chooseCurrent(getKey(last), getKey(current), n) ? current : last;
         }
 
+        [PublicAPI]
         public ValueTask<Outcome<T>> TrySingle(CancellationToken cancelToken = default)
             => seq.TrySingle((_, _) => true, cancelToken);
 
+        [PublicAPI]
         public async ValueTask<Outcome<T>> TrySingle(Func<T, int, bool> predicate, CancellationToken cancelToken = default) {
             if (seq.IsKnownEmpty()) return new ErrorInfo(StandardErrorCodes.NotFound);
 
@@ -416,6 +437,7 @@ public static class AsyncEnumerableExtension
             return await itor.MoveNextAsync().ConfigureAwait(false) ? new ErrorInfo(StandardErrorCodes.ValidationFailed, "Multiple elements found") : result;
         }
 
+        [PublicAPI]
         public async ValueTask<Option<R>> TrySum<R>(Func<T, int, R> getValue, CancellationToken cancelToken = default) where R : INumber<R> {
             if (seq.IsKnownEmpty()) return None;
 
@@ -427,23 +449,15 @@ public static class AsyncEnumerableExtension
             while (await itor.MoveNextAsync().ConfigureAwait(false)) sum += getValue(itor.Current, counter++);
             return sum;
         }
-    }
 
-    extension<T>(IAsyncEnumerable<Outcome<T>> seq)
-    {
-        public async ValueTask<Outcome<List<T>>> MakeMutableList(CancellationToken cancelToken = default) {
-            if (seq.IsKnownEmpty()) return ErrorInfo.NotFound;
-
-            var result = new List<T>();
-            await foreach (var i in seq.WithCancellation(cancelToken))
-                if (Success(i, out var v, out var e))
-                    result.Add(v);
-                else
-                    return e;
-            return result;
+        [PublicAPI]
+        public async IAsyncEnumerable<Outcome<T>> SafeEnumerate([EnumeratorCancellation] CancellationToken cancelToken = default) {
+            await using var itor = seq.GetAsyncEnumerator(cancelToken);
+            ErrorInfo? error;
+            while (Success(await itor.TryMoveNext().ConfigureAwait(false), out var next, out error) && next)
+                yield return itor.Current;
+            if (error is not null)
+                yield return error;
         }
-
-        public async ValueTask<Outcome<IReadOnlyList<T>>> MakeList(CancellationToken cancelToken = default)
-            => Success(await seq.MakeMutableList(cancelToken), out var v, out var e)? v : e;
     }
 }
