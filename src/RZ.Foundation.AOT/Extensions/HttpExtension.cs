@@ -1,6 +1,4 @@
-﻿using RZ.Foundation.Types;
-
-namespace RZ.Foundation.Extensions;
+﻿namespace RZ.Foundation.Extensions;
 
 public static class HttpExtension
 {

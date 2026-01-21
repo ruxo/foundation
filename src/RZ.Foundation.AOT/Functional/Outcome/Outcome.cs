@@ -5,15 +5,13 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
 using LanguageExt.Common;
-using RZ.Foundation.Types;
 
 namespace RZ.Foundation;
 
 public readonly struct OutcomeCatch<T>(Func<ErrorInfo, Outcome<T>> fail)
 {
     public OutcomeCatch(Func<ErrorInfo, bool> predicate, Func<ErrorInfo, Outcome<T>> fail)
-        : this(e => predicate(e) ? fail(e) : e) {
-    }
+        : this(e => predicate(e) ? fail(e) : e) { }
 
     public Outcome<T> Run(ErrorInfo error) => fail(error);
 }
@@ -45,16 +43,14 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     public ErrorInfo? Error { get; init; }
     public T? Data { get; init; }
 
-    public string State
-    {
+    public string State {
         get => status switch {
             EitherStatus.IsRight => Outcome.SuccessState,
             EitherStatus.IsLeft  => Outcome.FailState,
             _                    => Outcome.BottomState
         };
 
-        init
-        {
+        init {
             status = value switch {
                 Outcome.SuccessState => EitherStatus.IsRight,
                 Outcome.FailState    => EitherStatus.IsLeft,
@@ -64,9 +60,14 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
         }
     }
 
-    [Pure] public static implicit operator Outcome<T>(T value)         => new(value);
-    [Pure] public static implicit operator Outcome<T>(ErrorInfo value) => new(value);
-    [Pure] public static implicit operator Outcome<T>(Error value)     => new(ErrorFrom.Exception(value));
+    [Pure]
+    public static implicit operator Outcome<T>(T value) => new(value);
+
+    [Pure]
+    public static implicit operator Outcome<T>(ErrorInfo value) => new(value);
+
+    [Pure]
+    public static implicit operator Outcome<T>(Error value) => new(ErrorFrom.Exception(value));
 
     public void Deconstruct(out ErrorInfo? error, out T? data) => (error, data) = (Error, Data);
 
@@ -74,11 +75,9 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     public static implicit operator Outcome<T>(Either<ErrorInfo, T> value)
         => value.Match(v => new Outcome<T>(v), e => new Outcome<T>(e));
 
-    [Pure, JsonIgnore]
-    public bool IsFail => status == EitherStatus.IsLeft;
+    [Pure, JsonIgnore] public bool IsFail => status == EitherStatus.IsLeft;
 
-    [Pure, JsonIgnore]
-    public bool IsSuccess => status == EitherStatus.IsRight;
+    [Pure, JsonIgnore] public bool IsSuccess => status == EitherStatus.IsRight;
 
     [Pure]
     public Outcome<B> Bind<B>(Func<T, Outcome<B>> bind) =>
@@ -97,7 +96,7 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
         => status == EitherStatus.IsRight ? new Outcome<B>(success(Data!)) : new Outcome<B>(fail(Error!));
 
     [Pure]
-    public Either<E,B> MapToEither<B,E>(Func<T, B> success, Func<ErrorInfo, E> fail)
+    public Either<E, B> MapToEither<B, E>(Func<T, B> success, Func<ErrorInfo, E> fail)
         => status == EitherStatus.IsRight ? success(Data!) : fail(Error!);
 
     [Pure]
@@ -128,6 +127,8 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     [Pure]
     public Outcome<T> Catch(Func<ErrorInfo, T> handler) =>
         status == EitherStatus.IsRight ? this : new Outcome<T>(handler(Error!));
+
+    #region If Fail & Success
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T IfFail(Func<ErrorInfo, T> mapper) => status == EitherStatus.IsRight ? Data! : mapper(Error!);
@@ -161,17 +162,21 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     }
 
     public bool IfFail([NotNullWhen(true)] out ErrorInfo? e, [NotNullWhen(false)] out T? v) {
-        (e, v) = status == EitherStatus.IsRight? (null, Data) : (Error, default(T));
+        (e, v) = status == EitherStatus.IsRight ? (null, Data) : (Error, default(T));
         return status == EitherStatus.IsLeft;
     }
 
     public bool IfSuccess([NotNullWhen(true)] out T? v, [NotNullWhen(false)] out ErrorInfo? e) {
-        (e, v) = status == EitherStatus.IsRight? (null, Data) : (Error, default(T));
+        (e, v) = status == EitherStatus.IsRight ? (null, Data) : (Error, default(T));
         return status == EitherStatus.IsRight;
     }
 
+    #endregion
+
     public V Match<V>(Func<T, V> success, Func<ErrorInfo, V> fail)
         => status == EitherStatus.IsRight ? success(Data!) : fail(Error!);
+
+    #region Unwrap
 
     public T Unwrap()
         => status == EitherStatus.IsRight ? Data! : JustThrow(Error!);
@@ -190,8 +195,21 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     public ErrorInfo? UnwrapErrorOrDefault(ErrorInfo? defaultValue = null)
         => Error;
 
+    #endregion
+
+    #region NotFound related
+
     [Pure]
     public bool IsNotFound() => Error?.IsNotFound() ?? false;
+
+    public Outcome<T> IfNotFound(T value)                => IsNotFound() ? value : this;
+    public Outcome<T> IfNotFound(Outcome<T> @else)       => IsNotFound() ? @else : this;
+    public Outcome<T> IfNotFound(Func<Outcome<T>> @else) => IsNotFound() ? @else() : this;
+
+    public async ValueTask<Outcome<T>> IfNotFoundAsync(ValueTask<Outcome<T>> @else)       => IsNotFound() ? await @else : this;
+    public async ValueTask<Outcome<T>> IfNotFoundAsync(Func<ValueTask<Outcome<T>>> @else) => IsNotFound() ? await @else() : this;
+
+    #endregion
 
     [Pure, ExcludeFromCodeCoverage]
     public override string ToString() =>

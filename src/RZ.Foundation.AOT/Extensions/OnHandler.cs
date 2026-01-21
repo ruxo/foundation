@@ -1,6 +1,4 @@
-﻿using RZ.Foundation.Types;
-
-namespace RZ.Foundation.Extensions;
+﻿namespace RZ.Foundation.Extensions;
 
 [PublicAPI]
 public readonly struct OnHandlerSync(Action task)
