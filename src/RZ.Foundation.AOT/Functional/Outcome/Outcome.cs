@@ -173,13 +173,19 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
 
     #endregion
 
+    [Pure]
     public V Match<V>(Func<T, V> success, Func<ErrorInfo, V> fail)
         => status == EitherStatus.IsRight ? success(Data!) : fail(Error!);
 
     #region Unwrap
 
+    [Pure]
     public T Unwrap()
         => status == EitherStatus.IsRight ? Data! : JustThrow(Error!);
+
+    [Pure]
+    public T? UnwrapNullable()
+        => status == EitherStatus.IsRight ? Data : Error?.IsNotFound() == true ? default : JustThrow(Error!);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T? UnwrapOrDefault(T? defaultValue = default)
@@ -188,6 +194,7 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     static T JustThrow(ErrorInfo e) => e.Throw<T>();
 
+    [Pure]
     public ErrorInfo UnwrapError() =>
         status == EitherStatus.IsRight ? throw new InvalidOperationException("Outcome state is success") : Error!;
 
