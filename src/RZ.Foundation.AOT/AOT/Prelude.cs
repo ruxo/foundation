@@ -488,6 +488,16 @@ public static class Prelude
         return outcome.IsFail;
     }
 
+    public static bool FailButNotFound<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e, out T? v) {
+        (v, e) = outcome.IsSuccess ? (outcome.Data!, null) : (default(T), outcome.Error);
+        return outcome.IsFail && outcome.Error?.IsNotFound() != true;
+    }
+
+    public static bool FailButNotFound<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e) {
+        e = outcome.IsSuccess ? null : outcome.Error;
+        return outcome.IsFail && outcome.Error?.IsNotFound() != true;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool UnlessSuccess<T>(Outcome<T> outcome, [NotNullWhen(false)] out T? v) {
         v = outcome.IsSuccess ? outcome.Data : default;
