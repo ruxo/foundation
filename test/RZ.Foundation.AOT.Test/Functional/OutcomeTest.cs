@@ -11,25 +11,25 @@ public sealed class OutcomeTest
     #region General
 
     [Test]
-    public void OutcomeDirectSuccessAssignment() {
+    public async ValueTask OutcomeDirectSuccessAssignment() {
         var outcome = SuccessOutcome(42);
 
         outcome.IsSuccess.Should().BeTrue();
         outcome.IsFail.Should().BeFalse();
         outcome.Unwrap().Should().Be(42);
 
-        new Action(() => outcome.UnwrapError()).Should().Throw<InvalidOperationException>();
+        await Assert.That(() => outcome.UnwrapError()).Throws<InvalidOperationException>();
     }
 
     [Test]
-    public void OutcomeDirectFailureAssignment() {
+    public async ValueTask OutcomeDirectFailureAssignment() {
         var outcome = FailedOutcome<int>(new ErrorInfo("123", "dummy"));
 
         outcome.IsSuccess.Should().BeFalse();
         outcome.IsFail.Should().BeTrue();
         outcome.UnwrapError().Should().Match<ErrorInfo>(e => e.Is("123"));
 
-        new Action(() => outcome.Unwrap()).Should().Throw<ErrorInfoException>();
+        await Assert.That(() => outcome.Unwrap()).Throws<ErrorInfoException>();
     }
 
     [Test]
@@ -133,9 +133,8 @@ public sealed class OutcomeTest
     public void Map_value_with_outcome() {
         var outcome = SuccessOutcome(42);
 
-        var result = (from a in outcome
-                      select a + 1
-                     );
+        var result = from a in outcome
+                     select a + 1;
 
         result.IsSuccess.Should().BeTrue();
         result.Unwrap().Should().Be(42 + 1);
@@ -152,12 +151,42 @@ public sealed class OutcomeTest
     }
 
     [Test]
-    public void Binding_sync_with_sync() {
+    public async ValueTask Binding_sync_with_sync() {
         var result = from a in SuccessOutcome(42)
                      from b in SuccessOutcome(a + 1)
                      select b;
 
-        result.Should().Be(SuccessOutcome(43));
+        await Assert.That(result).IsEqualTo(SuccessOutcome(43));
+    }
+
+    [Test]
+    public async ValueTask Binding_async_with_sync_and_async() {
+        var result = from a in new ValueTask<Outcome<int>>(SuccessOutcome(42))
+                     from b in SuccessOutcome(a + 1)
+                     from c in new ValueTask<Outcome<int>>(SuccessOutcome(b + 1))
+                     select c;
+
+        await Assert.That(await result).IsEqualTo(SuccessOutcome(44));
+    }
+
+    [Test]
+    public async ValueTask Binding_sync_with_async_and_async() {
+        var result = from a in SuccessOutcome(42)
+                     from b in new ValueTask<Outcome<int>>(SuccessOutcome(a + 1))
+                     from c in new ValueTask<Outcome<int>>(SuccessOutcome(b + 1))
+                     select c;
+
+        await Assert.That(await result).IsEqualTo(SuccessOutcome(44));
+    }
+
+    [Test]
+    public async ValueTask Binding_sync_with_async_and_sync() {
+        var result = from a in SuccessOutcome(42)
+                     from b in new ValueTask<Outcome<int>>(SuccessOutcome(a + 1))
+                     from c in SuccessOutcome(b + 1)
+                     select c;
+
+        await Assert.That(await result).IsEqualTo(SuccessOutcome(44));
     }
 
     [Test]
