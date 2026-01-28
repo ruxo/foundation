@@ -152,6 +152,9 @@ public static class Prelude
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IReadOnlyDictionary<K, V> ReadOnly<K, V>(FrozenDictionary<K, V> dict) where K : notnull => dict;
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static IReadOnlyList<T> ReadOnly<T>(IEnumerable<T> seq) => seq.ToArray();
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IReadOnlyList<T> ReadOnly<T>(params T[] list) => list;
 
@@ -455,39 +458,49 @@ public static class Prelude
 
     #region Outcome Helpers
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Success<T>(Outcome<T> outcome, [NotNullWhen(true)] out T? v, [NotNullWhen(false)] out ErrorInfo? e) {
         (v, e) = outcome.IsSuccess ? (outcome.Data, null) : (default(T), outcome.Error);
         return outcome.IsSuccess;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Success<T>(Outcome<T> outcome, [NotNullWhen(true)] out T? v) {
         v = outcome.IsSuccess ? outcome.Data : default;
         return outcome.IsSuccess;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool UnlessFail<T>(Outcome<T> outcome, [NotNullWhen(false)] out ErrorInfo? e) {
         e = outcome.IsSuccess ? null : outcome.Error;
         return outcome.IsSuccess;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Fail<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e, [NotNullWhen(false)] out T? v) {
         (v, e) = outcome.IsSuccess ? (outcome.Data!, null) : (default(T), outcome.Error);
         return outcome.IsFail;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Fail<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e) {
         e = outcome.IsSuccess ? null : outcome.Error;
         return outcome.IsFail;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool UnlessSuccess<T>(Outcome<T> outcome, [NotNullWhen(false)] out T? v) {
         v = outcome.IsSuccess ? outcome.Data : default;
         return outcome.IsFail;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static OutcomeCatch<T> matchError<T>(Func<ErrorInfo, bool> predicate, Func<ErrorInfo, Outcome<T>> fail) =>
-        new(predicate, fail);
+    public static Outcome<T> UpCast<T, K>(Outcome<K> outcome) where K : T
+        => outcome.IsSuccess ? outcome.Data! : outcome.Error!;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    static OutcomeCatch<T> matchError<T>(Func<ErrorInfo, bool> predicate, Func<ErrorInfo, Outcome<T>> fail)
+        => new(predicate, fail);
 
     #region catch
 
