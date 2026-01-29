@@ -216,6 +216,9 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     public async ValueTask<Outcome<T>> IfNotFoundAsync(ValueTask<Outcome<T>> @else)       => IsNotFound() ? await @else : this;
     public async ValueTask<Outcome<T>> IfNotFoundAsync(Func<ValueTask<Outcome<T>>> @else) => IsNotFound() ? await @else() : this;
 
+    public Outcome<Option<T>> CheckNotFound()
+        => IsNotFound() ? SuccessOutcome<Option<T>>(None) : IsSuccess ? Some(Data!) : Error!;
+
     #endregion
 
     [Pure, ExcludeFromCodeCoverage]
