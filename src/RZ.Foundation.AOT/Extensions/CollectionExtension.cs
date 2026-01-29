@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace RZ.Foundation.Extensions;
@@ -106,6 +107,17 @@ public static class CollectionExtension
         [PublicAPI]
         public Outcome<IReadOnlyList<T>> MakeList()
             => Success(seq.MakeMutableList(), out var v, out var e) ? v : e;
+
+        [PublicAPI]
+        public bool IfAnyFail([NotNullWhen(true)] out ErrorInfo? error) {
+            foreach (var i in seq)
+                if (i.IsFail){
+                    error = i.Error!;
+                    return true;
+                }
+            error = null;
+            return false;
+        }
 
         #endregion
     }
