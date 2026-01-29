@@ -28,6 +28,10 @@ public static class OutcomeExtension
     extension<A>(ValueTask<Outcome<A>> ma)
     {
         [Pure]
+        public async ValueTask<Outcome<B>> Select<B>(Func<A, B> map)
+            => Fail(await ma, out var e, out var a) ? e : map(a);
+
+        [Pure]
         public async ValueTask<Outcome<C>> SelectMany<B, C>(Func<A, Outcome<B>> bind, Func<A, B, C> project) {
             if (Fail(await ma, out var e, out var a)
              || Fail(bind(a), out e, out var result)) return e;
