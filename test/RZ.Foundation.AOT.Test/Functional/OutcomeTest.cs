@@ -510,4 +510,12 @@ public sealed class OutcomeTest
     }
 
     #endregion
+
+    [Test]
+    public async ValueTask IfFail_Enum() {
+        var x = new[] {SuccessOutcome(42), FailedOutcome<int>(ErrorInfo.NotFound), SuccessOutcome(99)};
+
+        await Assert.That(x.IfAnyFail(out var e)).IsTrue();
+        await Assert.That(e).IsEqualTo(ErrorInfo.NotFound);
+    }
 }
