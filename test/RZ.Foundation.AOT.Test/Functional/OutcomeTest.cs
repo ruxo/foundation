@@ -160,6 +160,17 @@ public sealed class OutcomeTest
     }
 
     [Test]
+    public async ValueTask Binding_async_with_let() {
+        var result = from a in new ValueTask<Outcome<int>>(42)
+                     from b in new ValueTask<Outcome<int>>(a + 1)
+                     let c = b + 1
+                     from d in new ValueTask<Outcome<int>>(c + 1)
+                     select d;
+
+        await Assert.That(await result).IsEqualTo(SuccessOutcome(45));
+    }
+
+    [Test]
     public async ValueTask Binding_async_with_sync_and_async() {
         var result = from a in new ValueTask<Outcome<int>>(SuccessOutcome(42))
                      from b in SuccessOutcome(a + 1)
@@ -372,7 +383,7 @@ public sealed class OutcomeTest
     public void Pipe_first_failure_outcome_with_success_catch_returns_catch_value() {
         var a = FailedOutcome<int>(new ErrorInfo("42", "dummy"));
 
-        var result = (a | @catch(_ => 123));
+        var result = a | @catch(_ => 123);
 
         result.IsSuccess.Should().BeTrue();
         result.Unwrap().Should().Be(123);
@@ -382,7 +393,7 @@ public sealed class OutcomeTest
     public void Pipe_first_failure_outcome_with_failure_catch_returns_catch_value() {
         var a = FailedOutcome<int>(new ErrorInfo("42", "dummy"));
 
-        var result = (a | @catch<int>(_ => new ErrorInfo("123", "another dummy")));
+        var result = a | @catch<int>(_ => new ErrorInfo("123", "another dummy"));
 
         result.IsFail.Should().BeTrue();
         result.UnwrapError().Code.Should().Be("123");
@@ -433,7 +444,7 @@ public sealed class OutcomeTest
     public void Pipe_failure_outcome_is_caught_and_replaced_with_value() {
         var a = FailedOutcome<int>(new ErrorInfo("42", "dummy"));
 
-        var result = (a | @catch<int>(new ErrorInfo("42", "any text"), 123));
+        var result = a | @catch<int>(new ErrorInfo("42", "any text"), 123);
 
         result.Should().Be(SuccessOutcome(123));
     }
@@ -442,7 +453,7 @@ public sealed class OutcomeTest
     public void Pipe_failure_outcome_is_caught_and_replaced_with_another_error() {
         var a = FailedOutcome<int>(new ErrorInfo("42", "dummy"));
 
-        var result = (a | @catch<int>(new ErrorInfo("42", "any text"), new ErrorInfo("123", "another dummy")));
+        var result = a | @catch<int>(new ErrorInfo("42", "any text"), new ErrorInfo("123", "another dummy"));
 
         result.Should().Be(FailedOutcome<int>(new ErrorInfo("123", "another dummy")));
     }
@@ -451,7 +462,7 @@ public sealed class OutcomeTest
     public void Pipe_failure_outcome_is_caught_and_replaced_with_value_by_function() {
         var a = FailedOutcome<int>(new ErrorInfo("42", "dummy"));
 
-        var result = (a | @catch(new ErrorInfo("42", "any text"), e => int.Parse(e.Code) + 1));
+        var result = a | @catch(new ErrorInfo("42", "any text"), e => int.Parse(e.Code) + 1);
 
         result.Should().Be(SuccessOutcome(43));
     }
@@ -460,8 +471,8 @@ public sealed class OutcomeTest
     public void Pipe_failure_outcome_is_caught_and_replaced_with_another_error_by_function() {
         var a = FailedOutcome<int>(new ErrorInfo("42", "dummy"));
 
-        var result = (a | @catch<int>(new ErrorInfo("42", "any text"),
-                                      e => new ErrorInfo((int.Parse(e.Code) + 1).ToString(), e.Message)));
+        var result = a | @catch<int>(new ErrorInfo("42", "any text"),
+                                     e => new ErrorInfo((int.Parse(e.Code) + 1).ToString(), e.Message));
 
         result.Should().Be(FailedOutcome<int>(new ErrorInfo("43", "dummy")));
     }
