@@ -60,6 +60,16 @@ public static class CollectionExtension
         }
 
         [PublicAPI]
+        public IEnumerable<Outcome<B>> Choose<B>(Func<T, int, Outcome<B>> selector) {
+            var counter = 0;
+            foreach (var i in seq){
+                var result = selector(i, counter++);
+                if (!result.IsNotFound())
+                    yield return result;
+            }
+        }
+
+        [PublicAPI]
         public IAsyncEnumerable<Outcome<B>> ChooseAsync<B>(Func<T, int, CancellationToken, ValueTask<Outcome<B>>> selector) {
             return Impl(seq, selector);
 
@@ -95,10 +105,9 @@ public static class CollectionExtension
 
         [PublicAPI]
         public Outcome<IReadOnlyList<T>> MakeList()
-            => Success(seq.MakeMutableList(), out var v, out var e)? v : e;
+            => Success(seq.MakeMutableList(), out var v, out var e) ? v : e;
 
         #endregion
-
     }
 
     [Pure, Obsolete("Use TryGetValue instead")]

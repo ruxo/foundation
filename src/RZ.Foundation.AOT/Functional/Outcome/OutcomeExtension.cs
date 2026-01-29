@@ -40,5 +40,12 @@ public static class OutcomeExtension
              || Fail(await bind(a), out e, out var result)) return e;
             return project(a, result);
         }
+
+        [Pure, PublicAPI]
+        public async ValueTask<Outcome<Option<A>>> CheckNotFound() {
+            if (Fail(await ma, out var e, out var a))
+                return e.IsNotFound() ? SuccessOutcome<Option<A>>(None) : e;
+            return SuccessOutcome(Some(a));
+        }
     }
 }
