@@ -10,34 +10,35 @@ namespace RZ.Foundation.Extensions;
 [PublicAPI]
 public static class OptionHelper
 {
-    extension<T>(Option<T> o)
+    extension<T>(in Option<T> o)
     {
-        [PublicAPI]
+        [Pure, PublicAPI]
         public bool IfSome([NotNullWhen(true)] out T? data) {
             data = o.IsSome? (T)o.Case! : default;
             return o.IsSome;
         }
 
-        [PublicAPI]
+        [Pure, PublicAPI]
         public bool UnlessSome([NotNullWhen(false)] out T? data) {
             data = o.IsSome? (T)o.Case! : default;
             return o.IsNone;
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Option<ImmutableHashSet<T>> ToNotEmptyOption<T>(this ImmutableHashSet<T> data) =>
         data.IsEmpty ? None : data;
 
+    [Pure]
     public static Option<T[]> ToNotEmptyOption<T>(this IEnumerable<T> data) {
         var array = data.AsArray();
         return array.Length > 0 ? array : None;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Option<T> Join<T>(this Option<Option<T>> doubleOption) => doubleOption.Bind(i => i);
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Option<T> Join<T>(this in Option<Option<T>> doubleOption) => doubleOption.Bind(i => i);
 
-    extension<A, B>(Option<(A, B)> x)
+    extension<A, B>(in Option<(A, B)> x)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Option<T> Call<T>(Func<A, B, T> f) => x.Map(p => p.CallFrom(f));
@@ -46,7 +47,7 @@ public static class OptionHelper
         public Option<Unit> Call(Action<A, B> f) => x.Map(p => p.CallFrom(f));
     }
 
-    extension<A, B, C>(Option<(A, B, C)> x)
+    extension<A, B, C>(in Option<(A, B, C)> x)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Option<T> Call<T>(Func<A, B, C, T> f) => x.Map(p => p.CallFrom(f));
@@ -55,37 +56,38 @@ public static class OptionHelper
         public Option<Unit> Call(Action<A, B, C> f) => x.Map(p => p.CallFrom(f));
     }
 
-    extension<T>(Task<Option<T>> t)
+    extension<T>(ValueTask<Option<T>> t)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<Option<TR>> Chain<TR>(Func<T, Option<TR>> mapper) => (await t).Bind(mapper);
+        public async ValueTask<Option<TR>> Chain<TR>(Func<T, Option<TR>> mapper) => (await t.ConfigureAwait(false)).Bind(mapper);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<Option<TR>> ChainAsync<TR>(Func<T, Task<Option<TR>>> mapper) =>
-            await (await t).ToAsync().BindAsync(async x => (await mapper(x)).ToAsync()).ToOption();
+        public async ValueTask<Option<TR>> ChainAsync<TR>(Func<T, ValueTask<Option<TR>>> mapper) =>
+            await (await t.ConfigureAwait(false)).ToAsync().BindAsync(async x => (await mapper(x)).ToAsync()).ToOption();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> Get() => (await t).Get();
+        public async ValueTask<T> Get() => (await t.ConfigureAwait(false)).Get();
 
         [Obsolete("use Match instead")]
-        public Task<TR> Get<TR>(Func<T, TR> someMapper, Func<TR> noneMapper) => t.Match(someMapper, noneMapper);
+        public ValueTask<TR> Get<TR>(Func<T, TR> someMapper, Func<TR> noneMapper) => t.Match(someMapper, noneMapper);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<TR> Match<TR>(Func<T, TR> someMapper, Func<TR> noneMapper) =>
-            (await t).Match(someMapper, noneMapper);
+        public async ValueTask<TR> Match<TR>(Func<T, TR> someMapper, Func<TR> noneMapper) =>
+            (await t.ConfigureAwait(false)).Match(someMapper, noneMapper);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<TR> MatchAsync<TR>(Func<T, Task<TR>> someMapper, Func<Task<TR>> noneMapper) =>
-            await (await t).MatchAsync(someMapper, noneMapper);
+        public async ValueTask<TR> MatchAsync<TR>(Func<T, ValueTask<TR>> someMapper, Func<ValueTask<TR>> noneMapper) =>
+            await (await t.ConfigureAwait(false)).MatchAsync(async x => await someMapper(x), async () => await noneMapper());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> GetOrElse(T noneValue) => (await t).IfNone(noneValue);
+        public async ValueTask<T> GetOrElse(T noneValue) => (await t.ConfigureAwait(false)).IfNone(noneValue);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> GetOrElse(Func<T> noneValue) => (await t).IfNone(noneValue);
+        public async ValueTask<T> GetOrElse(Func<T> noneValue) => (await t.ConfigureAwait(false)).IfNone(noneValue);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> GetOrElseAsync(Func<Task<T>> noneValue) => await (await t).IfNoneAsync(noneValue);
+        public async ValueTask<T> GetOrElseAsync(Func<ValueTask<T>> noneValue)
+            => await (await t.ConfigureAwait(false)).IfNoneAsync(async () => await noneValue());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

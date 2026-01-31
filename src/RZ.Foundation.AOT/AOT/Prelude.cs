@@ -56,7 +56,7 @@ public static class Prelude
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Func<T, ValueTask<T>> SideEffectAsync<T>([InstantHandle] Func<T, ValueTask> f)
         => async x => {
-            await f(x);
+            await f(x).ConfigureAwait(false);
             return x;
         };
 
@@ -70,7 +70,7 @@ public static class Prelude
 
         [PublicAPI, ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async ValueTask<T> SideEffectAsync([InstantHandle] Func<T, ValueTask> f) {
-            await f(x);
+            await f(x).ConfigureAwait(false);
             return x;
         }
     }
@@ -116,11 +116,19 @@ public static class Prelude
 
     #region With
 
-    public static Option<(A, B)> With<A, B>(Option<A> a, Option<B> b) => a.Bind(ax => b.Map(bx => (ax, bx)));
+    [Pure]
+    public static Option<(A, B)> With<A, B>(in Option<A> a, in Option<B> b) {
+        if (a.IfSome(out var va) && b.IfSome(out var vb)) return (va, vb);
+        return None;
+    }
 
-    public static Option<(A, B, C)> With<A, B, C>(Option<A> a, Option<B> b, Option<C> c)
-        => a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx, cx))));
+    [Pure]
+    public static Option<(A, B, C)> With<A, B, C>(in Option<A> a, in Option<B> b, in Option<C> c) {
+        if (a.IfSome(out var va) && b.IfSome(out var vb) && c.IfSome(out var vc)) return (va, vb, vc);
+        return None;
+    }
 
+    [Pure]
     public static Option<IReadOnlyList<T>> With<T>(IReadOnlyList<Option<T>> a)
         => IfSome(a.Aggregate(Some(new List<T>(a.Count)),
                               (result, x) => from list in result
@@ -129,11 +137,19 @@ public static class Prelude
                ? final
                : None;
 
-    public static Outcome<(A, B)> With<A, B>(Outcome<A> a, Outcome<B> b) => a.Bind(ax => b.Map(bx => (ax, bx)));
+    [Pure]
+    public static Outcome<(A, B)> With<A, B>(in Outcome<A> a, in Outcome<B> b) {
+        if (a.IsSuccess && b.IsSuccess) return (a.Data, b.Data);
+        return a.IsFail? a.Error! : b.Error!;
+    }
 
-    public static Outcome<(A, B, C)> With<A, B, C>(Outcome<A> a, Outcome<B> b, Outcome<C> c)
-        => a.Bind(ax => b.Bind(bx => c.Map(cx => (ax, bx, cx))));
+    [Pure]
+    public static Outcome<(A, B, C)> With<A, B, C>(in Outcome<A> a, in Outcome<B> b, in Outcome<C> c) {
+        if (a.IsSuccess && b.IsSuccess && c.IsSuccess) return (a.Data, b.Data, c.Data);
+        return a.IsFail? a.Error! : b.IsFail? b.Error! : c.Error!;
+    }
 
+    [Pure]
     public static Outcome<IReadOnlyList<T>> With<T>(IReadOnlyList<Outcome<T>> a)
         => Fail(a.Aggregate(SuccessOutcome(new List<T>(a.Count)),
                             (result, x) => from list in result
@@ -146,16 +162,16 @@ public static class Prelude
 
     #region ReadOnly
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IReadOnlyDictionary<K, V> ReadOnly<K, V>(Dictionary<K, V> dict) where K : notnull => dict;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IReadOnlyDictionary<K, V> ReadOnly<K, V>(FrozenDictionary<K, V> dict) where K : notnull => dict;
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static IReadOnlyList<T> ReadOnly<T>(IEnumerable<T> seq) => seq.ToArray();
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IReadOnlyList<T> ReadOnly<T>(params T[] list) => list;
 
     #endregion
@@ -218,7 +234,7 @@ public static class Prelude
 
     public static async ValueTask<(Exception? Error, T Value)> Try<T>(ValueTask<T> task) {
         try{
-            return (null, await task);
+            return (null, await task.ConfigureAwait(false));
         }
         catch (Exception e){
             return (e, default!);
@@ -227,7 +243,7 @@ public static class Prelude
 
     public static async ValueTask<(Exception? Error, Unit Value)> Try(ValueTask task) {
         try{
-            await task;
+            await task.ConfigureAwait(false);
             return (null, unit);
         }
         catch (Exception e){
@@ -237,7 +253,7 @@ public static class Prelude
 
     public static async ValueTask<(Exception? Error, Unit Value)> Try(Func<ValueTask> f) {
         try{
-            await f();
+            await f().ConfigureAwait(false);
             return (null, unit);
         }
         catch (Exception e){
@@ -247,7 +263,7 @@ public static class Prelude
 
     public static async ValueTask<(Exception? Error, Unit Value)> Try<S>(S state, Func<S, ValueTask> f) {
         try{
-            await f(state);
+            await f(state).ConfigureAwait(false);
             return (null, unit);
         }
         catch (Exception e){
@@ -275,7 +291,7 @@ public static class Prelude
 
     public static async ValueTask<(Exception? Error, T Value)> Try<T>(Func<ValueTask<T>> f) {
         try{
-            return (null, await f());
+            return (null, await f().ConfigureAwait(false));
         }
         catch (Exception e){
             return (e, default!);
@@ -284,7 +300,7 @@ public static class Prelude
 
     public static async ValueTask<(Exception? Error, T Value)> Try<S, T>(S state, Func<S, ValueTask<T>> f) {
         try{
-            return (null, await f(state));
+            return (null, await f(state).ConfigureAwait(false));
         }
         catch (Exception e){
             return (e, default!);
@@ -302,7 +318,7 @@ public static class Prelude
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async ValueTask<Option<T>> ToOption<T>(this ValueTask<(Exception?, T)> result)
-        => (await result).ToOption();
+        => (await result.ConfigureAwait(false)).ToOption();
 
     [Pure]
     public static Outcome<T> ToOutcome<T>(this in (Exception?, T) result)
@@ -313,7 +329,7 @@ public static class Prelude
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async ValueTask<Outcome<T>> ToOutcome<T>(this ValueTask<(Exception?, T)> result)
-        => (await result).ToOutcome();
+        => (await result.ConfigureAwait(false)).ToOutcome();
 
     #endregion
 
@@ -338,7 +354,7 @@ public static class Prelude
 
     public static async ValueTask<Outcome<T>> TryCatch<T>(Task<T> task) {
         try{
-            return await task;
+            return await task.ConfigureAwait(false);
         }
         catch (Exception e){
             return ErrorFrom.Exception(e);
@@ -347,7 +363,7 @@ public static class Prelude
 
     public static async ValueTask<Outcome<T>> TryCatch<T>(ValueTask<T> task) {
         try{
-            return await task;
+            return await task.ConfigureAwait(false);
         }
         catch (Exception e){
             return ErrorFrom.Exception(e);
@@ -356,7 +372,7 @@ public static class Prelude
 
     public static async ValueTask<Outcome<Unit>> TryCatch(Task task) {
         try{
-            await task;
+            await task.ConfigureAwait(false);
             return unit;
         }
         catch (Exception e){
@@ -366,7 +382,7 @@ public static class Prelude
 
     public static async ValueTask<Outcome<Unit>> TryCatch(ValueTask task) {
         try{
-            await task;
+            await task.ConfigureAwait(false);
             return unit;
         }
         catch (Exception e){
@@ -377,7 +393,7 @@ public static class Prelude
     public static async IAsyncEnumerable<Outcome<T>> TryCatch<T>(IAsyncEnumerable<T> enumerable, [EnumeratorCancellation] CancellationToken cancelToken = default) {
        await using var itor = enumerable.GetAsyncEnumerator(cancelToken);
        ErrorInfo? e;
-       while (Success(await TryCatch(itor.MoveNextAsync()), out var hasNext, out e) && hasNext)
+       while (Success(await TryCatch(itor.MoveNextAsync()).ConfigureAwait(false), out var hasNext, out e) && hasNext)
            yield return itor.Current;
 
        if (e is not null)
@@ -387,7 +403,7 @@ public static class Prelude
     [PublicAPI]
     public static async ValueTask<Outcome<T>> TryCatch<T>([InstantHandle] Func<ValueTask<Outcome<T>>> handler) {
         try{
-            return await handler();
+            return await handler().ConfigureAwait(false);
         }
         catch (Exception e){
             return ErrorFrom.Exception(e);
@@ -397,7 +413,7 @@ public static class Prelude
     [PublicAPI]
     public static async ValueTask<Outcome<T>> TryCatch<T>([InstantHandle] Func<ValueTask<T>> handler) {
         try{
-            return await handler();
+            return await handler().ConfigureAwait(false);
         }
         catch (Exception e){
             return ErrorFrom.Exception(e);
@@ -407,7 +423,7 @@ public static class Prelude
     [PublicAPI]
     public static async ValueTask<Outcome<Unit>> TryCatch([InstantHandle] Func<ValueTask> handler) {
         try{
-            await handler();
+            await handler().ConfigureAwait(false);
             return unit;
         }
         catch (Exception e){
@@ -448,79 +464,81 @@ public static class Prelude
 
     #region Option Helpers
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IfSome<T>(Option<T> opt, [NotNullWhen(true)] out T? data) => opt.IfSome(out data);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool UnlessSome<T>(Option<T> opt, [NotNullWhen(false)] out T? data) => opt.UnlessSome(out data);
 
     #endregion
 
     #region Outcome Helpers
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Success<T>(Outcome<T> outcome, [NotNullWhen(true)] out T? v, [NotNullWhen(false)] out ErrorInfo? e) {
+    [Pure]
+    public static bool Success<T>(in Outcome<T> outcome, [NotNullWhen(true)] out T? v, [NotNullWhen(false)] out ErrorInfo? e) {
         (v, e) = outcome.IsSuccess ? (outcome.Data, null) : (default(T), outcome.Error);
         return outcome.IsSuccess;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Success<T>(Outcome<T> outcome, [NotNullWhen(true)] out T? v) {
+    [Pure]
+    public static bool Success<T>(in Outcome<T> outcome, [NotNullWhen(true)] out T? v) {
         v = outcome.IsSuccess ? outcome.Data : default;
         return outcome.IsSuccess;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool UnlessFail<T>(Outcome<T> outcome, [NotNullWhen(false)] out ErrorInfo? e) {
+    [Pure]
+    public static bool UnlessFail<T>(in Outcome<T> outcome, [NotNullWhen(false)] out ErrorInfo? e) {
         e = outcome.IsSuccess ? null : outcome.Error;
         return outcome.IsSuccess;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Fail<T1,T2,T3>(Outcome<(T1,T2,T3)> outcome, [NotNullWhen(true)] out ErrorInfo? e, out T1 v1, out T2 v2, out T3 v3) {
+    [Pure]
+    public static bool Fail<T1,T2,T3>(in Outcome<(T1,T2,T3)> outcome, [NotNullWhen(true)] out ErrorInfo? e, out T1 v1, out T2 v2, out T3 v3) {
         ((v1, v2, v3), e) = outcome.IsSuccess ? (outcome.Data, null) : (default((T1,T2,T3)), outcome.Error);
         return outcome.IsFail;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Fail<T1,T2>(Outcome<(T1,T2)> outcome, [NotNullWhen(true)] out ErrorInfo? e, out T1 v1, out T2 v2) {
+    [Pure]
+    public static bool Fail<T1,T2>(in Outcome<(T1,T2)> outcome, [NotNullWhen(true)] out ErrorInfo? e, out T1 v1, out T2 v2) {
         ((v1, v2), e) = outcome.IsSuccess ? (outcome.Data, null) : (default((T1,T2)), outcome.Error);
         return outcome.IsFail;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Fail<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e, [NotNullWhen(false)] out T? v) {
+    [Pure]
+    public static bool Fail<T>(in Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e, [NotNullWhen(false)] out T? v) {
         (v, e) = outcome.IsSuccess ? (outcome.Data!, null) : (default(T), outcome.Error);
         return outcome.IsFail;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Fail<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e) {
+    [Pure]
+    public static bool Fail<T>(in Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e) {
         e = outcome.IsSuccess ? null : outcome.Error;
         return outcome.IsFail;
     }
 
-    public static bool FailButNotFound<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e, out T? v) {
+    [Pure]
+    public static bool FailButNotFound<T>(in Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e, out T? v) {
         (v, e) = outcome.IsSuccess ? (outcome.Data!, null) : (default(T), outcome.Error);
         return outcome.IsFail && outcome.Error?.IsNotFound() != true;
     }
 
-    public static bool FailButNotFound<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e) {
+    [Pure]
+    public static bool FailButNotFound<T>(in Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e) {
         e = outcome.IsSuccess ? null : outcome.Error;
         return outcome.IsFail && outcome.Error?.IsNotFound() != true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool UnlessSuccess<T>(Outcome<T> outcome, [NotNullWhen(false)] out T? v) {
+    [Pure]
+    public static bool UnlessSuccess<T>(in Outcome<T> outcome, [NotNullWhen(false)] out T? v) {
         v = outcome.IsSuccess ? outcome.Data : default;
         return outcome.IsFail;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Outcome<T> UpCast<T, K>(Outcome<K> outcome) where K : T
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Outcome<T> UpCast<T, K>(in Outcome<K> outcome) where K : T
         => outcome.IsSuccess ? outcome.Data! : outcome.Error!;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     static OutcomeCatch<T> matchError<T>(Func<ErrorInfo, bool> predicate, Func<ErrorInfo, Outcome<T>> fail)
         => new(predicate, fail);
 
@@ -590,10 +608,10 @@ public static class Prelude
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async ValueTask<T> ThrowIfError<T>(ValueTask<Outcome<T>> value)
-        => (await value).Unwrap();
+        => (await value.ConfigureAwait(false)).Unwrap();
 
     public static async ValueTask<T?> ThrowUnlessNotFound<T>(ValueTask<Outcome<T>> value)
-        => Success(await value, out var v, out var e) ? (T?) v : e.IsNotFound() ? default(T?) : throw new ErrorInfoException(e);
+        => Success(await value.ConfigureAwait(false), out var v, out var e) ? (T?) v : e.IsNotFound() ? default(T?) : throw new ErrorInfoException(e);
 
     public static T ThrowIfNotFound<T>(this Option<T> optionValue, string message)
         => optionValue.GetOrThrow(() => new ErrorInfoException("not-found", message));
