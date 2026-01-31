@@ -24,7 +24,7 @@ public static class HttpExtension
         }
 
         [PublicAPI]
-        public async ValueTask<Outcome<Stream>> ReadAsStream() {
+        public async ValueTask<Outcome<Stream>> ReadStream() {
             try{
                 return await content.ReadAsStreamAsync();
             }
@@ -42,5 +42,22 @@ public static class HttpExtension
                 return ErrorFrom.Exception(e);
             }
         }
+    }
+
+    [PublicAPI]
+    public static async ValueTask<Outcome<Stream>> ToStream(this HttpResponseMessage r) {
+        using (r)
+            return r.IsSuccessStatusCode
+                       ? Success(await r.Content.ReadStream(), out var v, out var e) ? v : e.Trace("Read stream failed")
+                       : new ErrorInfo(StandardErrorCodes.HttpError, $"({r.StatusCode}) HTTP failed",
+                                       data: ToJson(("StatusCode", r.StatusCode.ToString()),
+                                                    ("ReasonPhrase", r.ReasonPhrase)));
+    }
+
+    extension(Task<HttpResponseMessage> task)
+    {
+        [PublicAPI]
+        public async ValueTask<Outcome<Stream>> ToStream()
+            => Fail(await TryCatch(task), out var e, out var r) ? e.Trace("Read response failed") : await r.ToStream();
     }
 }
