@@ -56,7 +56,7 @@ public sealed class OutcomeTest
         var json = JsonSerializer.Serialize(outcome, new JsonSerializerOptions().UseRzConverters());
 
         // then
-        json.Should().Be("""{"Error":{"Code":"unhandled","Message":"unhandled"}}""");
+        json.Should().Be("""{"Error":{"Code":"unhandled","Message":"unhandled","Locations":[]}}""", "But {0}", json);
     }
 
     [Fact]
