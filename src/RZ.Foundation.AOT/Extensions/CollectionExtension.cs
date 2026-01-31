@@ -94,6 +94,21 @@ public static class CollectionExtension
         #region To XX
 
         [PublicAPI]
+        public Outcome<List<A?>> MakeMutableList<A>(Func<T,A?> selector) {
+            var result = new List<A>();
+            foreach (var i in seq)
+                if (Success(i, out var v, out var e))
+                    result.Add(selector(v));
+                else
+                    return e;
+            return result;
+        }
+
+        [PublicAPI]
+        public Outcome<IReadOnlyList<A?>> MakeList<A>(Func<T,A?> selector)
+            => Success(seq.MakeMutableList(selector), out var v, out var e) ? v : e;
+
+        [PublicAPI]
         public Outcome<List<T>> MakeMutableList() {
             var result = new List<T>();
             foreach (var i in seq)
