@@ -477,6 +477,18 @@ public static class Prelude
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool Fail<T1,T2,T3>(Outcome<(T1,T2,T3)> outcome, [NotNullWhen(true)] out ErrorInfo? e, out T1 v1, out T2 v2, out T3 v3) {
+        ((v1, v2, v3), e) = outcome.IsSuccess ? (outcome.Data, null) : (default((T1,T2,T3)), outcome.Error);
+        return outcome.IsFail;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool Fail<T1,T2>(Outcome<(T1,T2)> outcome, [NotNullWhen(true)] out ErrorInfo? e, out T1 v1, out T2 v2) {
+        ((v1, v2), e) = outcome.IsSuccess ? (outcome.Data, null) : (default((T1,T2)), outcome.Error);
+        return outcome.IsFail;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Fail<T>(Outcome<T> outcome, [NotNullWhen(true)] out ErrorInfo? e, [NotNullWhen(false)] out T? v) {
         (v, e) = outcome.IsSuccess ? (outcome.Data!, null) : (default(T), outcome.Error);
         return outcome.IsFail;

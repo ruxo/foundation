@@ -74,8 +74,8 @@ public sealed record ErrorInfo
 
     public List<ErrorInfoLocation> Locations { get; init; } = new();
 
-    public ErrorInfo Comment(string description, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) {
-        Locations.Add(new(file ?? string.Empty, caller ?? string.Empty, description));
+    public ErrorInfo Trace(string description = ".", [CallerMemberName] string caller = "", [CallerFilePath] string file = "") {
+        Locations.Add(new(file, caller, description));
         return this;
     }
 
@@ -102,9 +102,9 @@ public sealed record ErrorInfo
         hashCode.Add(DebugInfo);
         hashCode.Add(Data);
         hashCode.Add(InnerError);
-        hashCode.Add(SubErrors);
+        hashCode.Add(SubErrors?.Sum(e => e.GetHashCode()) ?? 0);
         hashCode.Add(Stack);
-        hashCode.Add(Locations);
+        hashCode.Add(Locations.Sum(e => e.GetHashCode()));
         return hashCode.ToHashCode();
     }
 
