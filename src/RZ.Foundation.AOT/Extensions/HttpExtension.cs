@@ -1,13 +1,68 @@
-﻿namespace RZ.Foundation.Extensions;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace RZ.Foundation.Extensions;
 
 public static class HttpExtension
 {
-    public static async ValueTask<Outcome<HttpResponseMessage>> TrySend(this HttpClient http, HttpRequestMessage request) {
-        try{
-            return await http.SendAsync(request);
+    extension(HttpClient http)
+    {
+        [PublicAPI]
+        public async ValueTask<Outcome<HttpResponseMessage>> Get([StringSyntax("Uri"), UriString("GET")] string? requestUri, CancellationToken cancel = default) {
+            try{
+                return await http.GetAsync(requestUri, cancel);
+            }
+            catch (Exception e){
+                return ErrorFrom.Exception(e);
+            }
         }
-        catch (Exception e){
-            return ErrorFrom.Exception(e);
+
+        [PublicAPI]
+        public async ValueTask<Outcome<HttpResponseMessage>> Post([StringSyntax("Uri"), UriString("POST")] string? requestUri, HttpContent? content, CancellationToken cancel = default) {
+            try{
+                return await http.PostAsync(requestUri, content, cancel);
+            }
+            catch (Exception e){
+                return ErrorFrom.Exception(e);
+            }
+        }
+
+        [PublicAPI]
+        public async ValueTask<Outcome<HttpResponseMessage>> Put([StringSyntax("Uri"), UriString("PUT")] string? requestUri, HttpContent? content, CancellationToken cancel = default) {
+            try{
+                return await http.PutAsync(requestUri, content, cancel);
+            }
+            catch (Exception e){
+                return ErrorFrom.Exception(e);
+            }
+        }
+
+        [PublicAPI]
+        public async ValueTask<Outcome<HttpResponseMessage>> Patch([StringSyntax("Uri"), UriString("PATCH")] string? requestUri, HttpContent? content, CancellationToken cancel = default) {
+            try{
+                return await http.PatchAsync(requestUri, content, cancel);
+            }
+            catch (Exception e){
+                return ErrorFrom.Exception(e);
+            }
+        }
+
+        [PublicAPI]
+        public async ValueTask<Outcome<HttpResponseMessage>> Delete([StringSyntax("Uri"), UriString("DELETE")] string? requestUri, CancellationToken cancel = default) {
+            try{
+                return await http.DeleteAsync(requestUri, cancel);
+            }
+            catch (Exception e){
+                return ErrorFrom.Exception(e);
+            }
+        }
+
+        public async ValueTask<Outcome<HttpResponseMessage>> TrySend(HttpRequestMessage request) {
+            try{
+                return await http.SendAsync(request);
+            }
+            catch (Exception e){
+                return ErrorFrom.Exception(e);
+            }
         }
     }
 
