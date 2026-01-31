@@ -1,7 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using RZ.Foundation.Types;
 
 namespace RZ.Foundation.Json;
 
@@ -48,6 +51,15 @@ public static class JsonSerializerOptionsExtension
         public JsonSerializerOptions UseRzGraphStyleSettings() {
             opts.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper));
             return opts.UseCommonApiResponseSettings();
+        }
+    }
+
+    public static Outcome<T> TryDeserialize<T>(this JsonNode node, JsonSerializerOptions? options = null) {
+        try{
+            return node.Deserialize<T>(options) is {} v? v : ErrorInfo.NotFound;
+        }
+        catch (Exception e){
+            return ErrorFrom.Exception(e);
         }
     }
 }

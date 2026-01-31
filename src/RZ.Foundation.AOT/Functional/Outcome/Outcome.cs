@@ -34,10 +34,10 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
 {
     readonly EitherStatus status = EitherStatus.IsBottom;
 
-    Outcome(EitherStatus status, T? data, ErrorInfo? error)
+    Outcome(EitherStatus status, in T? data, ErrorInfo? error)
         => (this.status, Data, Error) = (status, data, error);
 
-    public Outcome(T data) : this(EitherStatus.IsRight, data, default) { }
+    public Outcome(in T data) : this(EitherStatus.IsRight, data, null) { }
     public Outcome(ErrorInfo error) : this(EitherStatus.IsLeft, default, error) { }
 
     public ErrorInfo? Error { get; init; }
@@ -61,7 +61,7 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     }
 
     [Pure]
-    public static implicit operator Outcome<T>(T value) => new(value);
+    public static implicit operator Outcome<T>(in T value) => new(value);
 
     [Pure]
     public static implicit operator Outcome<T>(ErrorInfo value) => new(value);
@@ -75,9 +75,15 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     public static implicit operator Outcome<T>(Either<ErrorInfo, T> value)
         => value.Match(v => new Outcome<T>(v), e => new Outcome<T>(e));
 
-    [Pure, JsonIgnore] public bool IsFail => status == EitherStatus.IsLeft;
+    [Pure, JsonIgnore]
+    [MemberNotNullWhen(false, nameof(Data))]
+    [MemberNotNullWhen(true, nameof(Error))]
+    public bool IsFail => status == EitherStatus.IsLeft;
 
-    [Pure, JsonIgnore] public bool IsSuccess => status == EitherStatus.IsRight;
+    [Pure, JsonIgnore]
+    [MemberNotNullWhen(true, nameof(Data))]
+    [MemberNotNullWhen(false, nameof(Error))]
+    public bool IsSuccess => status == EitherStatus.IsRight;
 
     [Pure]
     public Outcome<B> Bind<B>(Func<T, Outcome<B>> bind) =>
