@@ -9,6 +9,8 @@ using Seq = LanguageExt.Seq;
 
 namespace RZ.Foundation.Types;
 
+public readonly record struct ErrorInfoLocation(string File, string Method, String comment);
+
 /// <summary>
 /// Generic Error Information
 /// </summary>
@@ -69,6 +71,42 @@ public sealed record ErrorInfo
     /// Stack trace, if needed. It shouldn't be used in Release mode.
     /// </summary>
     public string? Stack { get; init; }
+
+    public List<ErrorInfoLocation> Locations { get; init; } = new();
+
+    public ErrorInfo Comment(string description, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) {
+        Locations.Add(new(file ?? string.Empty, caller ?? string.Empty, description));
+        return this;
+    }
+
+    public bool Equals(ErrorInfo? other) {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+
+        return Code == other.Code
+            && Message == other.Message
+            && TraceId == other.TraceId
+            && DebugInfo == other.DebugInfo
+            && Data == other.Data
+            && InnerError?.Equals(other.InnerError) != false
+            && (SubErrors ?? []).SequenceEqual(other.SubErrors ?? [])
+            && Stack == other.Stack
+            && Locations.SequenceEqual(other.Locations);
+    }
+
+    public override int GetHashCode() {
+        var hashCode = new HashCode();
+        hashCode.Add(Code);
+        hashCode.Add(Message);
+        hashCode.Add(TraceId);
+        hashCode.Add(DebugInfo);
+        hashCode.Add(Data);
+        hashCode.Add(InnerError);
+        hashCode.Add(SubErrors);
+        hashCode.Add(Stack);
+        hashCode.Add(Locations);
+        return hashCode.ToHashCode();
+    }
 
     [Pure]
     public bool Is(string code)
