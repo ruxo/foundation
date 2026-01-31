@@ -34,15 +34,19 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
 {
     readonly EitherStatus status = EitherStatus.IsBottom;
 
-    Outcome(EitherStatus status, in T? data, ErrorInfo? error)
+    Outcome(in EitherStatus status, in T? data, ErrorInfo? error)
         => (this.status, Data, Error) = (status, data, error);
 
     public Outcome(in T data) : this(EitherStatus.IsRight, data, null) { }
     public Outcome(ErrorInfo error) : this(EitherStatus.IsLeft, default, error) { }
 
+    [Pure]
     public ErrorInfo? Error { get; init; }
+
+    [Pure]
     public T? Data { get; init; }
 
+    [Pure]
     public string State {
         get => status switch {
             EitherStatus.IsRight => Outcome.SuccessState,
@@ -69,6 +73,7 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     [Pure]
     public static implicit operator Outcome<T>(Error value) => new(ErrorFrom.Exception(value));
 
+    [Pure]
     public void Deconstruct(out ErrorInfo? error, out T? data) => (error, data) = (Error, Data);
 
     [Pure]
@@ -112,16 +117,16 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     #region Pipe operators
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Outcome<T> operator |(Outcome<T> ma, in Outcome<T> mb) =>
+    public static Outcome<T> operator |(in Outcome<T> ma, in Outcome<T> mb) =>
         ma.status == EitherStatus.IsRight ? ma : mb;
 
-    public static Outcome<T> operator |(Outcome<T> ma, OutcomeCatch<T> mb) =>
+    public static Outcome<T> operator |(in Outcome<T> ma, OutcomeCatch<T> mb) =>
         ma.status == EitherStatus.IsRight ? ma : mb.Run(ma.Error!);
 
-    public static Outcome<T> operator |(Outcome<T> ma, OutcomeSideEffect<T> sideEffect) =>
+    public static Outcome<T> operator |(in Outcome<T> ma, OutcomeSideEffect<T> sideEffect) =>
         ma.status == EitherStatus.IsRight ? ma.Map(sideEffect.Run) : ma;
 
-    public static Outcome<T> operator |(Outcome<T> ma, OutcomeSideEffect sideEffect) =>
+    public static Outcome<T> operator |(in Outcome<T> ma, OutcomeSideEffect sideEffect) =>
         ma.status == EitherStatus.IsRight ? ma : new(SideEffect<ErrorInfo>(v => sideEffect.Run(v))(ma.Error!));
 
     #endregion
@@ -215,12 +220,15 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
     [Pure]
     public bool IsNotFound() => Error?.IsNotFound() ?? false;
 
-    public Outcome<T> IfNotFound(T value)                => IsNotFound() ? value : this;
-    public Outcome<T> IfNotFound(Outcome<T> @else)       => IsNotFound() ? @else : this;
+    public Outcome<T> IfNotFound(in T value)             => IsNotFound() ? value : this;
+    public Outcome<T> IfNotFound(in Outcome<T> @else)    => IsNotFound() ? @else : this;
     public Outcome<T> IfNotFound(Func<Outcome<T>> @else) => IsNotFound() ? @else() : this;
 
-    public async ValueTask<Outcome<T>> IfNotFoundAsync(ValueTask<Outcome<T>> @else)       => IsNotFound() ? await @else : this;
-    public async ValueTask<Outcome<T>> IfNotFoundAsync(Func<ValueTask<Outcome<T>>> @else) => IsNotFound() ? await @else() : this;
+    public async ValueTask<Outcome<T>> IfNotFoundAsync(ValueTask<Outcome<T>> @else)
+        => IsNotFound() ? await @else.ConfigureAwait(false) : this;
+
+    public async ValueTask<Outcome<T>> IfNotFoundAsync(Func<ValueTask<Outcome<T>>> @else)
+        => IsNotFound() ? await @else().ConfigureAwait(false) : this;
 
     public Outcome<Option<T>> CheckNotFound()
         => IsNotFound() ? SuccessOutcome<Option<T>>(None) : IsSuccess ? Some(Data!) : Error!;
@@ -248,11 +256,11 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
         => HashCode.Combine((int)status, Error, Data);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining), ExcludeFromCodeCoverage]
-    public static bool operator ==(Outcome<T> left, Outcome<T> right)
+    public static bool operator ==(in Outcome<T> left, in Outcome<T> right)
         => left.Equals(right);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining), ExcludeFromCodeCoverage]
-    public static bool operator !=(Outcome<T> left, Outcome<T> right)
+    public static bool operator !=(in Outcome<T> left, in Outcome<T> right)
         => !left.Equals(right);
 
     #endregion
