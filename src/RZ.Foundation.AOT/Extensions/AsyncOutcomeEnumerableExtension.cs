@@ -62,6 +62,23 @@ public static class AsyncOutcomeEnumerableExtension
         }
 
         [PublicAPI]
+        public async ValueTask<Outcome<List<A?>>> MakeMutableList<A>(Func<T,A?> selector, CancellationToken cancelToken = default) {
+            if (seq.IsKnownEmpty()) return ErrorInfo.NotFound;
+
+            var result = new List<A?>();
+            await foreach (var i in seq.ConfigureAwait(false).WithCancellation(cancelToken))
+                if (Success(i, out var v, out var e))
+                    result.Add(selector(v));
+                else
+                    return e;
+            return result;
+        }
+
+        [PublicAPI]
+        public async ValueTask<Outcome<IReadOnlyList<A?>>> MakeList<A>(Func<T,A?> selector, CancellationToken cancelToken = default)
+            => Success(await seq.MakeMutableList(selector, cancelToken).ConfigureAwait(false), out var v, out var e) ? v : e;
+
+        [PublicAPI]
         public async ValueTask<Outcome<List<T>>> MakeMutableList(CancellationToken cancelToken = default) {
             if (seq.IsKnownEmpty()) return ErrorInfo.NotFound;
 
