@@ -9,7 +9,7 @@ using Seq = LanguageExt.Seq;
 
 namespace RZ.Foundation.Types;
 
-public readonly record struct ErrorInfoLocation(string File, string Method, String comment);
+public readonly record struct ErrorInfoLocation(string File, string Method, int Line, String comment);
 
 /// <summary>
 /// Generic Error Information
@@ -28,9 +28,12 @@ public sealed record ErrorInfo
     }
 
     public ErrorInfo(string code, string? message = null, string? debugInfo = null, string? data = null,
-              ErrorInfo? innerError = null, IEnumerable<ErrorInfo>? subErrors = null, string? stack = null, string? traceId = null) =>
+              ErrorInfo? innerError = null, IEnumerable<ErrorInfo>? subErrors = null, string? stack = null, string? traceId = null,
+              IEnumerable<ErrorInfoLocation>? locations = null) {
         (Code, Message, TraceId, DebugInfo, Data, InnerError, SubErrors, Stack) =
-        (code, message ?? code, traceId ?? Activity.Current?.Id, debugInfo, data, innerError, subErrors, stack);
+            (code, message ?? code, traceId ?? Activity.Current?.Id, debugInfo, data, innerError, subErrors, stack);
+        Locations = new(locations ?? []);
+    }
 
     /// <summary>
     /// Error code
@@ -72,10 +75,10 @@ public sealed record ErrorInfo
     /// </summary>
     public string? Stack { get; init; }
 
-    public List<ErrorInfoLocation> Locations { get; init; } = new();
+    public List<ErrorInfoLocation> Locations { get; }
 
-    public ErrorInfo Trace(string description = ".", [CallerMemberName] string caller = "", [CallerFilePath] string file = "") {
-        Locations.Add(new(file, caller, description));
+    public ErrorInfo Trace(string description = ".", [CallerMemberName] string caller = "", [CallerLineNumber] int line = 0, [CallerFilePath] string file = "") {
+        Locations.Add(new(file, caller, line, description));
         return this;
     }
 
@@ -141,11 +144,12 @@ public sealed record ErrorInfo
         => With(debug: None, stack: None, inner: None, subErrors: None);
 
     public ErrorInfo With(string? code = null, Option<string>? debug = null, Option<StackInfo>? stack = null,
-                          Option<ErrorInfo>? inner = null, Option<Seq<ErrorInfo>>? subErrors = null)
+                          Option<ErrorInfo>? inner = null, Option<Seq<ErrorInfo>>? subErrors = null,
+                          IEnumerable<ErrorInfoLocation>? locations = null)
         => new(code ?? Code, Message, (debug ?? Optional(DebugInfo)).ToNullable(), Data,
                (inner ?? InnerError).ToNullable(),
                subErrors is null ? SubErrors : subErrors.Value.ToNullable(),
-               (stack?.Bind(s => Optional(s.Value)) ?? Optional(Stack)).ToNullable(), TraceId);
+               (stack?.Bind(s => Optional(s.Value)) ?? Optional(Stack)).ToNullable(), TraceId, locations ?? Locations);
 }
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
@@ -206,16 +210,14 @@ public static class ErrorFrom
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ErrorInfo Program(string message, [CallerMemberName] string? caller = null) =>
-        new(StandardErrorCodes.InvalidRequest, $"{caller}: {message}");
+        new(InvalidRequest, $"{caller}: {message}");
 
     public static ErrorInfo Exception(Exception e) {
         if (e is ErrorInfoException ei) return ei.ToErrorInfo();
 
         var errorInfoAttr = e.GetType().GetCustomAttribute<ErrorInfoAttribute>()?.Code;
-        return new ErrorInfo(errorInfoAttr ?? StandardErrorCodes.Unhandled,
+        return new ErrorInfo(errorInfoAttr ?? Unhandled,
                              e.Message,
-                             debugInfo: e.ToString(),
-                             data: null,
                              innerError: e.InnerException?.Apply(Exception),
                              subErrors: e.InnerException is AggregateException ae ? ae.InnerExceptions.Map(Exception) : null,
                              stack: e.StackTrace);
@@ -232,12 +234,10 @@ public static class ErrorFrom
                             from attr in Optional(ex.GetType().GetCustomAttribute<ErrorInfoAttribute>())
                             select attr.Code;
         var subErrors = e is ManyErrors me ? me.Errors.Map(Exception) : Seq.empty<ErrorInfo>();
-        return new ErrorInfo(errorInfoAttr.IfNone(StandardErrorCodes.Unhandled),
+        return new ErrorInfo(errorInfoAttr.IfNone(Unhandled),
                              e.Message,
-                             e.ToString(),
-                             data: null,
-                             e.Inner.Map(Exception).ToNullable(),
-                             subErrors.IsEmpty ? null : subErrors,
+                             innerError: e.Inner.Map(Exception).ToNullable(),
+                             subErrors: subErrors.IsEmpty ? null : subErrors,
                              stack: e.Exception.ToNullable()?.StackTrace);
     }
 }
