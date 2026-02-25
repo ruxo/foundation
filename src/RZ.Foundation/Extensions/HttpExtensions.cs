@@ -19,7 +19,7 @@ public static class HttpExtensions
                                                                          JsonSerializerOptions? options = null,
                                                                          CancellationToken cancel = default) {
             try{
-                return await http.PostAsJsonAsync(requestUri, body, options ?? RzRecommendedJsonOptions, cancel);
+                return await http.PostAsJsonAsync(requestUri, body, options ?? RzRecommendedJsonOptions, cancel).ConfigureAwait(false);
             }
             catch (Exception e){
                 return ErrorFrom.Exception(e);
@@ -32,7 +32,7 @@ public static class HttpExtensions
                                                                         JsonSerializerOptions? options = null,
                                                                         CancellationToken cancel = default) {
             try{
-                return await http.PutAsJsonAsync(requestUri, body, options ?? RzRecommendedJsonOptions, cancel);
+                return await http.PutAsJsonAsync(requestUri, body, options ?? RzRecommendedJsonOptions, cancel).ConfigureAwait(false);
             }
             catch (Exception e){
                 return ErrorFrom.Exception(e);
@@ -45,7 +45,7 @@ public static class HttpExtensions
                                                                           JsonSerializerOptions? options = null,
                                                                           CancellationToken cancel = default) {
             try{
-                return await http.PatchAsJsonAsync(requestUri, body, options ?? RzRecommendedJsonOptions, cancel);
+                return await http.PatchAsJsonAsync(requestUri, body, options ?? RzRecommendedJsonOptions, cancel).ConfigureAwait(false);
             }
             catch (Exception e){
                 return ErrorFrom.Exception(e);
@@ -62,7 +62,7 @@ public static class HttpExtensions
         public async ValueTask<Outcome<T>> DeserializedJson<T>(JsonSerializerOptions? options = null) {
             using (r)
                 return r.IsSuccessStatusCode
-                           ? Success(await TryCatch(r.Content.ReadFromJsonAsync<T>(options)), out var v, out var e) ? v : e.Trace($"Deserialize to {typeof(T).Name} failed")
+                           ? Success(await TryCatch(r.Content.ReadFromJsonAsync<T>(options)).ConfigureAwait(false), out var v, out var e) ? v : e.Trace($"Deserialize to {typeof(T).Name} failed")
                            : new ErrorInfo(HttpError, $"({r.StatusCode}) HTTP failed",
                                            data: ToJson(("StatusCode", r.StatusCode.ToString()),
                                                         ("ReasonPhrase", r.ReasonPhrase)));
@@ -76,11 +76,11 @@ public static class HttpExtensions
             using var _ = r;
             ErrorInfo? e;
             if (r.IsSuccessStatusCode)
-                return Success(await r.DeserializedJson<T>(options), out var v, out e)
+                return Success(await r.DeserializedJson<T>(options).ConfigureAwait(false), out var v, out e)
                            ? v
                            : e.Wrap(InvalidResponse, "Invalid response");
 
-            return Fail(await r.Content.ReadAsString(), out e, out var body) ? e.Trace("Read response failed") : ThrowError<T>(body, options);
+            return Fail(await r.Content.ReadAsString().ConfigureAwait(false), out e, out var body) ? e.Trace("Read response failed") : ExtractError<T>(body, options);
         }
 
         /// <summary>
@@ -89,18 +89,41 @@ public static class HttpExtensions
         [PublicAPI]
         public async ValueTask<Outcome<Unit>> MustSucceed(JsonSerializerOptions? options = null) {
             using var _ = r;
-            if (Fail(await r.Content.ReadAsString(), out var e, out var body)) return e.Trace("From HTTP response");
+            if (Fail(await r.Content.ReadAsString().ConfigureAwait(false), out var e, out var body)) return e.Trace("From HTTP response");
 
             if (r.IsSuccessStatusCode){
                 if (body.Length > 0)
                     return new ErrorInfo(ValidationFailed, "Does not expect any response body.", data: body);
                 return unit;
             }
-            return ThrowError<Unit>(body, options);
+            return ExtractError<Unit>(body, options);
+        }
+
+        [PublicAPI]
+        public async ValueTask<Outcome<Unit>> CheckSucceed(JsonSerializerOptions? options = null) {
+            using (r)
+                return r.IsSuccessStatusCode
+                           ? unit
+                           : ExtractError<Unit>(Success(await r.Content.ReadAsString().ConfigureAwait(false), out var body) ? body : string.Empty, options);
         }
     }
 
-    static Outcome<T> ThrowError<T>(string body, JsonSerializerOptions? options) {
+    extension(ValueTask<Outcome<HttpResponseMessage>> task)
+    {
+        [PublicAPI]
+        public ValueTask<Outcome<Unit>> MustSucceed(JsonSerializerOptions? options = null)
+            => from r in task
+               from _ in r.MustSucceed(options)
+               select unit;
+
+        [PublicAPI]
+        public ValueTask<Outcome<Unit>> CheckSucceed(JsonSerializerOptions? options = null)
+            => from r in task
+               from _ in r.CheckSucceed(options)
+               select unit;
+    }
+
+    public static Outcome<T> ExtractError<T>(string body, JsonSerializerOptions? options) {
         if (Success(JsonDeserialize<ErrorInfo>(body, options), out var errorInfo))
             if (!string.IsNullOrEmpty(errorInfo.Code))
                 return errorInfo.Trace("From HTTP response");
@@ -109,7 +132,7 @@ public static class HttpExtensions
 
     [PublicAPI]
     public static async ValueTask<Outcome<T>> DeserializedJson<T>(this ValueTask<Outcome<HttpResponseMessage>> task, JsonSerializerOptions? options = null) {
-        if (Fail(await task, out var e, out var r))
+        if (Fail(await task.ConfigureAwait(false), out var e, out var r))
             return e.Trace("Read response failed");
         using (r)
             return await r.DeserializedJson<T>(options);
@@ -117,5 +140,5 @@ public static class HttpExtensions
 
     [PublicAPI]
     public static ValueTask<Outcome<T>> DeserializedJson<T>(this Task<HttpResponseMessage> task, JsonSerializerOptions? options = null)
-        => TryCatch(async () => await task).DeserializedJson<T>(options);
+        => TryCatch(async () => await task.ConfigureAwait(false)).DeserializedJson<T>(options);
 }
