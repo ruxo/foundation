@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -32,7 +33,7 @@ public sealed record ErrorInfo
               IEnumerable<ErrorInfoLocation>? locations = null) {
         (Code, Message, TraceId, DebugInfo, Data, InnerError, SubErrors, Stack) =
             (code, message ?? code, traceId ?? Activity.Current?.Id, debugInfo, data, innerError, subErrors, stack);
-        Locations = new(locations ?? []);
+        Locations = ImmutableList<ErrorInfoLocation>.Empty.AddRange(locations ?? []);
     }
 
     /// <summary>
@@ -75,12 +76,10 @@ public sealed record ErrorInfo
     /// </summary>
     public string? Stack { get; init; }
 
-    public List<ErrorInfoLocation> Locations { get; }
+    public ImmutableList<ErrorInfoLocation> Locations { get; }
 
-    public ErrorInfo Trace(string description = ".", [CallerMemberName] string caller = "", [CallerLineNumber] int line = 0, [CallerFilePath] string file = "") {
-        Locations.Add(new(file, caller, line, description));
-        return this;
-    }
+    public ErrorInfo Trace(string description = ".", [CallerMemberName] string caller = "", [CallerLineNumber] int line = 0, [CallerFilePath] string file = "")
+        => With(locations: Locations.Add(new(file, caller, line, description)));
 
     public bool Equals(ErrorInfo? other) {
         if (other is null) return false;
