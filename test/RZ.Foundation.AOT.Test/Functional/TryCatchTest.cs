@@ -1,4 +1,3 @@
-﻿using FluentAssertions;
 using JetBrains.Annotations;
 using RZ.Foundation.Types;
 
@@ -8,67 +7,67 @@ namespace RZ.Foundation.Functional;
 public sealed class TryCatchTest
 {
     [Test]
-    public void Try_catch_sync_outcome() {
+    public async ValueTask Try_catch_sync_outcome() {
         var outcome = SuccessOutcome(42);
 
         var result = TryCatch(() => outcome);
 
-        result.Should().Be(SuccessOutcome(42));
+        await Assert.That(result).IsEqualTo(SuccessOutcome(42));
     }
 
     [Test]
-    public async Task Try_catch_async_outcome() {
+    public async ValueTask Try_catch_async_outcome() {
         var outcome = new ValueTask<Outcome<int>>(SuccessOutcome(42));
 
         var result = await TryCatch(() => outcome);
 
-        result.Should().Be(SuccessOutcome(42));
+        await Assert.That(result).IsEqualTo(SuccessOutcome(42));
     }
 
     [Test]
-    public void Try_catch_value() {
+    public async ValueTask Try_catch_value() {
         var result = TryCatch(() => 42);
 
-        result.Should().Be(SuccessOutcome(42));
+        await Assert.That(result).IsEqualTo(SuccessOutcome(42));
     }
 
     [Test]
-    public async Task Try_catch_async_value() {
+    public async ValueTask Try_catch_async_value() {
         var result = await TryCatch(() => new ValueTask<int>(42));
 
-        result.Should().Be(SuccessOutcome(42));
+        await Assert.That(result).IsEqualTo(SuccessOutcome(42));
     }
 
     [Test]
-    public void Try_catch_action() {
+    public async ValueTask Try_catch_action() {
         var called = false;
         var result = TryCatch(() => {
                                   called = true;
                               });
 
-        result.Should().Be(SuccessOutcome(unit));
-        called.Should().BeTrue();
+        await Assert.That(result).IsEqualTo(SuccessOutcome(unit));
+        await Assert.That(called).IsTrue();
     }
 
     [Test]
-    public async Task Try_catch_async_action() {
+    public async ValueTask Try_catch_async_action() {
         var called = false;
         var result = await TryCatch(async () => {
             await Task.Yield();
             called = true;
         });
 
-        result.Should().Be(SuccessOutcome(unit));
-        called.Should().BeTrue();
+        await Assert.That(result).IsEqualTo(SuccessOutcome(unit));
+        await Assert.That(called).IsTrue();
     }
 
     [Test]
-    public void Try_catch_action_exception() {
+    public async ValueTask Try_catch_action_exception() {
         var result = TryCatch(Test);
 
-        result.IsFail.Should().BeTrue();
-        result.UnwrapError().Is(StandardErrorCodes.Unhandled).Should().BeTrue();
-        result.UnwrapError().Message.Should().Be("test");
+        await Assert.That(result.IsFail).IsTrue();
+        await Assert.That(result.UnwrapError().Is(StandardErrorCodes.Unhandled)).IsTrue();
+        await Assert.That(result.UnwrapError().Message).IsEqualTo("test");
         return;
 
         void Test() {
@@ -77,12 +76,12 @@ public sealed class TryCatchTest
     }
 
     [Test]
-    public async Task Try_catch_async_action_exception() {
+    public async ValueTask Try_catch_async_action_exception() {
         var result = await TryCatch(Test);
 
-        result.IsFail.Should().BeTrue();
-        result.UnwrapError().Is(StandardErrorCodes.Unhandled).Should().BeTrue();
-        result.UnwrapError().Message.Should().Be("test");
+        await Assert.That(result.IsFail).IsTrue();
+        await Assert.That(result.UnwrapError().Is(StandardErrorCodes.Unhandled)).IsTrue();
+        await Assert.That(result.UnwrapError().Message).IsEqualTo("test");
         return;
 
         async ValueTask Test() {
@@ -92,12 +91,12 @@ public sealed class TryCatchTest
     }
 
     [Test]
-    public void Try_catch_errorinfoexception() {
+    public async ValueTask Try_catch_errorinfoexception() {
         var result = TryCatch(Test);
 
-        result.IsFail.Should().BeTrue();
-        result.UnwrapError().Is("test").Should().BeTrue();
-        result.UnwrapError().Message.Should().Be("message");
+        await Assert.That(result.IsFail).IsTrue();
+        await Assert.That(result.UnwrapError().Is("test")).IsTrue();
+        await Assert.That(result.UnwrapError().Message).IsEqualTo("message");
         return;
 
         void Test() {

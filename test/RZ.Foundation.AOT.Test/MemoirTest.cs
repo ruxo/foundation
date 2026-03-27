@@ -1,4 +1,3 @@
-﻿using FluentAssertions;
 using RZ.Foundation.Helpers;
 
 namespace RZ.Foundation;
@@ -6,7 +5,7 @@ namespace RZ.Foundation;
 public class MemoirTest
 {
     [Test]
-    public void MemoirDictSameKey() {
+    public async ValueTask MemoirDictSameKey() {
         var sideeffect = 0;
         int test(int x) {
             ++sideeffect;
@@ -17,8 +16,8 @@ public class MemoirTest
 
         var result = memoir(1);
 
-        result.Should().NotBe(3, "sideeffect should be increased once only!");
-        result.Should().Be(2);
+        await Assert.That(result).IsNotEqualTo(3);
+        await Assert.That(result).IsEqualTo(2);
     }
 
     [Test]
@@ -43,7 +42,7 @@ public class MemoirTest
         var results = tasks.Select(t => t.Result).ToArray();
 #pragma warning restore xUnit1031
 
-        results.All(r => r == 2).Should().BeTrue();
-        sideeffect.Should().Be(1, "sideeffect should be called just once!");
+        await Assert.That(results.All(r => r == 2)).IsTrue();
+        await Assert.That(sideeffect).IsEqualTo(1);
     }
 }

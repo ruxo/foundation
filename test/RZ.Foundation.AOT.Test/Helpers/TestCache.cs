@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using FluentAssertions;
 using LanguageExt.UnitsOfMeasure;
 
 namespace RZ.Foundation.Helpers;
@@ -23,35 +22,35 @@ public sealed class TestCache
     }
 
     [Test]
-    public void TestCacheSync() {
+    public async ValueTask TestCacheSync() {
         var mytime = new DateTime(2022, 1, 1);
 
         using var cache = Cache.Of(new TestData().Fetcher, 1.Minutes(), () => mytime);
 
-        cache.Get().Should().Be("1");
-        cache.Get().Should().Be("1"); // second get should use cache
+        await Assert.That(cache.Get()).IsEqualTo("1");
+        await Assert.That(cache.Get()).IsEqualTo("1"); // second get should use cache
 
         mytime += 5.Minutes();
-        cache.Get().Should().Be("2");
-        cache.Get().Should().Be("2");
+        await Assert.That(cache.Get()).IsEqualTo("2");
+        await Assert.That(cache.Get()).IsEqualTo("2");
     }
 
     [Test]
-    public async Task TestCacheAsync() {
+    public async ValueTask TestCacheAsync() {
         var mytime = new DateTime(2022, 1, 1);
 
         using var cache = Cache.OfAsync(new TestData().FetcherAsync, 1.Minutes(), () => mytime);
 
-        (await cache.Get()).Should().Be("1");
-        (await cache.Get()).Should().Be("1"); // second get should use cache
+        await Assert.That(await cache.Get()).IsEqualTo("1");
+        await Assert.That(await cache.Get()).IsEqualTo("1"); // second get should use cache
 
         mytime += 5.Minutes();
-        (await cache.Get()).Should().Be("2");
-        (await cache.Get()).Should().Be("2");
+        await Assert.That(await cache.Get()).IsEqualTo("2");
+        await Assert.That(await cache.Get()).IsEqualTo("2");
     }
 
     [Test]
-    public void TestMultiaccessSync() {
+    public async ValueTask TestMultiaccessSync() {
         var mytime = new DateTime(2022, 1, 1);
 
         using var cache = Cache.Of(new TestData().Fetcher, 1.Minutes(), () => mytime);
@@ -61,7 +60,7 @@ public sealed class TestCache
 
         Parallel.Invoke(getCache, getCache, getCache, getCache, getCache, getCache, getCache, getCache);
 
-        result.Should().AllBe("1");
+        await Assert.That(result.All(r => r == "1")).IsTrue();
     }
 
     [Test]
@@ -75,10 +74,10 @@ public sealed class TestCache
 
         await Task.WhenAll(getCache(), getCache(), getCache(), getCache(), getCache(), getCache(), getCache(), getCache());
 
-        result.Should().AllBe("1");
+        await Assert.That(result.All(r => r == "1")).IsTrue();
 
         var result1 = await Task.WhenAll(getCacheEveryMinute(), getCacheEveryMinute(), getCacheEveryMinute(), getCacheEveryMinute());
-        result1.Except(new[]{ "2", "3", "4", "5" }).Should().BeEmpty("But ({0})", string.Join(", ", result1));
+        await Assert.That(result1.Except(new[] { "2", "3", "4", "5" })).IsEmpty();
         return;
 
         async Task<string> getCacheEveryMinute() {

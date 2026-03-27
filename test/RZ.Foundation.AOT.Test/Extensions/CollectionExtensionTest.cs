@@ -1,71 +1,69 @@
-using FluentAssertions;
-
 namespace RZ.Foundation.Extensions
 {
     public sealed class CollectionExtensionTest
     {
         [Test]
-        public void RemoveAtMiddle() {
+        public async ValueTask RemoveAtMiddle() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.RemoveAt(2);
-            result.Should().BeEquivalentTo(new[] {1, 2, 4, 5});
+            await Assert.That(result).IsEquivalentTo(new[] {1, 2, 4, 5});
         }
 
         [Test]
-        public void RemoveAtInvalidPos_ReturnSame() {
+        public async ValueTask RemoveAtInvalidPos_ReturnSame() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.RemoveAt(-2);
-            result.Should().BeEquivalentTo(source);
+            await Assert.That(result).IsEquivalentTo(source);
         }
 
         [Test]
-        public void PartitionEvenOddNumbers() {
+        public async ValueTask PartitionEvenOddNumbers() {
             var source = new[] {1, 2, 3, 4, 5};
             var (evens, odds) = source.Partition(i => i % 2 == 0);
-            evens.Should().BeEquivalentTo(new[] {2, 4});
-            odds.Should().BeEquivalentTo(new[] {1, 3, 5});
+            await Assert.That(evens).IsEquivalentTo(new[] {2, 4});
+            await Assert.That(odds).IsEquivalentTo(new[] {1, 3, 5});
         }
 
         [Test]
-        public void TryFirst() {
+        public async ValueTask TryFirst() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.TryFirst();
-            result.Get().Should().Be(1);
+            await Assert.That(result.Get()).IsEqualTo(1);
         }
 
         [Test]
-        public void TryFirstWithPredicate() {
+        public async ValueTask TryFirstWithPredicate() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.TryFirst(i => i%2 == 0);
-            result.Get().Should().Be(2);
+            await Assert.That(result.Get()).IsEqualTo(2);
         }
 
         [Test]
-        public void TryFistWithEmpty_ReturnsNone() {
+        public async ValueTask TryFistWithEmpty_ReturnsNone() {
             var source = new int[0];
             var result = source.TryFirst();
-            result.IsNone.Should().BeTrue();
+            await Assert.That(result.IsNone).IsTrue();
         }
 
         [Test]
-        public void TryFirstWithPredicateFalse() {
+        public async ValueTask TryFirstWithPredicateFalse() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.TryFirst(i => i%7 == 0);
-            result.IsNone.Should().BeTrue();
+            await Assert.That(result.IsNone).IsTrue();
         }
 
         [Test]
-        public void TryFindIndex_ValidCondition() {
+        public async ValueTask TryFindIndex_ValidCondition() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.TryFindIndex(i => i == 3);
-            result.Get().Should().Be(2);
+            await Assert.That(result.Get()).IsEqualTo(2);
         }
 
         [Test]
-        public void TryFindIndex_NotFoundCondition() {
+        public async ValueTask TryFindIndex_NotFoundCondition() {
             var source = new[] {1, 2, 3, 4, 5};
             var result = source.TryFindIndex(i => i == 999);
-            result.IsNone.Should().BeTrue("999 is not in the array");
+            await Assert.That(result.IsNone).IsTrue();
         }
     }
 }
