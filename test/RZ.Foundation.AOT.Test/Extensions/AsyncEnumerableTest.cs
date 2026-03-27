@@ -1,4 +1,3 @@
-using FluentAssertions;
 using JetBrains.Annotations;
 using LanguageExt;
 
@@ -8,7 +7,7 @@ namespace RZ.Foundation.Extensions;
 public class AsyncEnumerableTest
 {
     [Test]
-    public async Task MapFromEnumerable() {
+    public async ValueTask MapFromEnumerable() {
         var source = new[]{ 1, 2, 3, 4, 5 };
 
         async ValueTask<int> mapAsync(int i, int _, CancellationToken __) {
@@ -17,10 +16,11 @@ public class AsyncEnumerableTest
         }
 
         var result = await source.MapAsync(mapAsync).ToArrayAsync();
-        result.Should().BeEquivalentTo([2,3,4,5,6]);
+        await Assert.That(result).IsEquivalentTo(new[] {2,3,4,5,6});
     }
+
     [Test]
-    public async Task ChooseFromEnumerable() {
+    public async ValueTask ChooseFromEnumerable() {
         var source = new[]{ 1, 2, 3, 4, 5 };
 
         async ValueTask<Option<int>> chooseAsync(int i, int _, CancellationToken __) {
@@ -30,10 +30,11 @@ public class AsyncEnumerableTest
         }
 
         var result = await source.ChooseAsync(chooseAsync).ToArrayAsync();
-        result.Should().BeEquivalentTo([2,4,6]);
+        await Assert.That(result).IsEquivalentTo(new[] {2,4,6});
     }
+
     [Test]
-    public async Task ChainFromEnumerable() {
+    public async ValueTask ChainFromEnumerable() {
         var source = new[]{ 1, 2, 3 };
 
         IAsyncEnumerable<int> chainAsync(int i, int _) {
@@ -41,6 +42,6 @@ public class AsyncEnumerableTest
         }
 
         var result = await source.FlattenT(chainAsync).ToArrayAsync();
-        result.Should().BeEquivalentTo([1,2,2,3,3,3]);
+        await Assert.That(result).IsEquivalentTo(new[] {1,2,2,3,3,3});
     }
 }

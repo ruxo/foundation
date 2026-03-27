@@ -1,41 +1,39 @@
-﻿using FluentAssertions;
-
 namespace RZ.Foundation.Helpers;
 
 public sealed class SnakeCaseTest
 {
     [Test]
-    public void OneWord() {
+    public async ValueTask OneWord() {
         var result = SnakeCase.ToSnakeCase("Hello");
 
-        result.Should().Be("hello");
+        await Assert.That(result).IsEqualTo("hello");
     }
 
     [Test]
-    public void TwoWords() {
+    public async ValueTask TwoWords() {
         var result = SnakeCase.ToSnakeCase("HelloWorld");
 
-        result.Should().Be("hello_world");
+        await Assert.That(result).IsEqualTo("hello_world");
     }
 
     [Test]
-    public void AbbreviationShouldNotBeSplit() {
+    public async ValueTask AbbreviationShouldNotBeSplit() {
         var result = SnakeCase.ToSnakeCase("ABC");
 
-        result.Should().Be("abc");
+        await Assert.That(result).IsEqualTo("abc");
     }
 
     [Test]
-    public void TwoSplitWordsShouldJustBeLowerCase() {
+    public async ValueTask TwoSplitWordsShouldJustBeLowerCase() {
         var result = SnakeCase.ToSnakeCase("Hello_World");
 
-        result.Should().Be("hello_world");
+        await Assert.That(result).IsEqualTo("hello_world");
     }
 
     [Test]
-    public void TwoWordsShouldJustBeLowerCase() {
+    public async ValueTask TwoWordsShouldJustBeLowerCase() {
         var result = SnakeCase.ToSnakeCase("Hello World");
 
-        result.Should().Be("hello_world");
+        await Assert.That(result).IsEqualTo("hello_world");
     }
 }
