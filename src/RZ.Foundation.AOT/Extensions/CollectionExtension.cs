@@ -95,7 +95,7 @@ public static class CollectionExtension
 
         [PublicAPI]
         public Outcome<List<A?>> MakeMutableList<A>(Func<T,A?> selector) {
-            var result = new List<A>();
+            var result = new List<A?>();
             foreach (var i in seq)
                 if (Success(i, out var v, out var e))
                     result.Add(selector(v));
