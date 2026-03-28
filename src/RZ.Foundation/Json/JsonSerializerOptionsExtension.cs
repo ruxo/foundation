@@ -56,7 +56,7 @@ public static class JsonSerializerOptionsExtension
 
     public static Outcome<T> TryDeserialize<T>(this JsonNode node, JsonSerializerOptions? options = null) {
         try{
-            return node.Deserialize<T>(options) is {} v? v : ErrorInfo.NotFound;
+            return node.Deserialize<T>(options ?? RzRecommendedJsonOptions) is {} v? v : ErrorInfo.NotFound;
         }
         catch (Exception e){
             return ErrorFrom.Exception(e);
