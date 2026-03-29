@@ -3,6 +3,7 @@
 ## 8.2.14
 
 - Property close `HttpResponseMessage` for `ReadStream()`
+- Fix `ErrorInfo` deserialization
 
 ## 8.2.1
 
