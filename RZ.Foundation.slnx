@@ -1,5 +1,6 @@
 ﻿<Solution>
   <Folder Name="/Misc/">
+    <File Path="CLAUDE.md" />
     <File Path="global.json" />
     <File Path="README.md" />
     <File Path="CHANGES.md" />
@@ -14,6 +15,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="test/RZ.Foundation.AOT.Test/RZ.Foundation.AOT.Test.csproj" />
-    <Project Path="test\RZ.Foundation.Test\RZ.Foundation.Test.csproj" Type="C#" />
+    <Project Path="test\RZ.Foundation.Test\RZ.Foundation.Test.csproj" />
   </Folder>
 </Solution>
