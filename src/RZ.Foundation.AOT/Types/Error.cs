@@ -36,6 +36,15 @@ public sealed record ErrorInfo
         Locations = ImmutableList<ErrorInfoLocation>.Empty.AddRange(locations ?? []);
     }
 
+    [JsonConstructor]
+    public ErrorInfo(string code, string message, string? traceId, string? debugInfo, string? data,
+              ErrorInfo? innerError, IEnumerable<ErrorInfo>? subErrors, string? stack,
+              ImmutableList<ErrorInfoLocation>? locations) {
+        (Code, Message, TraceId, DebugInfo, Data, InnerError, SubErrors, Stack) =
+            (code, message, traceId, debugInfo, data, innerError, subErrors, stack);
+        Locations = locations ?? [];
+    }
+
     /// <summary>
     /// Error code
     /// </summary>
