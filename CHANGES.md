@@ -1,5 +1,9 @@
 # Version changes
 
+## 8.2.14
+
+- Property close `HttpResponseMessage` for `ReadStream()`
+
 ## 8.2.1
 
 - Add 2 more TryCatch helper functions for converting simple ValueTask or Task to Outcome

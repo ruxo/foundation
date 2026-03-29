@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using RZ.Foundation.Helpers;
 
 namespace RZ.Foundation.Extensions;
 
@@ -101,31 +102,47 @@ public static class HttpExtension
 
     extension(HttpResponseMessage r)
     {
-        async ValueTask<Outcome<T>> Read<T>(Func<HttpContent,ValueTask<Outcome<T>>> reader, string readError) {
-            using (r)
-                return r.IsSuccessStatusCode
-                           ? Success(await reader(r.Content), out var v, out var e) ? v : e.Trace(readError)
-                           : new ErrorInfo(HttpError, $"({r.StatusCode}) HTTP failed",
-                                           data: ToJson(("StatusCode", r.StatusCode.ToString()),
-                                                        ("ReasonPhrase", r.ReasonPhrase)));
+        async ValueTask<Outcome<T>> Read<T>(Func<HttpContent, ValueTask<Outcome<T>>> reader, string readError)
+            => r.IsSuccessStatusCode
+                   ? Success(await reader(r.Content), out var v, out var e) ? v : e.Trace(readError)
+                   : new ErrorInfo(HttpError, $"({r.StatusCode}) HTTP failed",
+                                   data: ToJson(("StatusCode", r.StatusCode.ToString()),
+                                                ("ReasonPhrase", r.ReasonPhrase)));
+
+        /// <summary>
+        /// Read string from response and close response.
+        /// </summary>
+        /// <returns></returns>
+        [PublicAPI]
+        public async ValueTask<Outcome<string>> ReadString() {
+            using(r) return await r.Read(c => c.ReadAsString(), "Read string failed");
         }
 
+        /// <summary>
+        /// Read byte array from response and close response.
+        /// </summary>
+        /// <returns></returns>
         [PublicAPI]
-        public ValueTask<Outcome<string>> ReadString() => r.Read(c => c.ReadAsString(), "Read string failed");
+        public async ValueTask<Outcome<byte[]>> ReadByteArray() {
+            using(r) return await r.Read(c => c.ReadAsByteArray(), "Read byte array failed");
+        }
 
+        /// <summary>
+        /// Read stream from response and close response when the stream is disposed.
+        /// </summary>
         [PublicAPI]
-        public ValueTask<Outcome<byte[]>> ReadByteArray() => r.Read(c => c.ReadAsByteArray(), "Read byte array failed");
-
-        [PublicAPI]
-        public ValueTask<Outcome<Stream>> ReadStream() => r.Read(c => c.ReadStream(), "Read stream failed");
+        public async ValueTask<Outcome<Stream>> ReadStream() {
+            if (Fail(await r.Read(c => c.ReadStream(), "Read stream failed"), out var e, out var stream)) return e;
+            return OwnedStream.Of(stream, r);
+        }
     }
 
     extension(ValueTask<Outcome<HttpResponseMessage>> task)
     {
-        async ValueTask<Outcome<T>> Read<T>(Func<HttpResponseMessage,ValueTask<Outcome<T>>> reader) {
+        async ValueTask<Outcome<T>> Read<T>(Func<HttpResponseMessage, ValueTask<Outcome<T>>> reader) {
             try{
                 if (Fail(await task, out var e, out var r)) return e.Trace("Read response failed");
-                using(r)
+                using (r)
                     return await reader(r);
             }
             catch (Exception e){
@@ -140,7 +157,15 @@ public static class HttpExtension
         public ValueTask<Outcome<byte[]>> ReadByteArray() => task.Read(r => r.ReadByteArray());
 
         [PublicAPI]
-        public ValueTask<Outcome<Stream>> ReadStream() => task.Read(r => r.ReadStream());
+        public async ValueTask<Outcome<Stream>> ReadStream() {
+            try {
+                if (Fail(await task, out var e, out var r)) return e.Trace("Read response failed");
+                return await r.ReadStream(); // OwnedStream takes ownership of r
+            }
+            catch (Exception ex) {
+                return ErrorFrom.Exception(ex);
+            }
+        }
     }
 
     [PublicAPI]
