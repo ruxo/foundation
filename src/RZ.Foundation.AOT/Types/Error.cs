@@ -10,7 +10,9 @@ using Seq = LanguageExt.Seq;
 
 namespace RZ.Foundation.Types;
 
-public readonly record struct ErrorInfoLocation(string File, string Method, int Line, String comment);
+public readonly record struct ErrorInfoLocation(string File, string Method, int Line, string Comment);
+
+// TODO next major change: remove stack. Remove `NotFound` property.
 
 /// <summary>
 /// Generic Error Information
@@ -22,15 +24,15 @@ public sealed record ErrorInfo
     [PublicAPI]
     public readonly record struct StackInfo(string? Value)
     {
-        public static implicit operator StackInfo(string? stackInfo) => new(stackInfo);
+        public static implicit operator StackInfo(string? stackInfo)        => new(stackInfo);
         public static implicit operator StackInfo(Option<string> stackInfo) => new(stackInfo.ToNullable());
-        public static implicit operator StackInfo(Exception e) => new(e.StackTrace);
-        public static implicit operator StackInfo(StackTrace stack) => new(stack.ToString());
+        public static implicit operator StackInfo(Exception e)              => new(e.StackTrace);
+        public static implicit operator StackInfo(StackTrace stack)         => new(stack.ToString());
     }
 
     public ErrorInfo(string code, string? message = null, string? debugInfo = null, string? data = null,
-              ErrorInfo? innerError = null, IEnumerable<ErrorInfo>? subErrors = null, string? stack = null, string? traceId = null,
-              IEnumerable<ErrorInfoLocation>? locations = null) {
+                     ErrorInfo? innerError = null, IEnumerable<ErrorInfo>? subErrors = null, string? stack = null, string? traceId = null,
+                     IEnumerable<ErrorInfoLocation>? locations = null) {
         (Code, Message, TraceId, DebugInfo, Data, InnerError, SubErrors, Stack) =
             (code, message ?? code, traceId ?? Activity.Current?.Id, debugInfo, data, innerError, subErrors, stack);
         Locations = ImmutableList<ErrorInfoLocation>.Empty.AddRange(locations ?? []);
@@ -38,12 +40,20 @@ public sealed record ErrorInfo
 
     [JsonConstructor]
     public ErrorInfo(string code, string message, string? traceId, string? debugInfo, string? data,
-              ErrorInfo? innerError, IEnumerable<ErrorInfo>? subErrors, string? stack,
-              ImmutableList<ErrorInfoLocation>? locations) {
+                     ErrorInfo? innerError, IEnumerable<ErrorInfo>? subErrors, string? stack,
+                     ImmutableList<ErrorInfoLocation>? locations) {
         (Code, Message, TraceId, DebugInfo, Data, InnerError, SubErrors, Stack) =
             (code, message, traceId, debugInfo, data, innerError, subErrors, stack);
         Locations = locations ?? [];
     }
+
+    public static ErrorInfo New(string code, string? message = null, string? debugInfo = null, string? data = null,
+                                ErrorInfo? innerError = null, IEnumerable<ErrorInfo>? subErrors = null,
+                                [CallerMemberName] string caller = "", [CallerLineNumber] int line = 0, [CallerFilePath] string file = "")
+        => new(code, message, debugInfo, data, innerError, subErrors, locations: [new(file, caller, line, ".")]);
+
+    public static ErrorInfo _NotFound([CallerMemberName] string caller = "", [CallerLineNumber] int line = 0, [CallerFilePath] string file = "")
+        => new(StandardErrorCodes.NotFound, locations: [new(file, caller, line, ".")]);
 
     /// <summary>
     /// Error code
@@ -63,7 +73,7 @@ public sealed record ErrorInfo
     /// <summary>
     /// Information for debug. This should not be shown in Release mode.
     /// </summary>
-    public string? DebugInfo { get; init;  }
+    public string? DebugInfo { get; init; }
 
     /// <summary>
     /// Serialized associated data
@@ -175,7 +185,7 @@ public sealed class ErrorInfoException : ApplicationException
     public ErrorInfoException(Exception e) : this(ErrorFrom.Exception(e)) { }
 
     public ErrorInfoException(ErrorInfo ei) : base(ei.Message,
-        Optional(ei.InnerError).Map(inner => new ErrorInfoException(inner)).ToNullable()) =>
+                                                   Optional(ei.InnerError).Map(inner => new ErrorInfoException(inner)).ToNullable()) =>
         (Code, DebugInfo, AdditionalData, SubErrors) = (ei.Code, ei.DebugInfo, ei.Data, ei.SubErrors);
 
     public string Code { get; }
