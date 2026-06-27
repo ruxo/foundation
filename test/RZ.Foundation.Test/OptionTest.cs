@@ -1,27 +1,25 @@
-using FluentAssertions;
 using LanguageExt;
-using Xunit;
 // ReSharper disable EqualExpressionComparison
 
 namespace RZ.Foundation
 {
     public class OptionTest
     {
-        [Fact]
-        public void Where_True_NotChangeSuccessToNone() =>
-            Assert.Equal(Optional((int?)12).Where(_ => true), Optional((int?)12));
+        [Test]
+        public async Task Where_True_NotChangeSuccessToNone() =>
+            await Assert.That(Optional((int?)12).Where(_ => true)).IsEqualTo(Optional((int?)12));
 
-        [Fact]
-        public void Where_False_ChangeSuccessToNone() =>
-            Assert.Equal(Optional((int?) 12).Where(_ => false), Option<int>.None);
+        [Test]
+        public async Task Where_False_ChangeSuccessToNone() =>
+            await Assert.That(Optional((int?)12).Where(_ => false)).IsEqualTo(Option<int>.None);
 
-        [Fact]
-        public void OptionEquality_SomeEqualsSome() => Optional((int?)12).Equals(Optional((int?)12)).Should().BeTrue();
+        [Test]
+        public async Task OptionEquality_SomeEqualsSome() => await Assert.That(Optional((int?)12).Equals(Optional((int?)12))).IsTrue();
 
-        [Fact]
-        public void OptionEquality_NoneEqualNone() => None.Equals(None).Should().BeTrue();
+        [Test]
+        public async Task OptionEquality_NoneEqualNone() => await Assert.That(None.Equals(None)).IsTrue();
 
-        [Fact]
-        public void OptionEquality_SomeNotEqualsNone() => Optional((int?)0).Equals(None).Should().BeFalse();
+        [Test]
+        public async Task OptionEquality_SomeNotEqualsNone() => await Assert.That(Optional((int?)0).Equals(None)).IsFalse();
     }
 }
