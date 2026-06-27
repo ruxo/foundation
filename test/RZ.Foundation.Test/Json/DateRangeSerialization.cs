@@ -1,86 +1,91 @@
-﻿using System;
+using System;
 using System.Text.Json;
-using FluentAssertions;
-using FluentAssertions.Extensions;
 using RZ.Foundation.Types;
-using Xunit;
 
 namespace RZ.Foundation.Json;
 
 public class DateRangeSerialization
 {
-    static readonly DateTime StartValue = 1.January(2025);
-    static readonly DateTime EndValue = 15.January(2025);
+    static readonly DateTime StartValue = new(2025, 1, 1);
+    static readonly DateTime EndValue = new(2025, 1, 15);
 
-    [Fact(DisplayName = "Serialize a limit duration")]
-    public void Serialization() {
+    [Test]
+    [DisplayName("Serialize a limit duration")]
+    public async Task Serialization() {
         var data = new DateRange(StartValue, EndValue);
 
         var json = JsonSerializer.Serialize(data, RzRecommendedJsonOptions);
 
-        json.Should().Be("""{"begin":"2025-01-01T00:00:00","end":"2025-01-15T00:00:00"}""", $"but {json}");
+        await Assert.That(json).IsEqualTo("""{"begin":"2025-01-01T00:00:00","end":"2025-01-15T00:00:00"}""");
     }
 
-    [Fact(DisplayName = "Serialize an open-ended duration")]
-    public void SerializationOpenEnd() {
+    [Test]
+    [DisplayName("Serialize an open-ended duration")]
+    public async Task SerializationOpenEnd() {
         var data = new DateRange(StartValue);
 
         var json = JsonSerializer.Serialize(data, RzRecommendedJsonOptions);
 
-        json.Should().Be("""{"begin":"2025-01-01T00:00:00"}""");
+        await Assert.That(json).IsEqualTo("""{"begin":"2025-01-01T00:00:00"}""");
     }
 
-    [Fact(DisplayName = "Serialize an open-began duration")]
-    public void SerializationOpenBegin() {
+    [Test]
+    [DisplayName("Serialize an open-began duration")]
+    public async Task SerializationOpenBegin() {
         var data = new DateRange(end: EndValue);
 
         var json = JsonSerializer.Serialize(data, RzRecommendedJsonOptions);
 
-        json.Should().Be("""{"end":"2025-01-15T00:00:00"}""");
+        await Assert.That(json).IsEqualTo("""{"end":"2025-01-15T00:00:00"}""");
     }
 
-    [Fact(DisplayName = "Serialize unlimit duration")]
-    public void SerializationUnlimit() {
+    [Test]
+    [DisplayName("Serialize unlimit duration")]
+    public async Task SerializationUnlimit() {
         var data = new DateRange();
 
         var json = JsonSerializer.Serialize(data, RzRecommendedJsonOptions);
 
-        json.Should().Be("{}");
+        await Assert.That(json).IsEqualTo("{}");
     }
 
-    [Fact(DisplayName = "Deserialize a limit duration")]
-    public void Deserialization() {
+    [Test]
+    [DisplayName("Deserialize a limit duration")]
+    public async Task Deserialization() {
         var data = """{"begin":"2025-01-01T00:00:00","end":"2025-01-15T00:00:00"}""";
 
         var json = JsonSerializer.Deserialize<DateRange>(data, RzRecommendedJsonOptions);
 
-        json.Should().Be(new DateRange(StartValue, EndValue));
+        await Assert.That(json).IsEqualTo(new DateRange(StartValue, EndValue));
     }
 
-    [Fact(DisplayName = "Deserialize an open-ended duration")]
-    public void DeserializationOpenEnd() {
+    [Test]
+    [DisplayName("Deserialize an open-ended duration")]
+    public async Task DeserializationOpenEnd() {
         var data = """{"begin":"2025-01-01T00:00:00"}""";
 
         var json = JsonSerializer.Deserialize<DateRange>(data, RzRecommendedJsonOptions);
 
-        json.Should().Be(new DateRange(StartValue));
+        await Assert.That(json).IsEqualTo(new DateRange(StartValue));
     }
 
-    [Fact(DisplayName = "Deserialize an open-began duration")]
-    public void DeserializationOpenBegin() {
+    [Test]
+    [DisplayName("Deserialize an open-began duration")]
+    public async Task DeserializationOpenBegin() {
         var data = """{"end":"2025-01-15T00:00:00"}""";
 
         var json = JsonSerializer.Deserialize<DateRange>(data, RzRecommendedJsonOptions);
 
-        json.Should().Be(new DateRange(end: EndValue));
+        await Assert.That(json).IsEqualTo(new DateRange(end: EndValue));
     }
 
-    [Fact(DisplayName = "Deserialize unlimit duration")]
-    public void DeserializationUnlimit() {
+    [Test]
+    [DisplayName("Deserialize unlimit duration")]
+    public async Task DeserializationUnlimit() {
         var data = "{}";
 
         var json = JsonSerializer.Deserialize<DateRange>(data, RzRecommendedJsonOptions);
 
-        json.Should().Be(new DateRange());
+        await Assert.That(json).IsEqualTo(new DateRange());
     }
 }

@@ -1,46 +1,44 @@
-﻿using System.Text.Json;
-using FluentAssertions;
+using System.Text.Json;
 using LanguageExt;
-using Xunit;
 
 namespace RZ.Foundation.Json;
 
 public sealed class OptionJsonConverterTest
 {
     static readonly JsonSerializerOptions TestOptions = new(){ Converters ={ OptionJsonConverter.Default } };
-    
-    [Fact]
-    public void SerializeTest() {
+
+    [Test]
+    public async Task SerializeTest() {
         var data = new Test{ Name = "John", Age = 123, CitizenId = "112233" };
 
         var result = JsonSerializer.Serialize(data, TestOptions);
 
-        result.Should().Be("{\"Name\":\"John\",\"Age\":123,\"CitizenId\":\"112233\"}");
+        await Assert.That(result).IsEqualTo("{\"Name\":\"John\",\"Age\":123,\"CitizenId\":\"112233\"}");
     }
-    
-    [Fact]
-    public void SerializeNullTest() {
+
+    [Test]
+    public async Task SerializeNullTest() {
         var data = new Test{ Name = "John" };
 
         var result = JsonSerializer.Serialize(data, TestOptions);
 
-        result.Should().Be("{\"Name\":\"John\",\"Age\":null,\"CitizenId\":null}");
+        await Assert.That(result).IsEqualTo("{\"Name\":\"John\",\"Age\":null,\"CitizenId\":null}");
     }
 
-    [Fact]
-    public void DeserializeTest() {
+    [Test]
+    public async Task DeserializeTest() {
         var data = JsonSerializer.Deserialize<Test>("{\"Name\":\"John\",\"Age\":123,\"CitizenId\":\"112233\"}", TestOptions);
-        
+
         var expected = new Test{ Name = "John", Age = 123, CitizenId = "112233" };
-        data.Should().Be(expected);
+        await Assert.That(data).IsEqualTo(expected);
     }
 
-    [Fact]
-    public void DeserializeNullTest() {
+    [Test]
+    public async Task DeserializeNullTest() {
         var data = JsonSerializer.Deserialize<Test>("{\"Name\":\"John\",\"Age\":null,\"CitizenId\":null}", TestOptions);
 
         var expected = new Test{ Name = "John" };
-        data.Should().Be(expected);
+        await Assert.That(data).IsEqualTo(expected);
     }
 
     readonly record struct Test

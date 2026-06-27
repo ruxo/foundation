@@ -1,8 +1,7 @@
-﻿using System.Text.Json;
+using System;
+using System.Text.Json;
 using System.Text.Json.Serialization;
-using FluentAssertions;
 using JetBrains.Annotations;
-using Xunit;
 
 namespace RZ.Foundation.Json;
 
@@ -36,30 +35,30 @@ public sealed class TypedClassConverterTest
 
     #region Basic cases
 
-    [Fact]
-    public void DeserializeStudent() {
+    [Test]
+    public async Task DeserializeStudent() {
         var json = """{"type":"student","id":"42"}""";
         var student = JsonSerializer.Deserialize<Person>(json, Options);
 
-        student.Should().BeOfType<Student>();
-        student.As<Student>().Id.Should().Be("42", $"but {student}");
+        await Assert.That(student).IsTypeOf<Student>();
+        await Assert.That(((Student)student!).Id).IsEqualTo("42");
     }
 
-    [Fact]
-    public void DeserializeTeacher() {
+    [Test]
+    public async Task DeserializeTeacher() {
         var json = """{"type":"teacher","subject":"Math"}""";
         var teacher = JsonSerializer.Deserialize<Person>(json, Options);
 
-        teacher.Should().BeOfType<Teacher>();
-        teacher.As<Teacher>().Subject.Should().Be("Math");
+        await Assert.That(teacher).IsTypeOf<Teacher>();
+        await Assert.That(((Teacher)teacher!).Subject).IsEqualTo("Math");
     }
 
-    [Fact]
-    public void SerializeStudent() {
+    [Test]
+    public async Task SerializeStudent() {
         var student = new Student("42");
         var json = JsonSerializer.Serialize(student, Options);
 
-        json.Should().Be("""{"id":"42","type":"student"}""");
+        await Assert.That(json).IsEqualTo("""{"id":"42","type":"student"}""");
     }
 
     #endregion
@@ -78,30 +77,32 @@ public sealed class TypedClassConverterTest
 
     #region Base class cases
 
-    [Fact]
-    public void DeserializeSchool() {
+    [Test]
+    public async Task DeserializeSchool() {
         var json = """{"type":"school","name":"RZ","people":[{"type":"student","id":"42"},{"type":"teacher","subject":"Math"}]}""";
         var school = JsonSerializer.Deserialize<Place>(json, Options);
 
-        school.Should().BeOfType<School>();
-        school.Should().BeEquivalentTo(new School("RZ", [new Student("42"), new Teacher("Math")]));
+        await Assert.That(school).IsTypeOf<School>();
+        await Assert.That(school).IsEquivalentTo(new School("RZ", [new Student("42"), new Teacher("Math")]));
     }
 
-    [Fact(DisplayName = "Serializing a base class is not supported!")]
-    public void SerializePlace() {
+    [Test]
+    [DisplayName("Serializing a base class is not supported!")]
+    public async Task SerializePlace() {
         var place = new Place(PlaceType.Home);
 
-        var action = () => JsonSerializer.Serialize(place, Options);
+        Action action = () => JsonSerializer.Serialize(place, Options);
 
-        action.Should().Throw<JsonException>().WithMessage("Serializing a base class is not supported!");
+        await Assert.That(action).Throws<JsonException>().WithMessage("Serializing a base class is not supported!");
     }
 
-    [Fact(DisplayName = "Deserializing a base class is not supported!")]
-    public void DeserializeBaseClass() {
+    [Test]
+    [DisplayName("Deserializing a base class is not supported!")]
+    public async Task DeserializeBaseClass() {
         var json = """{"type":"home"}""";
-        var action = () => JsonSerializer.Deserialize<Place>(json, Options);
+        Action action = () => JsonSerializer.Deserialize<Place>(json, Options);
 
-        action.Should().Throw<JsonException>().WithMessage("Deserializing a base class is not supported!");
+        await Assert.That(action).Throws<JsonException>().WithMessage("Deserializing a base class is not supported!");
     }
 
     #endregion
@@ -113,22 +114,24 @@ public sealed class TypedClassConverterTest
     [RzJsonDerivedType(PersonType.Accountant)]
     sealed record Accountant(string Grade) : Officer(PersonType.Accountant);
 
-    [Fact(DisplayName = "Deserialize Accountant to Person")]
-    public void DeserializeAccountantToPerson() {
+    [Test]
+    [DisplayName("Deserialize Accountant to Person")]
+    public async Task DeserializeAccountantToPerson() {
         var json = """{"type":"accountant","grade":"A"}""";
         var accountant = JsonSerializer.Deserialize<Person>(json, Options);
 
-        accountant.Should().BeOfType<Accountant>();
-        accountant.As<Accountant>().Grade.Should().Be("A");
+        await Assert.That(accountant).IsTypeOf<Accountant>();
+        await Assert.That(((Accountant)accountant!).Grade).IsEqualTo("A");
     }
 
-    [Fact(DisplayName = "Deserialize Accountant to Officer")]
-    public void DeserializeAccountantToOfficer() {
+    [Test]
+    [DisplayName("Deserialize Accountant to Officer")]
+    public async Task DeserializeAccountantToOfficer() {
         var json = """{"type":"accountant","grade":"A"}""";
         var accountant = JsonSerializer.Deserialize<Officer>(json, Options);
 
-        accountant.Should().BeOfType<Accountant>();
-        accountant.As<Accountant>().Grade.Should().Be("A");
+        await Assert.That(accountant).IsTypeOf<Accountant>();
+        await Assert.That(((Accountant)accountant!).Grade).IsEqualTo("A");
     }
 
     #endregion

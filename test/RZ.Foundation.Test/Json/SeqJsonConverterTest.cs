@@ -1,7 +1,5 @@
-﻿using System.Text.Json;
-using FluentAssertions;
+using System.Text.Json;
 using LanguageExt;
-using Xunit;
 using static LanguageExt.Prelude;
 using Seq = LanguageExt.Seq;
 
@@ -10,47 +8,47 @@ namespace RZ.Foundation.Json;
 public sealed class SeqJsonConverterTest
 {
     static readonly JsonSerializerOptions TestOptions = new(){ Converters ={ SeqJsonConverter.Default }  };
-    
-    [Fact]
-    public void SerializeTest() {
+
+    [Test]
+    public async Task SerializeTest() {
         var data = new Test{ Name = "John", Phones = Seq("123", "456")};
 
         var result = JsonSerializer.Serialize(data, TestOptions);
 
-        result.Should().Be("{\"Name\":\"John\",\"Phones\":[\"123\",\"456\"]}");
+        await Assert.That(result).IsEqualTo("{\"Name\":\"John\",\"Phones\":[\"123\",\"456\"]}");
     }
-    
-    [Fact]
-    public void SerializeEmptyTest() {
+
+    [Test]
+    public async Task SerializeEmptyTest() {
         var data = new Test{ Name = "John", Phones = Seq.empty<string>() };
 
         var result = JsonSerializer.Serialize(data, TestOptions);
 
-        result.Should().Be("{\"Name\":\"John\",\"Phones\":[]}");
+        await Assert.That(result).IsEqualTo("{\"Name\":\"John\",\"Phones\":[]}");
     }
 
-    [Fact]
-    public void DeserializeTest() {
+    [Test]
+    public async Task DeserializeTest() {
         var data = JsonSerializer.Deserialize<Test>("{\"Name\":\"John\",\"Phones\":[\"123\",\"456\"]}", TestOptions);
-        
+
         var expected = new Test{ Name = "John", Phones = Seq("123", "456") };
-        data.Should().Be(expected);
+        await Assert.That(data).IsEqualTo(expected);
     }
 
-    [Fact]
-    public void DeserializeEmptyTest() {
+    [Test]
+    public async Task DeserializeEmptyTest() {
         var data = JsonSerializer.Deserialize<Test>("{\"Name\":\"John\",\"Phones\":[]}", TestOptions);
-        
+
         var expected = new Test{ Name = "John" };
-        data.Should().Be(expected);
+        await Assert.That(data).IsEqualTo(expected);
     }
 
-    [Fact]
-    public void DeserializeMissingTest() {
+    [Test]
+    public async Task DeserializeMissingTest() {
         var data = JsonSerializer.Deserialize<Test>("{\"Name\":\"John\"}", TestOptions);
-        
+
         var expected = new Test{ Name = "John" };
-        data.Should().Be(expected);
+        await Assert.That(data).IsEqualTo(expected);
     }
 
     readonly record struct Test

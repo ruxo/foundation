@@ -1,9 +1,7 @@
-﻿using System.Text.Json;
-using FluentAssertions;
+using System.Text.Json;
 using JetBrains.Annotations;
 using RZ.Foundation.Json;
 using RZ.Foundation.Types;
-using Xunit;
 
 namespace RZ.Foundation.Functional;
 
@@ -14,19 +12,19 @@ public sealed class OutcomeTest
     [PublicAPI]
     sealed record TestRecord(string Name, int Age);
 
-    [Fact]
-    public void NativeSerializeSuccessOutcome() {
+    [Test]
+    public async Task NativeSerializeSuccessOutcome() {
         Outcome<TestRecord> outcome = new TestRecord("John", 42);
 
         // when
         var json = JsonSerializer.Serialize(outcome);
 
         // then
-        json.Should().Be("""{"Error":null,"Data":{"Name":"John","Age":42},"State":"success"}""");
+        await Assert.That(json).IsEqualTo("""{"Error":null,"Data":{"Name":"John","Age":42},"State":"success"}""");
     }
 
-    [Fact]
-    public void NativeDeserializeSuccessOutcome() {
+    [Test]
+    public async Task NativeDeserializeSuccessOutcome() {
         const string json = """{"Error":null,"Data":{"Name":"John","Age":42},"State":"success"}""";
         var expected = SuccessOutcome(new TestRecord("John", 42));
 
@@ -34,33 +32,33 @@ public sealed class OutcomeTest
         var outcome = JsonSerializer.Deserialize<Outcome<TestRecord>>(json);
 
         // then
-        outcome.Should().Be(expected);
+        await Assert.That(outcome).IsEqualTo(expected);
     }
 
-    [Fact]
-    public void SerializeSuccessOutcomeToJson() {
+    [Test]
+    public async Task SerializeSuccessOutcomeToJson() {
         Outcome<TestRecord> outcome = new TestRecord("John", 42);
 
         // when
         var json = JsonSerializer.Serialize(outcome, new JsonSerializerOptions().UseRzConverters());
 
         // then
-        json.Should().Be("{\"Data\":{\"Name\":\"John\",\"Age\":42}}");
+        await Assert.That(json).IsEqualTo("{\"Data\":{\"Name\":\"John\",\"Age\":42}}");
     }
 
-    [Fact]
-    public void SerializeFailureOutcomeToJson() {
-        Outcome<TestRecord> outcome = new ErrorInfo(StandardErrorCodes.Unhandled);
+    [Test]
+    public async Task SerializeFailureOutcomeToJson() {
+        Outcome<TestRecord> outcome = new ErrorInfo(StandardErrorCodes.Unhandled) { TraceId = null };
 
         // when
         var json = JsonSerializer.Serialize(outcome, new JsonSerializerOptions().UseRzConverters());
 
         // then
-        json.Should().Be("""{"Error":{"Code":"unhandled","Message":"unhandled","Locations":[]}}""", "But {0}", json);
+        await Assert.That(json).IsEqualTo("""{"Error":{"Code":"unhandled","Message":"unhandled","Locations":[]}}""");
     }
 
-    [Fact]
-    public void DeserializeSuccessOutcomeToJson() {
+    [Test]
+    public async Task DeserializeSuccessOutcomeToJson() {
         var json = "{\"Data\":{\"Name\":\"John\",\"Age\":42}}";
         Outcome<TestRecord> expected = new TestRecord("John", 42);
 
@@ -68,19 +66,19 @@ public sealed class OutcomeTest
         var outcome = JsonSerializer.Deserialize<Outcome<TestRecord>>(json, new JsonSerializerOptions().UseRzConverters());
 
         // then
-        outcome.Should().Be(expected);
+        await Assert.That(outcome).IsEqualTo(expected);
     }
 
-    [Fact]
-    public void DeserializeFailureOutcomeToJson() {
+    [Test]
+    public async Task DeserializeFailureOutcomeToJson() {
         var json = "{\"Error\":{\"Code\":\"unhandled\",\"Message\":\"unhandled\",\"TraceId\":null,\"DebugInfo\":null,\"Data\":null}}";
-        Outcome<TestRecord> expected = new ErrorInfo(StandardErrorCodes.Unhandled);
+        Outcome<TestRecord> expected = new ErrorInfo(StandardErrorCodes.Unhandled) { TraceId = null };
 
         // when
         var outcome = JsonSerializer.Deserialize<Outcome<TestRecord>>(json, new JsonSerializerOptions().UseRzConverters());
 
         // then
-        outcome.Should().Be(expected);
+        await Assert.That(outcome).IsEqualTo(expected);
     }
 
     #endregion
