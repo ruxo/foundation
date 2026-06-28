@@ -332,9 +332,83 @@ var result = from u in FindUser(id)
 | Forward an error early                  | `if (Fail(x, out var e, out var v)) return e.Trace();` |
 | Treat not-found as non-error            | `FailButNotFound(x, out var e, out var v)`     |
 | Turn a throwing call into an `Outcome`  | `TryCatch(() => ...)` / `TryCatch(async ...)`  |
-| Collapse to a value                     | `x.Match(onOk, onErr)` / `x.IfFail(default)`   |
+| Collapse to a value                     | `x.Match[README.md](src/RZ.Foundation/README.md)(onOk, onErr)` / `x.IfFail(default)`   |
 | Exit to exception-based code            | `x.Unwrap()` / `await ThrowIfError(task)`      |
 | Collect an async stream                 | `await TryCatch(stream).MakeList()` / `.MakeMutableList()` |
 | Build a structured error                | `ErrorInfo.New(code, message)` / `StandardErrorCodes` |
 | Add app-level trace while propagating   | `error.Trace()`                                |
 | Wrap a low-level error in context       | `error.Wrap(code, message)`                    |
+
+## Encryption (AES-GCM) ##
+
+`RZ.Foundation.Helpers.Encryption` provides authenticated symmetric encryption built on **AES-GCM**.
+`Encrypt` and `Decrypt` return `Outcome<byte[]>`, so failures — a wrong key, a malformed or tampered
+payload, or a platform without AES-GCM — flow through the railway instead of throwing.
+
+AES-GCM gives two guarantees for free:
+
+* **Confidentiality** — a fresh random 12-byte nonce is generated on every `Encrypt`, so encrypting the
+  same data twice produces different output.
+* **Integrity / authenticity** — every payload carries an authentication tag. If the payload is modified,
+  or decrypted with the wrong key, `Decrypt` fails with the `Encryption.TAMPER_ERROR` code rather than
+  returning corrupt bytes.
+
+The produced payload is self-describing, laid out as `[nonce (12 bytes)][tag (16 bytes)][ciphertext]`, so
+the only thing you need to keep is the key.
+
+### Getting a key ###
+
+A key must be 16, 24 or 32 bytes (AES-128/192/256).
+
+```c#
+using RZ.Foundation.Helpers;
+
+// A true random 256-bit key (store it somewhere safe):
+byte[] key = Encryption.RandomAesKey();
+```
+
+To derive the key deterministically from a string — so it can be re-created on demand and never stored —
+pick the method that matches your input. The name makes the security choice explicit:
+
+```c#
+// For a human passphrase / low-entropy text — PBKDF2-HMAC-SHA256 (slow, adds brute-force resistance):
+byte[] key = Encryption.CreateAesKeyFromWeakText("correct horse battery staple").Unwrap();
+
+// For text that is ALREADY high-entropy (e.g. a generated / base64 secret) — HKDF-SHA256 (fast):
+byte[] key = Encryption.CreateAesKeyFromStrongText(mySecretToken).Unwrap();
+
+// Both default to a 32-byte (AES-256) key; pass n = 16 or 24 for AES-128 / AES-192.
+```
+
+> Deterministic derivation is only as strong as the entropy of the input string. For a key that does not
+> need to be reproducible from text, prefer `RandomAesKey()`.
+
+### Encrypting and decrypting ###
+
+```c#
+using System.Text;
+using RZ.Foundation;          // Outcome<T>
+using RZ.Foundation.Helpers;
+
+byte[] key  = Encryption.RandomAesKey();
+byte[] data = Encoding.UTF8.GetBytes("secret message");
+
+Outcome<byte[]> roundTrip =
+    Encryption.Encrypt(key, data)
+              .Bind(payload => Encryption.Decrypt(key, payload));
+
+string text = roundTrip.Match(
+    plain => Encoding.UTF8.GetString(plain),
+    error => $"failed: {error.Message}");
+```
+
+### Detecting tampering ###
+
+```c#
+var payload = Encryption.Encrypt(key, data).Unwrap();
+payload[^1] ^= 0xFF;   // flip a byte of the ciphertext
+
+var result = Encryption.Decrypt(key, payload);
+if (result.IfFail(out var error) && error.Is(Encryption.TAMPER_ERROR))
+    Console.WriteLine("Payload was tampered with (or the key is wrong).");
+```
