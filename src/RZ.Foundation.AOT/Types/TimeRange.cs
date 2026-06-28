@@ -123,7 +123,7 @@ public readonly struct TimeRange : IEquatable<TimeRange>
                    : $"[{DisplayTime(Begin)} - {DisplayTime(End)}]";
 
     public static TimeRange Parse(string s)
-        => TryParse(s).IfNone(() => throw new ErrorInfoException(InvalidRequest, $"Unrecognized TimeRange format: {s}", debugInfo: s));
+        => TryParse(s).IfNone(() => throw new ErrorInfoException(INVALID_REQUEST, $"Unrecognized TimeRange format: {s}", debugInfo: s));
 
     public static Option<TimeRange> TryParse(string s) {
         var trimmed = s.Trim('[', ']', ' ');

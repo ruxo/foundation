@@ -338,7 +338,7 @@ public static class Prelude
     [Pure]
     [PublicAPI]
     public static Outcome<T> ToOutcome<T>(this Option<T> opt, ErrorInfo? error = null)
-        => opt.Match(v => (Outcome<T>)v, () => error ?? new(NotFound));
+        => opt.Match(v => (Outcome<T>)v, () => error ?? new(NOT_FOUND));
 
     [Pure]
     [PublicAPI]

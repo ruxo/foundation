@@ -66,7 +66,7 @@ public sealed class TryCatchTest
         var result = TryCatch(Test);
 
         await Assert.That(result.IsFail).IsTrue();
-        await Assert.That(result.UnwrapError().Is(StandardErrorCodes.Unhandled)).IsTrue();
+        await Assert.That(result.UnwrapError().Is(StandardErrorCodes.UNHANDLED)).IsTrue();
         await Assert.That(result.UnwrapError().Message).IsEqualTo("test");
         return;
 
@@ -80,7 +80,7 @@ public sealed class TryCatchTest
         var result = await TryCatch(Test);
 
         await Assert.That(result.IsFail).IsTrue();
-        await Assert.That(result.UnwrapError().Is(StandardErrorCodes.Unhandled)).IsTrue();
+        await Assert.That(result.UnwrapError().Is(StandardErrorCodes.UNHANDLED)).IsTrue();
         await Assert.That(result.UnwrapError().Message).IsEqualTo("test");
         return;
 
