@@ -6,7 +6,7 @@
     <Description>Foundation library</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Title>RZ.Foundation: Functional and utility functions</Title>
-      <AssemblyVersion>8.0.0.0</AssemblyVersion>
+      <AssemblyVersion>8.0.0.1</AssemblyVersion>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageTags>utility,functional</PackageTags>

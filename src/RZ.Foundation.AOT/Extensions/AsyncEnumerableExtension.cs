@@ -429,12 +429,12 @@ public static class AsyncEnumerableExtension
 
         [PublicAPI]
         public async ValueTask<Outcome<T>> TrySingle(Func<T, int, bool> predicate, CancellationToken cancelToken = default) {
-            if (seq.IsKnownEmpty()) return new ErrorInfo(StandardErrorCodes.NotFound);
+            if (seq.IsKnownEmpty()) return new ErrorInfo(NotFound);
 
             await using var itor = seq.Where(predicate).GetAsyncEnumerator(cancelToken);
-            if (!await itor.MoveNextAsync().ConfigureAwait(false)) return new ErrorInfo(StandardErrorCodes.NotFound);
+            if (!await itor.MoveNextAsync().ConfigureAwait(false)) return new ErrorInfo(NotFound);
             var result = itor.Current;
-            return await itor.MoveNextAsync().ConfigureAwait(false) ? new ErrorInfo(StandardErrorCodes.ValidationFailed, "Multiple elements found") : result;
+            return await itor.MoveNextAsync().ConfigureAwait(false) ? new ErrorInfo(ValidationFailed, "Multiple elements found") : result;
         }
 
         [PublicAPI]

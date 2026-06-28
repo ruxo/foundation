@@ -20,7 +20,13 @@ static class JsonConverterHelper
     public static object? GetObjectValue(this JsonValue node) =>
         node.GetValueKind() switch {
             JsonValueKind.String => node.GetValue<string>(),
-            JsonValueKind.Number => IsInteger(node.GetValue<double>())? node.GetValue<int>() : node.GetValue<double>(),
+            // NOTE: cast a branch to object so the conditional does not unify int/long/double
+            // to double (which would box every integer as Double and break equality compares).
+            JsonValueKind.Number => node.GetValue<double>() is var d && IsInteger(d)
+                                        ? d is >= int.MinValue and <= int.MaxValue
+                                              ? (object)node.GetValue<int>()
+                                              : node.GetValue<long>()
+                                        : d,
             JsonValueKind.True   => true,
             JsonValueKind.False  => false,
             JsonValueKind.Undefined or
