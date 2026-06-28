@@ -106,7 +106,7 @@ public static class HttpExtension
         async ValueTask<Outcome<T>> Read<T>(Func<HttpContent, ValueTask<Outcome<T>>> reader, string readError)
             => r.IsSuccessStatusCode
                    ? Success(await reader(r.Content), out var v, out var e) ? v : e.Trace(readError)
-                   : new ErrorInfo(HttpError, $"({r.StatusCode}) HTTP failed",
+                   : new ErrorInfo(HTTP_ERROR, $"({r.StatusCode}) HTTP failed",
                                    data: ToJson(("StatusCode", r.StatusCode.ToString()),
                                                 ("ReasonPhrase", r.ReasonPhrase)));
 

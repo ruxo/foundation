@@ -48,7 +48,7 @@ public sealed class OutcomeTest
 
     [Test]
     public async Task SerializeFailureOutcomeToJson() {
-        Outcome<TestRecord> outcome = new ErrorInfo(StandardErrorCodes.Unhandled) { TraceId = null };
+        Outcome<TestRecord> outcome = new ErrorInfo(StandardErrorCodes.UNHANDLED) { TraceId = null };
 
         // when
         var json = JsonSerializer.Serialize(outcome, new JsonSerializerOptions().UseRzConverters());
@@ -72,7 +72,7 @@ public sealed class OutcomeTest
     [Test]
     public async Task DeserializeFailureOutcomeToJson() {
         var json = "{\"Error\":{\"Code\":\"unhandled\",\"Message\":\"unhandled\",\"TraceId\":null,\"DebugInfo\":null,\"Data\":null}}";
-        Outcome<TestRecord> expected = new ErrorInfo(StandardErrorCodes.Unhandled) { TraceId = null };
+        Outcome<TestRecord> expected = new ErrorInfo(StandardErrorCodes.UNHANDLED) { TraceId = null };
 
         // when
         var outcome = JsonSerializer.Deserialize<Outcome<TestRecord>>(json, new JsonSerializerOptions().UseRzConverters());

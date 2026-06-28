@@ -15,7 +15,7 @@ public sealed class WebRequestDataTest
         var result = bad.ToHttpRequest();
 
         await Assert.That(result.IsFail).IsTrue();
-        await Assert.That(result.UnwrapError().Is(StandardErrorCodes.InvalidRequest)).IsTrue();
+        await Assert.That(result.UnwrapError().Is(StandardErrorCodes.INVALID_REQUEST)).IsTrue();
     }
 
     [Test]
@@ -65,6 +65,6 @@ public sealed class WebRequestDataTest
         var result = request.ToHttpRequest();
 
         await Assert.That(result.IsFail).IsTrue();
-        await Assert.That(result.UnwrapError().Is(StandardErrorCodes.InvalidResponse)).IsTrue();
+        await Assert.That(result.UnwrapError().Is(StandardErrorCodes.INVALID_RESPONSE)).IsTrue();
     }
 }

@@ -19,7 +19,7 @@ public readonly record struct ErrorInfoLocation(string File, string Method, int 
 /// </summary>
 public sealed record ErrorInfo
 {
-    public static readonly ErrorInfo NotFound = new(StandardErrorCodes.NotFound);
+    public static readonly ErrorInfo NotFound = new(StandardErrorCodes.NOT_FOUND);
 
     [PublicAPI]
     public readonly record struct StackInfo(string? Value)
@@ -53,7 +53,7 @@ public sealed record ErrorInfo
         => new(code, message, debugInfo, data, innerError, subErrors, locations: [new(file, caller, line, ".")]);
 
     public static ErrorInfo _NotFound([CallerMemberName] string caller = "", [CallerLineNumber] int line = 0, [CallerFilePath] string file = "")
-        => new(StandardErrorCodes.NotFound, locations: [new(file, caller, line, ".")]);
+        => new(StandardErrorCodes.NOT_FOUND, locations: [new(file, caller, line, ".")]);
 
     /// <summary>
     /// Error code
@@ -137,7 +137,7 @@ public sealed record ErrorInfo
     public bool Is(ErrorInfo another) => Is(another.Code);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsNotFound() => Is(StandardErrorCodes.NotFound);
+    public bool IsNotFound() => Is(StandardErrorCodes.NOT_FOUND);
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ErrorInfo Wrap(string code, string? message = null, string? debugInfo = null, string? data = null, string? traceId = null)
@@ -228,13 +228,13 @@ public static class ErrorFrom
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ErrorInfo Program(string message, [CallerMemberName] string? caller = null) =>
-        new(InvalidRequest, $"{caller}: {message}");
+        new(INVALID_REQUEST, $"{caller}: {message}");
 
     public static ErrorInfo Exception(Exception e) {
         if (e is ErrorInfoException ei) return ei.ToErrorInfo();
 
         var errorInfoAttr = e.GetType().GetCustomAttribute<ErrorInfoAttribute>()?.Code;
-        return new ErrorInfo(errorInfoAttr ?? Unhandled,
+        return new ErrorInfo(errorInfoAttr ?? UNHANDLED,
                              e.Message,
                              innerError: e.InnerException?.Apply(Exception),
                              subErrors: e.InnerException is AggregateException ae ? ae.InnerExceptions.Map(Exception) : null,
@@ -252,7 +252,7 @@ public static class ErrorFrom
                             from attr in Optional(ex.GetType().GetCustomAttribute<ErrorInfoAttribute>())
                             select attr.Code;
         var subErrors = e is ManyErrors me ? me.Errors.Map(Exception) : Seq.empty<ErrorInfo>();
-        return new ErrorInfo(errorInfoAttr.IfNone(Unhandled),
+        return new ErrorInfo(errorInfoAttr.IfNone(UNHANDLED),
                              e.Message,
                              innerError: e.Inner.Map(Exception).ToNullable(),
                              subErrors: subErrors.IsEmpty ? null : subErrors,

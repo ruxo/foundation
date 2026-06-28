@@ -48,17 +48,17 @@ public sealed class OutcomeTest
         Outcome<string> result = err;
 
         await Assert.That(result.IsFail).IsTrue();
-        await Assert.That(result.UnwrapError().Code).IsEqualTo(StandardErrorCodes.Unhandled);
+        await Assert.That(result.UnwrapError().Code).IsEqualTo(StandardErrorCodes.UNHANDLED);
     }
 
     [Test]
     public async ValueTask Convert_from_either_error() {
-        Either<ErrorInfo, string> err = new ErrorInfo(StandardErrorCodes.Timeout, "dummy");
+        Either<ErrorInfo, string> err = new ErrorInfo(StandardErrorCodes.TIMEOUT, "dummy");
 
         Outcome<string> result = err;
 
         await Assert.That(result.IsFail).IsTrue();
-        await Assert.That(result.UnwrapError().Code).IsEqualTo(StandardErrorCodes.Timeout);
+        await Assert.That(result.UnwrapError().Code).IsEqualTo(StandardErrorCodes.TIMEOUT);
     }
 
     [Test]
@@ -73,7 +73,7 @@ public sealed class OutcomeTest
 
     [Test]
     public async ValueTask Default_value_for_failure() {
-        var value = FailedOutcome<int>(new ErrorInfo(StandardErrorCodes.Unhandled, "dummy"));
+        var value = FailedOutcome<int>(new ErrorInfo(StandardErrorCodes.UNHANDLED, "dummy"));
 
         var result = value.IfFail(123);
 

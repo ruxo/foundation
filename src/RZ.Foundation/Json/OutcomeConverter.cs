@@ -21,10 +21,10 @@ public class OutcomeConverter : JsonConverterFactory
     {
         public override Outcome<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
             if (reader.TokenType != JsonTokenType.StartObject)
-                throw new ErrorInfoException(InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: not a start object");
+                throw new ErrorInfoException(INVALID_REQUEST, "Deserialize to OutcomeSerializer<T> failed: not a start object");
 
             var found = false;
-            Outcome<T> result = new ErrorInfo(InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: malformed Outcome JSON");
+            Outcome<T> result = new ErrorInfo(INVALID_REQUEST, "Deserialize to OutcomeSerializer<T> failed: malformed Outcome JSON");
 
             // Read every property of THIS object; deserialize data/error, skip the rest. The loop
             // exits on this object's own EndObject, leaving the reader exactly where the serializer
@@ -33,11 +33,11 @@ public class OutcomeConverter : JsonConverterFactory
                 var key = reader.GetString()!;
                 reader.Read(); // move to the property value
                 if (!found && key.Equals("data", StringComparison.OrdinalIgnoreCase)){
-                    result = JsonSerializer.Deserialize<T>(ref reader, options) ?? throw new ErrorInfoException(InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: possibly type mismatched");
+                    result = JsonSerializer.Deserialize<T>(ref reader, options) ?? throw new ErrorInfoException(INVALID_REQUEST, "Deserialize to OutcomeSerializer<T> failed: possibly type mismatched");
                     found = true;
                 }
                 else if (!found && key.Equals("error", StringComparison.OrdinalIgnoreCase)){
-                    result = JsonSerializer.Deserialize<ErrorInfo>(ref reader, options) ?? throw new ErrorInfoException(InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: possibly error type mismatched");
+                    result = JsonSerializer.Deserialize<ErrorInfo>(ref reader, options) ?? throw new ErrorInfoException(INVALID_REQUEST, "Deserialize to OutcomeSerializer<T> failed: possibly error type mismatched");
                     found = true;
                 }
                 else

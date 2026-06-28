@@ -63,7 +63,7 @@ public static class HttpExtensions
             using (r)
                 return r.IsSuccessStatusCode
                            ? Success(await TryCatch(r.Content.ReadFromJsonAsync<T>(options)).ConfigureAwait(false), out var v, out var e) ? v : e.Trace($"Deserialize to {typeof(T).Name} failed")
-                           : new ErrorInfo(HttpError, $"({r.StatusCode}) HTTP failed",
+                           : new ErrorInfo(HTTP_ERROR, $"({r.StatusCode}) HTTP failed",
                                            data: ToJson(("StatusCode", r.StatusCode.ToString()),
                                                         ("ReasonPhrase", r.ReasonPhrase)));
         }
@@ -78,7 +78,7 @@ public static class HttpExtensions
             if (r.IsSuccessStatusCode)
                 return Success(await r.DeserializedJson<T>(options).ConfigureAwait(false), out var v, out e)
                            ? v
-                           : e.Wrap(InvalidResponse, "Invalid response");
+                           : e.Wrap(INVALID_RESPONSE, "Invalid response");
 
             return Fail(await r.Content.ReadAsString().ConfigureAwait(false), out e, out var body) ? e.Trace("Read response failed") : ExtractError<T>(body, options);
         }
@@ -93,7 +93,7 @@ public static class HttpExtensions
 
             if (r.IsSuccessStatusCode){
                 if (body.Length > 0)
-                    return new ErrorInfo(ValidationFailed, "Does not expect any response body.", data: body);
+                    return new ErrorInfo(VALIDATION_FAILED, "Does not expect any response body.", data: body);
                 return unit;
             }
             return ExtractError<Unit>(body, options);
@@ -127,7 +127,7 @@ public static class HttpExtensions
         if (Success(JsonDeserialize<ErrorInfo>(body, options), out var errorInfo))
             if (!string.IsNullOrEmpty(errorInfo.Code))
                 return errorInfo.Trace("From HTTP response");
-        return new ErrorInfo(HttpError, data: body);
+        return new ErrorInfo(HTTP_ERROR, data: body);
     }
 
     [PublicAPI]
