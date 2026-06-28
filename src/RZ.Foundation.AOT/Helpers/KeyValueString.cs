@@ -1,14 +1,12 @@
-﻿using System.Text.Json;
-using System.Text.Json.Nodes;
-
-// ReSharper disable UnusedType.Global
+﻿// ReSharper disable UnusedType.Global
 
 namespace RZ.Foundation.Helpers;
 
 /// <summary>
 /// Represent a key/pair string.
 ///
-/// <p>A key/pair string is a semi-colon separated of <c>key=value</c> strings. The value must be JSON encoded.</p>
+/// <p>A key/pair string is a semi-colon separated of <c>key=value</c> strings. The value is taken
+/// literally (everything after the first <c>=</c>), so it round-trips verbatim.</p>
 /// </summary>
 [PublicAPI]
 public static class KeyValueString
@@ -18,7 +16,6 @@ public static class KeyValueString
     /// </summary>
     /// <param name="keyValueString"></param>
     /// <returns>A dictionary that contains key/value pairs of the given string.</returns>
-    /// <exception cref="ArgumentException">Malformed key/value string</exception>
     public static IDictionary<string, string> Parse(string keyValueString) =>
         keyValueString.Split(';')
                       .ToSeq()
@@ -27,11 +24,8 @@ public static class KeyValueString
 
     public static (string, string) SplitPairs(string s) {
         var separator = s.IndexOf('=');
-        try {
-            return separator == -1 ? (s,string.Empty) : (s[..separator], JsonNode.Parse($"\"{s[(separator+1)..]}\"")!.ToString());
-        }
-        catch (JsonException e) {
-            throw new ArgumentException("Malformed key/JSON-value pairs", nameof(s), e);
-        }
+        return separator == -1
+                   ? (s, string.Empty)
+                   : (s[..separator], s[(separator + 1)..]);
     }
 }

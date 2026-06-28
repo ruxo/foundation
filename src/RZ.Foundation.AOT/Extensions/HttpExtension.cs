@@ -57,9 +57,10 @@ public static class HttpExtension
             }
         }
 
-        public async ValueTask<Outcome<HttpResponseMessage>> TrySend(HttpRequestMessage request) {
+        [PublicAPI]
+        public async ValueTask<Outcome<HttpResponseMessage>> TrySend(HttpRequestMessage request, CancellationToken cancel = default) {
             try{
-                return await http.SendAsync(request);
+                return await http.SendAsync(request, cancel);
             }
             catch (Exception e){
                 return ErrorFrom.Exception(e);

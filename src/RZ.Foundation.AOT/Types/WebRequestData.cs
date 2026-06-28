@@ -22,12 +22,19 @@ public record WebRequestData(Uri Uri)
 
     public Outcome<HttpRequestMessage> ToHttpRequest() {
         if (ToHttpMethod(Method).UnlessSome(out var method))
-            return new ErrorInfo(StandardErrorCodes.InvalidResponse, $"Unsupported HTTP method: {Method}");
+            return new ErrorInfo(InvalidResponse, $"Unsupported HTTP method: {Method}");
 
         var req = new HttpRequestMessage(method, Uri) {
             Content = Optional(Body).Map(x => new StringContent(x)).ToNullable()
         };
-        Headers.Iter(h => req.Headers.Add(h[0], h[1]));
+        foreach (var h in Headers){
+            if (h.Length < 2)
+                return ErrorInfo.New(InvalidRequest, $"Malformed header row: [{string.Join(", ", h)}]");
+
+            // TryAddWithoutValidation falls back to content headers for content-only names (e.g. Content-Type)
+            if (!req.Headers.TryAddWithoutValidation(h[0], h[1]))
+                req.Content?.Headers.TryAddWithoutValidation(h[0], h[1]);
+        }
         return req;
     }
 
@@ -59,7 +66,7 @@ public static class WebRequestDataExtension
         }
         if (Fail(await response.Content.ReadAsString(), out e, out var error)) return e;
 
-        return new ErrorInfo(StandardErrorCodes.ServiceError, $"Get image failed: {error}",
+        return new ErrorInfo(ServiceError, $"Get image failed: {error}",
                              data: ToJson(("StatusCode", response.StatusCode.ToString())));
     }
 }

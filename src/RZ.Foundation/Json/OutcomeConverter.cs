@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using RZ.Foundation.Types;
@@ -21,25 +20,30 @@ public class OutcomeConverter : JsonConverterFactory
     public class OutcomeSerializer<T> : JsonConverter<Outcome<T>>
     {
         public override Outcome<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-            var result = ReadOutcome(ref reader, options);
-            // ensure the reader is at the end
-            while (reader.Read() && reader.TokenType != JsonTokenType.EndObject){}
-            return result;
-        }
-
-        static Outcome<T> ReadOutcome(ref Utf8JsonReader reader, JsonSerializerOptions options) {
             if (reader.TokenType != JsonTokenType.StartObject)
-                throw new ErrorInfoException(StandardErrorCodes.InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: not a start object");
+                throw new ErrorInfoException(InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: not a start object");
+
+            var found = false;
+            Outcome<T> result = new ErrorInfo(InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: malformed Outcome JSON");
+
+            // Read every property of THIS object; deserialize data/error, skip the rest. The loop
+            // exits on this object's own EndObject, leaving the reader exactly where the serializer
+            // expects it — so trailing properties (even nested objects) are handled correctly.
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject){
                 var key = reader.GetString()!;
-                Trace.Assert(reader.Read());
-                if (key.Equals("data", StringComparison.OrdinalIgnoreCase))
-                    return JsonSerializer.Deserialize<T>(ref reader, options) ?? throw new ErrorInfoException(StandardErrorCodes.InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: possibly type mismatched");
-                if (key.Equals("error", StringComparison.OrdinalIgnoreCase))
-                    return JsonSerializer.Deserialize<ErrorInfo>(ref reader, options) ?? throw new ErrorInfoException(StandardErrorCodes.InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: possibly error type mismatched");
-                reader.Skip();
+                reader.Read(); // move to the property value
+                if (!found && key.Equals("data", StringComparison.OrdinalIgnoreCase)){
+                    result = JsonSerializer.Deserialize<T>(ref reader, options) ?? throw new ErrorInfoException(InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: possibly type mismatched");
+                    found = true;
+                }
+                else if (!found && key.Equals("error", StringComparison.OrdinalIgnoreCase)){
+                    result = JsonSerializer.Deserialize<ErrorInfo>(ref reader, options) ?? throw new ErrorInfoException(InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: possibly error type mismatched");
+                    found = true;
+                }
+                else
+                    reader.Skip(); // skip an unknown property's value, including nested objects/arrays
             }
-            return new ErrorInfo(StandardErrorCodes.InvalidRequest, "Deserialize to OutcomeSerializer<T> failed: not malformed Outcome JSON");
+            return result;
         }
 
         public override void Write(Utf8JsonWriter writer, Outcome<T> value, JsonSerializerOptions options) {

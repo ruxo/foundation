@@ -200,7 +200,7 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T? UnwrapOrDefault(T? defaultValue = default)
-        => Data;
+        => status == EitherStatus.IsRight ? Data : defaultValue;
 
     [ExcludeFromCodeCoverage, MethodImpl(MethodImplOptions.AggressiveInlining)]
     static T JustThrow(ErrorInfo e) => e.Throw<T>();
@@ -211,7 +211,7 @@ public readonly struct Outcome<T> : IEquatable<Outcome<T>>
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ErrorInfo? UnwrapErrorOrDefault(ErrorInfo? defaultValue = null)
-        => Error;
+        => status == EitherStatus.IsLeft ? Error : defaultValue;
 
     #endregion
 

@@ -123,9 +123,9 @@ public sealed record ErrorInfo
         hashCode.Add(DebugInfo);
         hashCode.Add(Data);
         hashCode.Add(InnerError);
-        hashCode.Add(SubErrors?.Sum(e => e.GetHashCode()) ?? 0);
+        hashCode.Add(SubErrors?.GetCombinationHashCode() ?? 0);
         hashCode.Add(Stack);
-        hashCode.Add(Locations.Sum(e => e.GetHashCode()));
+        hashCode.Add(Locations.GetCombinationHashCode());
         return hashCode.ToHashCode();
     }
 
