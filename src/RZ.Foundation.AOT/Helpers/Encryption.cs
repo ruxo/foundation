@@ -8,11 +8,11 @@ public static class Encryption
 {
     public const string TAMPER_ERROR = "tampered";
 
-    const int NonceLength = 16;
+    const int NONCE_LENGTH = 16;
 
-    const int Pbkdf2Iterations = 600_000; // OWASP-recommended minimum for PBKDF2-HMAC-SHA256
-    const int WeakMinLength = 8;
-    const int StrongMinLength = 16;
+    const int PBKDF2_ITERATIONS = 600_000; // OWASP-recommended minimum for PBKDF2-HMAC-SHA256
+    const int WEAK_MIN_LENGTH = 8;
+    const int STRONG_MIN_LENGTH = 16;
 
     // Fixed, library-wide derivation constants. A per-key salt is impossible here because these functions must
     // be deterministic; these provide domain separation only, NOT anti-precomputation. Do NOT change once
@@ -20,7 +20,7 @@ public static class Encryption
     static readonly byte[] AesPbkdf2Salt =                 // "RZFndnKDFv1salt!" (ASCII)
         [0x52, 0x5A, 0x46, 0x6E, 0x64, 0x6E, 0x4B, 0x44, 0x46, 0x76, 0x31, 0x73, 0x61, 0x6C, 0x74, 0x21];
     static readonly byte[] AesHkdfInfo =                   // HKDF context string for domain separation
-        Encoding.ASCII.GetBytes("RZ.Foundation/AES-HKDF/v1");
+        "RZ.Foundation/AES-HKDF/v1"u8.ToArray();
 
     /// <summary>
     /// Generate a Nonce from a string. The Nonce will be 16 bytes long.
@@ -28,8 +28,8 @@ public static class Encryption
     /// <param name="s">A string for making a nonce. It shouldn't be longer than 16 characters.</param>
     /// <returns>A nonce</returns>
     [Obsolete("Use Encrypt(byte[], byte[]) instead")]
-    public static byte[] NonceFromASCII(string s)
-        => Enumerable.Repeat(Encoding.ASCII.GetBytes(s), NonceLength).SelectMany(x => x).Take(NonceLength).ToArray();
+    public static byte[] NonceFromAscii(string s)
+        => Enumerable.Repeat(Encoding.ASCII.GetBytes(s), NONCE_LENGTH).SelectMany(x => x).Take(NONCE_LENGTH).ToArray();
 
     /// <summary>
     /// Generate 256-bit random AES key.
@@ -65,8 +65,8 @@ public static class Encryption
     /// <see cref="RandomAesKey"/>.
     /// </remarks>
     public static Outcome<byte[]> CreateAesKeyFromWeakText(string key, int n = 32)
-        => DeriveAesKey(key, n, WeakMinLength,
-                        () => Rfc2898DeriveBytes.Pbkdf2(key, AesPbkdf2Salt, Pbkdf2Iterations, HashAlgorithmName.SHA256, outputLength: n));
+        => DeriveAesKey(key, n, WEAK_MIN_LENGTH,
+                        () => Rfc2898DeriveBytes.Pbkdf2(key, AesPbkdf2Salt, PBKDF2_ITERATIONS, HashAlgorithmName.SHA256, outputLength: n));
 
     /// <summary>
     /// Deterministically derives an AES key of <paramref name="n"/> bytes from <b>already high-entropy</b> keying
@@ -84,7 +84,7 @@ public static class Encryption
     /// domain separation only.
     /// </remarks>
     public static Outcome<byte[]> CreateAesKeyFromStrongText(string key, int n = 32)
-        => DeriveAesKey(key, n, StrongMinLength,
+        => DeriveAesKey(key, n, STRONG_MIN_LENGTH,
                         () => HKDF.DeriveKey(HashAlgorithmName.SHA256, Encoding.UTF8.GetBytes(key), n, salt: null, info: AesHkdfInfo));
 
     [Obsolete("Use Encrypt(byte[], byte[]) instead")]
